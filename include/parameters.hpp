@@ -1,5 +1,4 @@
 #pragma once
-#include <boost/shared_ptr.hpp>
 #include <boost/signals2.hpp>
 #include "LokiTypeInfo.h"
 #include "UI/UI.hpp"
@@ -17,7 +16,7 @@ namespace Parameters
 			Control = 8
 		};
 		Parameter(const std::string& name, const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = "");
-		typedef boost::shared_ptr<Parameter> Ptr;
+		typedef std::shared_ptr<Parameter> Ptr;
 		virtual Loki::TypeInfo GetTypeInfo() = 0;
 
 		virtual std::string& GetName();
@@ -40,7 +39,7 @@ namespace Parameters
 	class InputParameter
 	{
 	public:
-		typedef boost::shared_ptr<InputParameter> Ptr;
+		typedef std::shared_ptr<InputParameter> Ptr;
 		virtual bool SetInput(const std::string& name_) = 0;
 		virtual bool SetInput(const Parameter::Ptr param) = 0;
 		virtual bool AcceptsInput(const Parameter::Ptr param) = 0;
@@ -51,7 +50,7 @@ namespace Parameters
 			public Parameter
     {
     public:
-		typedef boost::shared_ptr<ITypedParameter<T>> Ptr;
+		typedef std::shared_ptr<ITypedParameter<T>> Ptr;
         virtual T* Data() = 0;
 		virtual void UpdateData(T& data_) = 0;
 		virtual void UpdateData(const T& data_) = 0;
@@ -87,7 +86,7 @@ namespace Parameters
     {
         T data;
     public:
-		typedef boost::shared_ptr<TypedParameter<T>> Ptr;
+		typedef std::shared_ptr<TypedParameter<T>> Ptr;
 		static Ptr create(const T& init, const std::string& name, const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = "")
 		{
 			return Ptr(new TypedParameter<T>(name, init, type, tooltip));
@@ -120,7 +119,7 @@ namespace Parameters
 	{
 		T& data;
 	public:
-		typedef boost::shared_ptr<TypedParameterRef<T>> Ptr;
+		typedef std::shared_ptr<TypedParameterRef<T>> Ptr;
 		TypedParameterRef(const std::string& name, const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = ""):
 			MetaTypedParameter<T>(name, type, tooltip){}
 		virtual T* Data()
@@ -144,7 +143,7 @@ namespace Parameters
     {
         T* ptr;
     public:
-		typedef boost::shared_ptr<TypedParameterPtr<T>> Ptr;
+		typedef std::shared_ptr<TypedParameterPtr<T>> Ptr;
 		static Ptr create(const std::string& name, T* ptr_ = nullptr,
 			const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = "")
 		{
@@ -185,7 +184,7 @@ namespace Parameters
 
 		}
 	public:
-		typedef boost::shared_ptr<TypedInputParameter<T>> Ptr;
+		typedef std::shared_ptr<TypedInputParameter<T>> Ptr;
 		TypedInputParameter(const std::string& name, const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = ""):
 			MetaTypedParameter<T>(name, type, tooltip){}
 		virtual bool SetInput(const std::string& name_)
@@ -250,7 +249,7 @@ namespace Parameters
 			*userVar = input->Data();
 		}
 	public:
-		typedef boost::shared_ptr<TypedInputParameterPtr<T>> Ptr;
+		typedef std::shared_ptr<TypedInputParameterPtr<T>> Ptr;
 		static Ptr create(T** userVar_)
 		{
 			return Ptr(new TypedInputParameterPtr(userVar_));

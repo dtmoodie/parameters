@@ -16,7 +16,15 @@
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0">
-     <layout class="QGridLayout" name="widgetLayout"/>
+     <layout class="QGridLayout" name="widgetLayout">
+      <item row="0" column="0">
+       <widget class="QPushButton" name="btnSerialize">
+        <property name="text">
+         <string>Serialize</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>

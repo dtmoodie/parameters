@@ -6,7 +6,7 @@ namespace Parameters
 {
 	namespace UI
 	{
-		template<typename T> class UiPolicy
+		template<typename T> class UiPolicy: public qt::QtUiPolicy<T>
 		{
 		public:
 
