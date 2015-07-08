@@ -53,6 +53,13 @@ IF(${Qt5_FOUND})
   ${OpenCV_LIBS}
   libParameter
   )
+  TARGET_LINK_LIBRARIES(test_parameter 
+  Qt5::Core
+  Qt5::Gui
+  Qt5::Widgets
+  ${OpenCV_LIBS}
+  libParameter
+  )
  add_dependencies(test_param_qt libParameter)
 ENDIF()
 

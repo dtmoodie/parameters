@@ -194,7 +194,7 @@ namespace Parameters
 
 		virtual bool SetInput(const Parameter::Ptr param)
 		{
-			ITypedParameter<T>::Ptr castedParam = boost::dynamic_pointer_cast<ITypedParameter<T>, Parameter>(param);
+			ITypedParameter<T>::Ptr castedParam = std::dynamic_pointer_cast<ITypedParameter<T>>(param);
 			if (castedParam)
 			{
 				input = castedParam;
@@ -265,7 +265,7 @@ namespace Parameters
 
 		virtual bool SetInput(const Parameter::Ptr param)
 		{
-			ITypedParameter<T>::Ptr castedParam = boost::dynamic_pointer_cast<ITypedParameter<T>, Parameter>(param);
+			ITypedParameter<T>::Ptr castedParam = std::dynamic_pointer_cast<ITypedParameter<T>>(param);
 			if (castedParam)
 			{
 				input = castedParam;
