@@ -36,7 +36,6 @@ add_executable(test_parameter "test/parameter_test.cpp")
 TARGET_LINK_LIBRARIES(test_parameter libParameter ${OpenCV_LIBS})
 ADD_DEPENDENCIES(test_parameter libParameter)
 
-
 IF(${Qt5_FOUND})
  FILE(GLOB qt_src "test/qt_policy_test/src/*.cpp")
  FILE(GLOB qt_hdr "test/qt_policy_test/include/*.h")
