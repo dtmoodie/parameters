@@ -1,7 +1,7 @@
 #include "Parameters.hpp"
 
 using namespace Parameters;
-Parameter::Parameter(const std::string& name_, const ParameterTypes& type_, const std::string& tooltip_):
+Parameter::Parameter(const std::string& name_, const ParameterType& type_, const std::string& tooltip_):
 	name(name_), type(type_), tooltip(tooltip_)
 {
 }

@@ -1,8 +1,16 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
 PROJECT(Parameters)
-
-FIND_PACKAGE(Boost)
+IF(WIN32)
+	set(Boost_USE_STATIC_LIBS        ON)
+	set(Boost_USE_MULTITHREADED      ON)
+	set(Boost_USE_STATIC_RUNTIME     OFF)
+ELSE(WIN32)
+	set(Boost_USE_STATIC_LIBS        OFF)
+	set(Boost_USE_MULTITHREADED      ON)
+	set(Boost_USE_STATIC_RUNTIME     OFF)
+ENDIF(WIN32)
+FIND_PACKAGE(Boost COMPONENTS filesystem system)
 FIND_PACKAGE(Qt5 COMPONENTS Gui Widgets)
 FIND_PACKAGE(OpenCV COMPONENTS core)
 
@@ -18,7 +26,12 @@ IF(Boost_FOUND)
  ADD_DEFINITIONS(-DBoost_FOUND)
 ENDIF()
 
-
+message(STATUS
+"============== libParameter =============
+  Boost libs: ${Boost_LIBRARIES}
+  
+  
+ " )
 INCLUDE_DIRECTORIES(
  ${Boost_INCLUDE_DIRS} 
  "${CMAKE_CURRENT_SOURCE_DIR}/src" 
@@ -33,7 +46,7 @@ SET(Parameters_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include" PARENT_SCOPE)
 add_library(libParameter ${hdr} ${src} ${MOC})
 
 add_executable(test_parameter "test/parameter_test.cpp")
-TARGET_LINK_LIBRARIES(test_parameter libParameter ${OpenCV_LIBS})
+TARGET_LINK_LIBRARIES(test_parameter libParameter ${OpenCV_LIBS} ${Boost_LIBRARIES})
 ADD_DEPENDENCIES(test_parameter libParameter)
 
 IF(${Qt5_FOUND})
@@ -50,13 +63,16 @@ IF(${Qt5_FOUND})
   Qt5::Gui
   Qt5::Widgets
   ${OpenCV_LIBS}
+  ${Boost_LIBRARIES}
   libParameter
-  )
+ )
+
   TARGET_LINK_LIBRARIES(test_parameter 
   Qt5::Core
   Qt5::Gui
   Qt5::Widgets
   ${OpenCV_LIBS}
+  ${Boost_LIBRARIES}
   libParameter
   )
  add_dependencies(test_param_qt libParameter)

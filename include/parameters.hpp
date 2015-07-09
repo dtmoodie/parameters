@@ -1,8 +1,11 @@
 #pragma once
 #include <boost/signals2.hpp>
+#include <boost/filesystem/path.hpp>
+#include <mutex>
 #include "LokiTypeInfo.h"
 #include "UI/UI.hpp"
 #include "Persistence/Persistence.hpp"
+
 namespace Parameters
 {
     class Parameter
@@ -19,7 +22,7 @@ namespace Parameters
 		};
 		struct WriteDirectory : public boost::filesystem::path{};
 
-		class CV_EXPORTS EnumParameter
+		class EnumParameter
 		{
 		public:
 			EnumParameter()
@@ -42,42 +45,58 @@ namespace Parameters
 			int currentSelection;
 		};
 
-		enum ParameterTypes
+		enum ParameterType
 		{
+			None = 0,
 			Input = 1,
 			Output = 2,
 			State = 4,
 			Control = 8
 		};
-		Parameter(const std::string& name, const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = "");
+		Parameter(const std::string& name, const ParameterType& type = ParameterType::Control, const std::string& tooltip = "");
 		typedef std::shared_ptr<Parameter> Ptr;
 		virtual Loki::TypeInfo GetTypeInfo() = 0;
 
-		virtual std::string& GetName();
 		virtual void SetName(const std::string& name_);
-		virtual const std::string& GetTooltip();
 		virtual void SetTooltip(const std::string& tooltip_);
-		virtual const std::string& GetTreeName();
 		virtual void SetTreeName(const std::string& treeName_);
+		virtual void SetTreeRoot(const std::string& treeRoot_)
+		{
+			SetTreeName(treeRoot_ + ":" + GetName());
+		}
+		virtual std::string& GetName();		
+		virtual const std::string& GetTooltip();		
+		virtual const std::string& GetTreeName();
+		
 		virtual boost::signals2::connection RegisterNotifier(const boost::function<void(void)>& f);
-
+		
+		std::recursive_mutex mtx;
+		ParameterType type;
+		bool changed;
+		unsigned short subscribers;
 	protected:
 		boost::signals2::signal<void(void)> UpdateSignal;
 	private:
 		std::string name;
 		std::string tooltip;
 		std::string treeName;
-		ParameterTypes type;
+		
     };
 
 	class InputParameter
 	{
+	protected:
+		boost::function<bool(const Parameter*)> qualifier;
 	public:
 		typedef std::shared_ptr<InputParameter> Ptr;
 		virtual bool SetInput(const std::string& name_) = 0;
 		virtual bool SetInput(const Parameter::Ptr param) = 0;
 		virtual bool AcceptsInput(const Parameter::Ptr param) = 0;
 		virtual bool AcceptsType(const Loki::TypeInfo& type) = 0;
+		virtual void SetQualifier(const boost::function<bool(const Parameter*)>& f)
+		{
+			qualifier = f;
+		}
 	};
 
     template<typename T> class ITypedParameter: 
@@ -89,7 +108,7 @@ namespace Parameters
 		virtual void UpdateData(T& data_) = 0;
 		virtual void UpdateData(const T& data_) = 0;
 		virtual void UpdateData(T* data_) = 0;
-		ITypedParameter(const std::string& name, const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = "") :
+		ITypedParameter(const std::string& name, const ParameterType& type = Parameter::Control, const std::string& tooltip = "") :
 			Parameter(name, type, tooltip){}
 		virtual Loki::TypeInfo GetTypeInfo()
 		{
@@ -111,7 +130,7 @@ namespace Parameters
 		public ITypedParameter<T>, public Policy1<T>, public Policy2<T>
 	{
 	public:
-		MetaTypedParameter(const std::string& name, const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = ""):
+		MetaTypedParameter(const std::string& name, const ParameterType& type = Parameter::Control, const std::string& tooltip = "") :
 			ITypedParameter<T>(name, type, tooltip){}
 	};
 
@@ -121,11 +140,11 @@ namespace Parameters
         T data;
     public:
 		typedef std::shared_ptr<TypedParameter<T>> Ptr;
-		static Ptr create(const T& init, const std::string& name, const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = "")
+		static Ptr create(const T& init, const std::string& name, const ParameterType& type = ParameterType::Control, const std::string& tooltip = "")
 		{
 			return Ptr(new TypedParameter<T>(name, init, type, tooltip));
 		}
-		TypedParameter(const std::string& name, const T& init = T(), const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = ""):
+		TypedParameter(const std::string& name, const T& init = T(), const ParameterType& type = ParameterType::Control, const std::string& tooltip = ""):
 			MetaTypedParameter<T>(name, type, tooltip), data(init) {}
 
         virtual T* Data()
@@ -135,16 +154,19 @@ namespace Parameters
         virtual void UpdateData(T& data_)
         {
             data = data_;
+			changed = true;
 			UpdateSignal();
         }
 		virtual void UpdateData(const T& data_)
 		{
 			data = data_;
+			changed = true;
 			UpdateSignal();
 		}
 		virtual void UpdateData(T* data_)
 		{
 			data = *data_;
+			changed = true;
 			UpdateSignal();
 		}
     };
@@ -154,7 +176,7 @@ namespace Parameters
 		T& data;
 	public:
 		typedef std::shared_ptr<TypedParameterRef<T>> Ptr;
-		TypedParameterRef(const std::string& name, const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = ""):
+		TypedParameterRef(const std::string& name, const ParameterType& type = ParameterType::Control, const std::string& tooltip = ""):
 			MetaTypedParameter<T>(name, type, tooltip){}
 		virtual T* Data()
 		{
@@ -163,11 +185,13 @@ namespace Parameters
 		virtual void UpdateData(const T& data_)
 		{
 			data = data_;
+			changed = true;
 			UpdateSignal();
 		}
 		virtual void UpdateData(const T* data_)
 		{
 			data = *data_;
+			changed = true;
 			UpdateSignal();
 		}
 
@@ -176,17 +200,18 @@ namespace Parameters
     template<typename T> class TypedParameterPtr: public MetaTypedParameter<T>
     {
         T* ptr;
+		bool ownsData;
     public:
 		typedef std::shared_ptr<TypedParameterPtr<T>> Ptr;
 		static Ptr create(const std::string& name, T* ptr_ = nullptr,
-			const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = "")
+			const ParameterType& type = ParameterType::Control, const std::string& tooltip = "")
 		{
 			return Ptr(new TypedInputParameterPtr(name, ptr_, type, tooltip));
 		}
 		TypedParameterPtr(const std::string& name, T* ptr_ = nullptr, 
-			const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = "") : 
+			const ParameterType& type = ParameterType::Control, const std::string& tooltip = "", bool ownsData_ = false) : 
 			ptr(ptr_),
-			MetaTypedParameter<T>(name, type, tooltip){}
+			MetaTypedParameter<T>(name, type, tooltip), ownsData(ownsData_){}
 
         virtual T* Data()
         {
@@ -195,16 +220,20 @@ namespace Parameters
         virtual void UpdateData(T& data)
         {
             ptr = &data;
+			changed = true;
 			UpdateSignal();
         }
 		virtual void UpdateData(const T& data)
 		{
 			if (ptr)
 				*ptr = data;
+			changed = true;
+			UpdateSignal();
 		}
 		virtual void UpdateData(T* data_)
 		{
 			ptr = data_;
+			changed = true;
 			UpdateSignal();
 		}
     };
@@ -219,8 +248,8 @@ namespace Parameters
 		}
 	public:
 		typedef std::shared_ptr<TypedInputParameter<T>> Ptr;
-		TypedInputParameter(const std::string& name, const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = ""):
-			MetaTypedParameter<T>(name, type, tooltip){}
+		TypedInputParameter(const std::string& name, const std::string& tooltip = "", const boost::function<bool(const Parameter*)>& qualifier_ = boost::function<bool(const Parameter*)>()) :
+			MetaTypedParameter<T>(name, ParameterType::Input, tooltip){ qualifier = qualifier_; }
 		virtual bool SetInput(const std::string& name_)
 		{
 			return false;
@@ -266,6 +295,7 @@ namespace Parameters
 		{
 
 		}
+
 	};
 
 	// Meant to reference a pointer variable in user space, and to update that variable whenever 
@@ -289,7 +319,7 @@ namespace Parameters
 			return Ptr(new TypedInputParameterPtr(userVar_));
 		}
 		TypedInputParameterPtr(const std::string& name, T** userVar_, 
-			const ParameterTypes& type = ParameterTypes::Control, const std::string& tooltip = ""):
+			const ParameterType& type = ParameterType::Control, const std::string& tooltip = ""):
 			MetaTypedParameter<T>(name, type, tooltip), userVar(userVar_){}
 
 		virtual bool SetInput(const std::string& name_)

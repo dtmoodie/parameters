@@ -36,7 +36,7 @@ namespace Parameters
 
 			template<typename T> void Serializer(::cv::FileStorage* fs, Parameters::Parameter* param)
 			{
-				ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
+				/*ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
 				if (typedParam)
 				{
 					const std::string& toolTip = typedParam->GetTooltip();
@@ -46,11 +46,11 @@ namespace Parameters
 					if (toolTip.size())
 						(*fs) << "ToolTip" << toolTip;
 					(*fs) << "}";
-				}
+				}*/
 			}
 			template<typename T> void DeSerializer(::cv::FileNode* fs, Parameters::Parameter* param)
 			{
-				ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
+				/*ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
 				if (typedParam)
 				{
 					::cv::FileNode myNode = (*fs)[param->GetName()];
@@ -59,7 +59,7 @@ namespace Parameters
 						myNode["Data"] >> *typedParam->Data();
 					else
 						::cv::error(::cv::Error::StsAssert, "Datatype " + std::string(param->GetTypeInfo().name()) + " requested, but " + type + " found in file", CV_Func, __FILE__, __LINE__);
-				}
+				}*/
 			}
 			template<typename T> class PersistencePolicy
 			{

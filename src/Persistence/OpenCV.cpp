@@ -30,3 +30,11 @@ Parameters::Parameter* Parameters::Persistence::cv::DeSerialize(::cv::FileNode* 
 	//TODO object factory based on serialized type
 	return nullptr;
 }
+template<> void Parameters::Persistence::cv::Serializer<cv::cuda::GpuMat>(::cv::FileStorage* fs, Parameters::Parameter* param)
+{
+	
+}
+template<> void Parameters::Persistence::cv::DeSerializer<cv::cuda::GpuMat>(::cv::FileNode* fs, Parameters::Parameter* param)
+{
+	
+}
