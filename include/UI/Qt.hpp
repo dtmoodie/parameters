@@ -10,6 +10,18 @@
 #include <LokiTypeInfo.h>
 //#include "Parameters.hpp"
 #include <memory>
+
+#ifdef Parameter_EXPORTS
+#undef Parameter_EXPORTS
+#endif
+#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && defined libParameter_EXPORTS
+#  define Parameter_EXPORTS __declspec(dllexport)
+#elif defined __GNUC__ && __GNUC__ >= 4
+#  define Parameter_EXPORTS __attribute__ ((visibility ("default")))
+#else
+#  define Parameter_EXPORTS
+#endif
+
 namespace Parameters{
 	class Parameter;
 	template<typename T> class ITypedParameter;
@@ -20,7 +32,7 @@ namespace Parameters{
 			class IHandler;
 			class IParameterProxy;
 			
-			class WidgetFactory
+			class Parameter_EXPORTS WidgetFactory
 			{
 			public:
 				typedef std::function<std::shared_ptr<IParameterProxy>(std::shared_ptr<Parameters::Parameter>)> HandlerCreator;
@@ -31,7 +43,7 @@ namespace Parameters{
 				static std::map<Loki::TypeInfo, HandlerCreator> registry;
 			};
 
-			class SignalProxy : public QObject
+			class Parameter_EXPORTS SignalProxy : public QObject
 			{
 				Q_OBJECT
 				IHandler* handler;
@@ -48,7 +60,7 @@ namespace Parameters{
 
 			// IHandler class is the interface for all parmeter handlers.  It handles updating the user interface on parameter changes
 			// as well as updating parameters on user interface changes
-			class IHandler
+			class Parameter_EXPORTS IHandler
 			{
 			protected:
 				SignalProxy* proxy;
@@ -70,7 +82,7 @@ namespace Parameters{
 			// Relays signals from the QObject ui elements and sends them to the IHandler object
 			
 
-			class IParameterProxy
+			class Parameter_EXPORTS IParameterProxy
 			{
 			protected:
 				SignalProxy* signalProxy;

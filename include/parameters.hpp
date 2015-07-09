@@ -1,14 +1,26 @@
 #pragma once
 #include <boost/signals2.hpp>
 #include <boost/filesystem/path.hpp>
+#include <boost/thread/recursive_mutex.hpp>
 #include <mutex>
 #include "LokiTypeInfo.h"
 #include "UI/UI.hpp"
 #include "Persistence/Persistence.hpp"
+#ifdef Parameter_EXPORTS
+#undef Parameter_EXPORTS
+#endif
+#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && defined libParameter_EXPORTS
+#  define Parameter_EXPORTS __declspec(dllexport)
+#elif defined __GNUC__ && __GNUC__ >= 4
+#  define Parameter_EXPORTS __attribute__ ((visibility ("default")))
+#else
+#  define Parameter_EXPORTS
+#endif
 
+#define ENUM(value) value, #value
 namespace Parameters
 {
-    class Parameter
+	class Parameter_EXPORTS Parameter
     {
 	public:
 		struct ReadFile : public boost::filesystem::path{};
@@ -70,7 +82,7 @@ namespace Parameters
 		
 		virtual boost::signals2::connection RegisterNotifier(const boost::function<void(void)>& f);
 		
-		std::recursive_mutex mtx;
+		boost::recursive_mutex mtx;
 		ParameterType type;
 		bool changed;
 		unsigned short subscribers;
@@ -83,17 +95,17 @@ namespace Parameters
 		
     };
 
-	class InputParameter
+	class Parameter_EXPORTS InputParameter
 	{
 	protected:
-		boost::function<bool(const Parameter*)> qualifier;
+		boost::function<bool(Parameter*)> qualifier;
 	public:
 		typedef std::shared_ptr<InputParameter> Ptr;
 		virtual bool SetInput(const std::string& name_) = 0;
 		virtual bool SetInput(const Parameter::Ptr param) = 0;
 		virtual bool AcceptsInput(const Parameter::Ptr param) = 0;
 		virtual bool AcceptsType(const Loki::TypeInfo& type) = 0;
-		virtual void SetQualifier(const boost::function<bool(const Parameter*)>& f)
+		virtual void SetQualifier(const boost::function<bool(Parameter*)>& f)
 		{
 			qualifier = f;
 		}
@@ -248,7 +260,7 @@ namespace Parameters
 		}
 	public:
 		typedef std::shared_ptr<TypedInputParameter<T>> Ptr;
-		TypedInputParameter(const std::string& name, const std::string& tooltip = "", const boost::function<bool(const Parameter*)>& qualifier_ = boost::function<bool(const Parameter*)>()) :
+		TypedInputParameter(const std::string& name, const std::string& tooltip = "", const boost::function<bool(Parameter*)>& qualifier_ = boost::function<bool(Parameter*)>()) :
 			MetaTypedParameter<T>(name, ParameterType::Input, tooltip){ qualifier = qualifier_; }
 		virtual bool SetInput(const std::string& name_)
 		{
