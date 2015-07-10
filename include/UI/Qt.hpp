@@ -72,6 +72,7 @@ namespace Parameters{
 				virtual void OnUiUpdate(int val) {}
 				virtual void OnUiUpdate(bool val) {}
 				virtual void OnUiUpdate(QString val) {}
+
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
 					return std::vector<QWidget*>();
@@ -87,12 +88,14 @@ namespace Parameters{
 			protected:
 				SignalProxy* signalProxy;
 			public:
+				typedef std::shared_ptr<IParameterProxy> Ptr;
 				IParameterProxy()
 				{
 					
 				}
 				
 				virtual QWidget* GetParameterWidget(QWidget* parent) = 0;
+				virtual bool CheckParameter(Parameter* param) = 0;
 			};
 
 			
@@ -197,6 +200,10 @@ namespace Parameters{
 						parameter = typedParam;
 						paramHandler.SetData(parameter->Data());
 					}
+				}
+				virtual bool CheckParameter(Parameter* param)
+				{
+					return param == parameter.get();
 				}
 				QWidget* GetParameterWidget(QWidget* parent)
 				{
