@@ -18,6 +18,7 @@
 #endif
 
 #define ENUM(value) value, #value
+template<typename T> class Parameters::UI::qt::ParameterProxy;
 namespace Parameters
 {
 	class Parameter_EXPORTS Parameter
@@ -87,6 +88,7 @@ namespace Parameters
 		bool changed;
 		unsigned short subscribers;
 	protected:
+		template<typename T> friend class Parameters::UI::qt::ParameterProxy;
 		boost::signals2::signal<void(void)> UpdateSignal;
 	private:
 		std::string name;

@@ -6,27 +6,49 @@ using namespace Parameters::UI::qt;
 SignalProxy::SignalProxy(IHandler* handler_)
 {
 	handler = handler_;
+	lastCallTime.start();
 }
 
 void SignalProxy::on_update()
 {
-	handler->OnUiUpdate(sender());
+	if (lastCallTime.elapsed() > 15)
+	{
+		lastCallTime.start();
+		handler->OnUiUpdate(sender());
+	}
+	
 }
 void SignalProxy::on_update(int)
 {
-	handler->OnUiUpdate(sender());
+	if (lastCallTime.elapsed() > 15)
+	{
+		lastCallTime.start();
+		handler->OnUiUpdate(sender());
+	}
 }
 void SignalProxy::on_update(double)
 {
-	handler->OnUiUpdate(sender());
+	if (lastCallTime.elapsed() > 15)
+	{
+		lastCallTime.start();
+		handler->OnUiUpdate(sender());
+	}
 }
 void SignalProxy::on_update(bool)
 {
-	handler->OnUiUpdate(sender());
+	if (lastCallTime.elapsed() > 15)
+	{
+		lastCallTime.start();
+		handler->OnUiUpdate(sender());
+	}
 }
 void SignalProxy::on_update(QString)
 {
-	handler->OnUiUpdate(sender());
+	if (lastCallTime.elapsed() > 15)
+	{
+		lastCallTime.start();
+		handler->OnUiUpdate(sender());
+	}
 }
 std::map<Loki::TypeInfo, WidgetFactory::HandlerCreator> WidgetFactory::registry = std::map<Loki::TypeInfo, WidgetFactory::HandlerCreator>();
 

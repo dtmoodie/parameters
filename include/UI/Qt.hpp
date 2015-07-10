@@ -6,8 +6,12 @@
 #include "qwidget.h"
 #include "qlayout.h"
 #include "qlabel.h"
+#include <qdatetime.h>
+#include "qpushbutton.h"
+#include <qlineedit.h>
 #include <functional>
 #include <LokiTypeInfo.h>
+#include <boost/function.hpp>
 //#include "Parameters.hpp"
 #include <memory>
 
@@ -47,6 +51,7 @@ namespace Parameters{
 			{
 				Q_OBJECT
 				IHandler* handler;
+				QTime lastCallTime;
 			public:
 				SignalProxy(IHandler* handler_);
 
@@ -64,6 +69,8 @@ namespace Parameters{
 			{
 			protected:
 				SignalProxy* proxy;
+				std::function<void(void)> onUpdate;
+				template<typename T> friend class ParameterProxy;
 			public:
 				IHandler() : write(true), proxy(new SignalProxy(this)){}
 				virtual void OnUiUpdate(){}
@@ -86,7 +93,6 @@ namespace Parameters{
 			class Parameter_EXPORTS IParameterProxy
 			{
 			protected:
-				SignalProxy* signalProxy;
 			public:
 				typedef std::shared_ptr<IParameterProxy> Ptr;
 				IParameterProxy()
@@ -103,7 +109,7 @@ namespace Parameters{
 			{
 				T* currentData;
 			public:
-				Handler() {}
+				Handler():currentData(nullptr) {}
 				virtual void UpdateUi(const T& data)
 				{}
 				virtual void OnUiUpdate(QObject* sender)
@@ -118,46 +124,170 @@ namespace Parameters{
 				}
 			};
 
+			template<> class Handler<std::string, void>:public IHandler
+			{
+				std::string* strData;
+				QLineEdit* lineEdit;
+			public:
+				Handler() : strData(nullptr), lineEdit(nullptr) {}
+				virtual void UpdateUi(const std::string& data)
+				{
+					lineEdit->setText(QString::fromStdString(data));
+				}
+				virtual void OnUiUpdate(QObject* sender)
+				{
+					if (sender == lineEdit && strData)
+						*strData = lineEdit->text().toStdString();
+				}
+				virtual void SetData(std::string* data_)
+				{
+					strData = data_;
+					if (lineEdit)
+						lineEdit->setText(QString::fromStdString(*strData));
+				}
+				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
+				{
+					std::vector<QWidget*> output;
+					if (lineEdit == nullptr)
+						lineEdit = new QLineEdit(parent);
+					lineEdit->connect(lineEdit, SIGNAL(editingFinished()), proxy, SLOT(on_update()));
+					output.push_back(lineEdit);
+					return output;
+				}
+			};
+			template<> class Handler<boost::function<void(void)>, void>: public IHandler
+			{
+				boost::function<void(void)>* funcData;
+				QPushButton* btn;
+			public:
+				Handler() : funcData(nullptr), btn(nullptr) {}
+				virtual void UpdateUi(const boost::function<void(void)>& data)
+				{
+				
+				}
+				virtual void OnUiUpdate(QObject* sender)
+				{
+					if (sender == btn)
+					{
+						// TODO processing thread callback
+						if (funcData)
+							(*funcData)();
+					}
+				}
+				virtual void SetData(boost::function<void(void)>* data_)
+				{
+					funcData = data_;
+				}
+				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
+				{
+					std::vector<QWidget*> output;
+					if (btn == nullptr)
+					{
+						btn = new QPushButton(parent);					
+					}
+					
+					btn->connect(btn, SIGNAL(clicked()), proxy, SLOT(on_update()));
+					output.push_back(btn);
+					return output;
+				}
+			};
 
 			template<typename T>
 			class Handler<T, typename std::enable_if<std::is_floating_point<T>::value, void>::type>: public IHandler
 			{
-				T* data;
+				T* floatData;
 				QDoubleSpinBox* box;
 			public:
-				Handler(): box(nullptr), data(nullptr) {}
+				Handler(): box(nullptr), floatData(nullptr) {}
 				virtual void UpdateUi(const T& data)
 				{
 					box->setValue(data);
 				}
 				virtual void OnUiUpdate(QObject* sender)
 				{
-					if (sender == box && data)
-						*data = box->value();
+					if (sender == box && floatData)
+						*floatData = box->value();
+					if (onUpdate)
+						onUpdate();
 				}
 				virtual void SetData(T* data_)
 				{
-					data = data_;
+					floatData = data_;
 					if (box)
-						box->setValue(*data);
+						box->setValue(*floatData);
 				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
 					std::vector<QWidget*> output;
 					if (box == nullptr)
+					{
 						box = new QDoubleSpinBox(parent);
+						box->setMinimum(std::numeric_limits<T>::min());
+						box->setMaximum(std::numeric_limits<T>::max());
+					}
+						
 					box->connect(box, SIGNAL(valueChanged(double)), proxy, SLOT(on_update(double)));
 					output.push_back(box);
 					return output;
 				}
 			};
+			template<typename T>
+			class Handler<T, typename std::enable_if<std::is_integral<T>::value, void>::type> : public IHandler
+			{
+				T* intData;
+			QSpinBox* box;
+			public:
+				Handler() : box(nullptr), intData(nullptr) {}
+				virtual void UpdateUi(const T& data)
+				{
+					box->setValue(data);
+				}
+				virtual void OnUiUpdate(QObject* sender)
+				{
+					if (sender == box && intData)
+						*intData = box->value();
+					if (onUpdate)
+						onUpdate();
+				}
+				virtual void SetData(T* data_)
+				{
+					intData = data_;
+					if (box)
+						box->setValue(*intData);
+				}
+				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
+				{
+					std::vector<QWidget*> output;
+					if (box == nullptr)
+					{
+						box = new QSpinBox(parent);
+						if (std::numeric_limits<T>::max() > std::numeric_limits<int>::max())
+							box->setMinimum(std::numeric_limits<int>::max());
+						else
+							box->setMinimum(std::numeric_limits<T>::max());
+
+							box->setMinimum(std::numeric_limits<T>::min());
+
+						if (intData)
+							box->setValue(*intData);
+						else
+							box->setValue(0);
+					}
+						
+					box->connect(box, SIGNAL(valueChanged(int)), proxy, SLOT(on_update(int)));
+					box->connect(box, SIGNAL(editingFinished()), proxy, SLOT(on_update()));
+					output.push_back(box);
+					return output;
+				}
+			};
+
 
 			template<typename T> class Handler<std::vector<T>>: public Handler<T>
 			{
-				std::vector<T>* data;
+				std::vector<T>* vectorData;
 				QSpinBox* index;
 			public:
-				Handler() : index(new QSpinBox()), data(nullptr) {}
+				Handler() : index(new QSpinBox()), vectorData(nullptr) {}
 				virtual void UpdateUi(const std::vector<T>& data)
 				{
 					index->setMaximum(data.size() - 1);
@@ -166,14 +296,14 @@ namespace Parameters{
 				virtual void OnUiUpdate(QObject* sender)
 				{
 					Handler<T>::OnUiUpdate(sender);
-					if (sender == index && data)
-						Handler<T>::SetData(&(*data)[index->value()]);
+					if (sender == index && vectorData)
+						Handler<T>::SetData(&(*vectorData)[index->value()]);
 				}
 				virtual void SetData(std::vector<T>* data_)
 				{
-					data = data_;
-					if (index && index->value() < data->size())
-						Handler<T>::SetData(&(*data)[index->value()]);
+					vectorData = data_;
+					if (index && index->value() < vectorData->size())
+						Handler<T>::SetData(&(*vectorData)[index->value()]);
 					
 				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
@@ -191,6 +321,18 @@ namespace Parameters{
 			{
 				Handler<T> paramHandler;
 				std::shared_ptr<Parameters::ITypedParameter<T>> parameter;
+				void onUiUpdate()
+				{
+					//TODO Notify parameter of update on the processing thread.
+					parameter->changed = true;
+					parameter->UpdateSignal();
+				}
+				void onParamUpdate()
+				{
+					auto dataPtr = parameter->Data();
+					if(dataPtr)
+						paramHandler.UpdateUi(*dataPtr);
+				}
 			public:
 				ParameterProxy(std::shared_ptr<Parameters::Parameter> param)
 				{
@@ -199,6 +341,8 @@ namespace Parameters{
 					{
 						parameter = typedParam;
 						paramHandler.SetData(parameter->Data());
+						paramHandler.onUpdate = std::bind(&ParameterProxy<T>::onUiUpdate, this);
+						parameter->RegisterNotifier(std::bind(&ParameterProxy<T>::onParamUpdate, this));
 					}
 				}
 				virtual bool CheckParameter(Parameter* param)
@@ -213,9 +357,9 @@ namespace Parameters{
 					layout->addWidget(new QLabel(QString::fromStdString(parameter->GetName()), output), 0,0);
 					int count = 1;
 					output->setLayout(layout);
-					for (int i = widgets.size() - 1; i >= 0; --i, ++count)
+					for (auto itr = widgets.rbegin(); itr != widgets.rend(); ++itr, ++count)
 					{
-						layout->addWidget(widgets[i], 0, count);
+						layout->addWidget(*itr, 0, count);
 					}
 					layout->addWidget(new QLabel(QString(parameter->GetTypeInfo().name()), output), 0, count);
 					paramHandler.UpdateUi(*parameter->Data());
