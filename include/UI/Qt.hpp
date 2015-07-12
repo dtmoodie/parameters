@@ -1,30 +1,26 @@
 #pragma once
+#include "../Parameter_def.hpp"
 #include <QtWidgets/QWidget>
 #include <type_traits>
 
 #include <QtWidgets/QDoubleSpinBox>
-#include "qwidget.h"
-#include "qlayout.h"
-#include "qlabel.h"
-#include <qdatetime.h>
-#include "qpushbutton.h"
-#include <qlineedit.h>
+#include <QtWidgets/qwidget.h>
+#include "QtWidgets/qlayout.h"
+#include "QtWidgets/qlabel.h"
+#include "QtWidgets/qcombobox.h"
+#include "QtCore/qdatetime.h"
+#include "QtWidgets/qpushbutton.h"
+#include <QtWidgets/qlineedit.h>
 #include <functional>
 #include <LokiTypeInfo.h>
 #include <boost/function.hpp>
-//#include "Parameters.hpp"
+#include "../Types.hpp"
+//#include "QtSignalProxy.hpp"
+//#include "QtHandlerInterface.hpp"
+//#include "QtHandler_impl.hpp"
 #include <memory>
 
-#ifdef Parameter_EXPORTS
-#undef Parameter_EXPORTS
-#endif
-#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && defined libParameter_EXPORTS
-#  define Parameter_EXPORTS __declspec(dllexport)
-#elif defined __GNUC__ && __GNUC__ >= 4
-#  define Parameter_EXPORTS __attribute__ ((visibility ("default")))
-#else
-#  define Parameter_EXPORTS
-#endif
+
 
 namespace Parameters{
 	class Parameter;
@@ -32,7 +28,6 @@ namespace Parameters{
 
 	namespace UI{
 		namespace qt{
-			class SignalProxy;
 			class IHandler;
 			class IParameterProxy;
 			
@@ -45,12 +40,26 @@ namespace Parameters{
 
 			private:
 				static std::map<Loki::TypeInfo, HandlerCreator> registry;
-			};
+			};			
 
+			class Parameter_EXPORTS IParameterProxy
+			{
+			protected:
+			public:
+				typedef std::shared_ptr<IParameterProxy> Ptr;
+				IParameterProxy()
+				{
+					
+				}
+				
+				virtual QWidget* GetParameterWidget(QWidget* parent) = 0;
+				virtual bool CheckParameter(Parameter* param) = 0;
+			};
+			
 			class Parameter_EXPORTS SignalProxy : public QObject
 			{
 				Q_OBJECT
-				IHandler* handler;
+					IHandler* handler;
 				QTime lastCallTime;
 			public:
 				SignalProxy(IHandler* handler_);
@@ -62,9 +71,6 @@ namespace Parameters{
 				void on_update(bool);
 				void on_update(QString);
 			};
-
-			// IHandler class is the interface for all parmeter handlers.  It handles updating the user interface on parameter changes
-			// as well as updating parameters on user interface changes
 			class Parameter_EXPORTS IHandler
 			{
 			protected:
@@ -86,30 +92,11 @@ namespace Parameters{
 				}
 				bool write;
 			};
-
-			// Relays signals from the QObject ui elements and sends them to the IHandler object
-			
-
-			class Parameter_EXPORTS IParameterProxy
-			{
-			protected:
-			public:
-				typedef std::shared_ptr<IParameterProxy> Ptr;
-				IParameterProxy()
-				{
-					
-				}
-				
-				virtual QWidget* GetParameterWidget(QWidget* parent) = 0;
-				virtual bool CheckParameter(Parameter* param) = 0;
-			};
-
-			
 			template<typename T, typename Enable = void> class Handler : public IHandler
 			{
 				T* currentData;
 			public:
-				Handler():currentData(nullptr) {}
+				Handler() :currentData(nullptr) {}
 				virtual void UpdateUi(const T& data)
 				{}
 				virtual void OnUiUpdate(QObject* sender)
@@ -123,8 +110,53 @@ namespace Parameters{
 					return std::vector<QWidget*>();
 				}
 			};
-
-			template<> class Handler<std::string, void>:public IHandler
+			
+			// **********************************************************************************
+			// *************************** Enums ************************************************
+			// **********************************************************************************
+			template<> class Handler<Parameters::EnumParameter, void> : public IHandler
+			{
+				QComboBox* enumCombo;
+				Parameters::EnumParameter* enumData;
+			public:
+				Handler() : enumCombo(nullptr){}
+				virtual void UpdateUi(const Parameters::EnumParameter& data)
+				{
+					enumCombo->clear();
+					for (int i = 0; i < data.enumerations.size(); ++i)
+					{
+						enumCombo->addItem(QString::fromStdString(data.enumerations[i]));
+					}
+				}
+				virtual void OnUiUpdate(QObject* sender)
+				{
+					if (sender == enumCombo && enumData)
+					{
+						auto idx = enumCombo->currentIndex();
+						enumData->currentSelection = enumData->values[idx];
+						if (onUpdate)
+							onUpdate();
+					}
+				}
+				virtual void SetData(Parameters::EnumParameter* data_)
+				{
+					enumData = data_;
+					if (enumCombo)
+						UpdateUi(*enumData);
+				}
+				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
+				{
+					std::vector<QWidget*> output;
+					if (enumCombo == nullptr)
+						enumCombo = new QComboBox(parent);
+					enumCombo->connect(enumCombo, SIGNAL(currentIndexChanged(int)), proxy, SLOT(on_update(int)));
+					return output;
+				}
+			};
+			// **********************************************************************************
+			// *************************** std::string ******************************************
+			// **********************************************************************************
+			template<> class Handler<std::string, void> :public IHandler
 			{
 				std::string* strData;
 				QLineEdit* lineEdit;
@@ -137,7 +169,12 @@ namespace Parameters{
 				virtual void OnUiUpdate(QObject* sender)
 				{
 					if (sender == lineEdit && strData)
+					{
 						*strData = lineEdit->text().toStdString();
+						if (onUpdate)
+							onUpdate();
+					}
+
 				}
 				virtual void SetData(std::string* data_)
 				{
@@ -150,28 +187,35 @@ namespace Parameters{
 					std::vector<QWidget*> output;
 					if (lineEdit == nullptr)
 						lineEdit = new QLineEdit(parent);
-					lineEdit->connect(lineEdit, SIGNAL(editingFinished()), proxy, SLOT(on_update()));
+					//lineEdit->connect(lineEdit, SIGNAL(editingFinished()), proxy, SLOT(on_update()));
+					lineEdit->connect(lineEdit, SIGNAL(returnPressed()), proxy, SLOT(on_update()));
 					output.push_back(lineEdit);
 					return output;
 				}
 			};
-			template<> class Handler<boost::function<void(void)>, void>: public IHandler
+			// **********************************************************************************
+			// *************************** boost::function<void(void)> **************************
+			// **********************************************************************************
+			template<> class Handler<boost::function<void(void)>, void> : public IHandler
 			{
 				boost::function<void(void)>* funcData;
 				QPushButton* btn;
 			public:
 				Handler() : funcData(nullptr), btn(nullptr) {}
 				virtual void UpdateUi(const boost::function<void(void)>& data)
-				{
-				
-				}
+				{}
 				virtual void OnUiUpdate(QObject* sender)
 				{
 					if (sender == btn)
 					{
 						// TODO processing thread callback
 						if (funcData)
+						{
 							(*funcData)();
+							if (onUpdate)
+								onUpdate();
+						}
+
 					}
 				}
 				virtual void SetData(boost::function<void(void)>* data_)
@@ -183,22 +227,24 @@ namespace Parameters{
 					std::vector<QWidget*> output;
 					if (btn == nullptr)
 					{
-						btn = new QPushButton(parent);					
+						btn = new QPushButton(parent);
 					}
-					
+
 					btn->connect(btn, SIGNAL(clicked()), proxy, SLOT(on_update()));
 					output.push_back(btn);
 					return output;
 				}
 			};
-
+			// **********************************************************************************
+			// *************************** floating point data **********************************
+			// **********************************************************************************
 			template<typename T>
-			class Handler<T, typename std::enable_if<std::is_floating_point<T>::value, void>::type>: public IHandler
+			class Handler<T, typename std::enable_if<std::is_floating_point<T>::value, void>::type> : public IHandler
 			{
 				T* floatData;
 				QDoubleSpinBox* box;
 			public:
-				Handler(): box(nullptr), floatData(nullptr) {}
+				Handler() : box(nullptr), floatData(nullptr) {}
 				virtual void UpdateUi(const T& data)
 				{
 					box->setValue(data);
@@ -222,20 +268,25 @@ namespace Parameters{
 					if (box == nullptr)
 					{
 						box = new QDoubleSpinBox(parent);
+						box->setMaximumWidth(100);
 						box->setMinimum(std::numeric_limits<T>::min());
 						box->setMaximum(std::numeric_limits<T>::max());
 					}
-						
+
 					box->connect(box, SIGNAL(valueChanged(double)), proxy, SLOT(on_update(double)));
 					output.push_back(box);
 					return output;
 				}
 			};
+
+			// **********************************************************************************
+			// *************************** integers *********************************************
+			// **********************************************************************************
 			template<typename T>
 			class Handler<T, typename std::enable_if<std::is_integral<T>::value, void>::type> : public IHandler
 			{
 				T* intData;
-			QSpinBox* box;
+				QSpinBox* box;
 			public:
 				Handler() : box(nullptr), intData(nullptr) {}
 				virtual void UpdateUi(const T& data)
@@ -261,19 +312,20 @@ namespace Parameters{
 					if (box == nullptr)
 					{
 						box = new QSpinBox(parent);
+						box->setMaximumWidth(100);
 						if (std::numeric_limits<T>::max() > std::numeric_limits<int>::max())
 							box->setMinimum(std::numeric_limits<int>::max());
 						else
 							box->setMinimum(std::numeric_limits<T>::max());
 
-							box->setMinimum(std::numeric_limits<T>::min());
+						box->setMinimum(std::numeric_limits<T>::min());
 
 						if (intData)
 							box->setValue(*intData);
 						else
 							box->setValue(0);
 					}
-						
+
 					box->connect(box, SIGNAL(valueChanged(int)), proxy, SLOT(on_update(int)));
 					box->connect(box, SIGNAL(editingFinished()), proxy, SLOT(on_update()));
 					output.push_back(box);
@@ -281,8 +333,10 @@ namespace Parameters{
 				}
 			};
 
-
-			template<typename T> class Handler<std::vector<T>>: public Handler<T>
+			// **********************************************************************************
+			// *************************** std::vector ******************************************
+			// **********************************************************************************
+			template<typename T> class Handler<std::vector<T>> : public Handler < T >
 			{
 				std::vector<T>* vectorData;
 				QSpinBox* index;
@@ -304,7 +358,7 @@ namespace Parameters{
 					vectorData = data_;
 					if (index && index->value() < vectorData->size())
 						Handler<T>::SetData(&(*vectorData)[index->value()]);
-					
+
 				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
@@ -354,15 +408,24 @@ namespace Parameters{
 					QWidget* output = new QWidget(parent);
 					auto widgets = paramHandler.GetUiWidgets(output);
 					QGridLayout* layout = new QGridLayout(output);
-					layout->addWidget(new QLabel(QString::fromStdString(parameter->GetName()), output), 0,0);
-					int count = 1;
-					output->setLayout(layout);
-					for (auto itr = widgets.rbegin(); itr != widgets.rend(); ++itr, ++count)
+					if (parameter->GetTypeInfo() == Loki::TypeInfo(typeid(boost::function<void(void)>)))
 					{
-						layout->addWidget(*itr, 0, count);
+						dynamic_cast<QPushButton*>(widgets[0])->setText(QString::fromStdString(parameter->GetName()));
+						layout->addWidget(widgets[0], 0, 0);
 					}
-					layout->addWidget(new QLabel(QString(parameter->GetTypeInfo().name()), output), 0, count);
-					paramHandler.UpdateUi(*parameter->Data());
+					else
+					{
+						QLabel* nameLbl = new QLabel(QString::fromStdString(parameter->GetName()), output);
+						nameLbl->setToolTip(QString(parameter->GetTypeInfo().name()));
+						layout->addWidget(nameLbl, 0, 0);
+						int count = 1;
+						output->setLayout(layout);
+						for (auto itr = widgets.rbegin(); itr != widgets.rend(); ++itr, ++count)
+						{
+							layout->addWidget(*itr, 0, count);
+						}
+						paramHandler.UpdateUi(*parameter->Data());
+					}
 					return output;
 				}
 			};

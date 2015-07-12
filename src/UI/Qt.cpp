@@ -61,6 +61,11 @@ std::shared_ptr<IParameterProxy> WidgetFactory::Createhandler(std::shared_ptr<Pa
 {
 	auto itr = registry.find(param->GetTypeInfo());
 	if (itr == registry.end())
+	{
+		std::cout << "No Widget Factory registered for type " << param->GetTypeInfo().name() << " unable to make widget for parameter: " << param->GetTreeName() << std::endl;
 		return std::shared_ptr<IParameterProxy>();
+	}
+		
 	return itr->second(param);
 }
+
