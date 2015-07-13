@@ -12,13 +12,14 @@
 #include "QtWidgets/qpushbutton.h"
 #include <QtWidgets/qlineedit.h>
 #include <QtWidgets/qfiledialog.h>
+#include "QtWidgets/qtablewidget.h"
 #include <functional>
 #include <LokiTypeInfo.h>
 #include <boost/function.hpp>
 #include "../Types.hpp"
-//#include "QtSignalProxy.hpp"
-//#include "QtHandlerInterface.hpp"
-//#include "QtHandler_impl.hpp"
+#ifdef OPENCV_FOUND || def(CV_EXPORTS) || def(CVAPI_EXPORTS)
+#include <opencv2/core/types.hpp>
+#endif
 #include <memory>
 
 
@@ -71,27 +72,33 @@ namespace Parameters{
 				void on_update(double);
 				void on_update(bool);
 				void on_update(QString);
+				void on_update(int row, int col);
 			};
 			class Parameter_EXPORTS IHandler
 			{
+				
 			protected:
 				SignalProxy* proxy;
 				std::function<void(void)> onUpdate;
-				template<typename T> friend class ParameterProxy;
 			public:
 				IHandler() : write(true), proxy(new SignalProxy(this)){}
 				virtual void OnUiUpdate(){}
-				virtual void OnUiUpdate(QObject* sender) = 0;
-				virtual void OnUiUpdate(double val) {}
-				virtual void OnUiUpdate(int val) {}
-				virtual void OnUiUpdate(bool val) {}
-				virtual void OnUiUpdate(QString val) {}
-
+				virtual void OnUiUpdate(QObject* sender) {};
+				virtual void OnUiUpdate(QObject* sender, double val) {}
+				virtual void OnUiUpdate(QObject* sender, int val) {}
+				virtual void OnUiUpdate(QObject* sender, bool val) {}
+				virtual void OnUiUpdate(QObject* sender, QString val) {}
+				virtual void OnUiUpdate(QObject* sender, int row, int col) {}
+				std::function<void(void)>& GetUpdateSignal()
+				{
+					return onUpdate;
+				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
 					return std::vector<QWidget*>();
 				}
 				bool write;
+
 			};
 			template<typename T, typename Enable = void> class Handler : public IHandler
 			{
@@ -169,10 +176,68 @@ namespace Parameters{
 				}
 			};
 
-			
+#ifdef OPENCV_FOUND || def(CV_EXPORTS) || def(CVAPI_EXPORTS)
+			// **********************************************************************************
+			// *************************** cv::Matx ************************************************
+			// **********************************************************************************
+			template<typename T, int ROW, int COL> class Handler<typename ::cv::Matx<T, ROW, COL>, void> : public IHandler
+			{
+				QTableWidget* table;
+				std::vector<typename QTableWidgetItem*> items;
+				::cv::Matx<T, ROW, COL>* matData;
+			public:
+				Handler() : table(nullptr), matData(nullptr), IHandler()
+				{
+					table = new QTable();
+					items.reserve(ROW*COL);
+					for (int i = 0; i < ROW; ++i)
+					{
+						for (int j = 0; j < COL; ++j)
+						{
+							QTableWidgetItem* item = new QTableWigetItem(table);
+							items.push_back(item);
+							table->setItem(i, j, item);
+						}
+					}
+					proxy->connect(table, SIGNAL(cellChanged(int, int)), proxy, SLOT(on_update(int, int)));
+				}
 
+				virtual void UpdateUi(const ::cv::Matx<T, ROW, COL>& data)
+				{
+					for (int i = 0; i < ROW; ++i)
+					{
+						for (int j = 0; j < COL; ++j)
+						{
+							items[i*COL + j]->setData(Qt::EditRole, data(i, j));
+						}
+					}
+				}
+				virtual void OnUiUpdate(QObject* sender, int row, int col)
+				{
+					if (sender == table)
+					{
+						if (matData)
+						{
+							if (typeid(T) == typeid(float))
+								(*matData)(row, col) = (T)items[row* COL + col]->data(Qt::EditRole).toFloat();
+							if(typeid(T) == typeid(double))
+								(*matData)(row, col) = (T)items[row* COL + col]->data(Qt::EditRole).toDouble();
+							if(typeid(T) == typeid(int))
+								(*matData)(row, col) = (T)items[row* COL + col]->data(Qt::EditRole).toInt();
+							if(typeid(T) == typeid(unsigned int))
+								(*matData)(row, col) = (T)items[row* COL + col]->data(Qt::EditRole).toUInt();
+						}
+					}
+				}
+				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
+				{
+					std::vector<QWidget*> output;
+					output.push_back(table);
+					return table;
+				}
+			};
 
-
+#endif
 			
 			// **********************************************************************************
 			// *************************** Enums ************************************************
@@ -398,6 +463,74 @@ namespace Parameters{
 			};
 
 			// **********************************************************************************
+			// *************************** std::pair ******************************************
+			// **********************************************************************************
+
+			template<typename T1> class Handler<std::pair<T1, T1>> : public Handler<T1>
+			{
+				std::pair<T1,T1>* pairData;
+			public:
+				Handler() : pairData(nullptr) {}
+
+				virtual void UpdateUi(const std::pair<T1, T1>& data)
+				{
+
+				}
+				virtual void OnUiUpdate(QObject* sender)
+				{
+					Handler<T1>::OnUiUpdate(sender);
+					Handler<T1>::OnUiUpdate(sender);
+				}
+				virtual void SetData(std::pair<T1, T1>* data_)
+				{
+					pairData = data_;
+					Handler<T1>::SetData(&data_->first);
+					Handler<T1>::SetData(&data_->second);
+				}
+				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
+				{
+					auto output = Handler<T1>::GetUiWidgets(parent);
+					auto out2 = Handler<T1>::GetUiWidgets(parent);
+					output.insert(output.end(), out2.begin(), out2.end());
+					return output;
+				}
+			};
+
+
+
+			template<typename T1, typename T2> class Handler<std::pair<T1, T2>>: public Handler<T1>, public Handler<T2>
+			{
+				std::pair<T1,T2>* pairData;
+			public:
+				Handler() : pairData(nullptr) {}
+
+				virtual void UpdateUi(const std::pair<T1, T2>& data)
+				{
+
+				}
+				virtual void OnUiUpdate(QObject* sender)
+				{
+					Handler<T1>::OnUiUpdate(sender);
+					Handler<T2>::OnUiUpdate(sender);
+				}
+				virtual void SetData(std::pair<T1, T2>* data_)
+				{
+					pairData = data_;
+					Handler<T1>::SetData(&data_->first);
+					Handler<T2>::SetData(&data_->second);
+				}
+				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
+				{
+					auto output = Handler<T1>::GetUiWidgets(parent);
+					auto out2 = Handler<T2>::GetUiWidgets(parent);
+					output.insert(output.end(), out2.begin(), out2.end());
+					return output;
+				}
+			};
+
+
+
+			// **********************************************************************************
 			// *************************** std::vector ******************************************
 			// **********************************************************************************
 			template<typename T> class Handler<std::vector<T>> : public Handler < T >
@@ -429,7 +562,7 @@ namespace Parameters{
 					auto output = Handler<T>::GetUiWidgets(parent);
 					index->setParent(parent);
 					index->setMinimum(0);
-					proxy->connect(index, SIGNAL(valueChanged(int)), proxy, SLOT(on_update(int)));
+					IHandler::proxy->connect(index, SIGNAL(valueChanged(int)), IHandler::proxy, SLOT(on_update(int)));
 					output.push_back(index);
 					return output;
 				}
@@ -459,7 +592,7 @@ namespace Parameters{
 					{
 						parameter = typedParam;
 						paramHandler.SetData(parameter->Data());
-						paramHandler.onUpdate = std::bind(&ParameterProxy<T>::onUiUpdate, this);
+						paramHandler.IHandler::GetUpdateSignal() = std::bind(&ParameterProxy<T>::onUiUpdate, this);
 						parameter->RegisterNotifier(std::bind(&ParameterProxy<T>::onParamUpdate, this));
 					}
 				}

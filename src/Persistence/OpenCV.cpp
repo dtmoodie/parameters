@@ -1,4 +1,3 @@
-#include "Persistence/opencv.hpp"
 #include "Parameters.hpp"
 #include <opencv2/core/base.hpp>
 
@@ -30,11 +29,35 @@ Parameters::Parameter* Parameters::Persistence::cv::DeSerialize(::cv::FileNode* 
 	//TODO object factory based on serialized type
 	return nullptr;
 }
-template<> void Parameters::Persistence::cv::Serializer<cv::cuda::GpuMat>(::cv::FileStorage* fs, Parameters::Parameter* param)
+void Serializer<char, void>::Serialize(::cv::FileStorage* fs, Parameters::Parameter* param)
 {
-	
+	Parameters::ITypedParameter<char>* typedParam = dynamic_cast<Parameters::ITypedParameter<char>*>(param);
+	if (typedParam)
+	{
+		const std::string& toolTip = typedParam->GetTooltip();
+		(*fs) << typedParam->GetName().c_str() << "{";
+		(*fs) << "Data" << (signed char)*typedParam->Data();
+		(*fs) << "Type" << typedParam->GetTypeInfo().name();
+		if (toolTip.size())
+			(*fs) << "ToolTip" << toolTip;
+		(*fs) << "}";
+	}
 }
-template<> void Parameters::Persistence::cv::DeSerializer<cv::cuda::GpuMat>(::cv::FileNode* fs, Parameters::Parameter* param)
+
+void Serializer<char, void>::DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param)
 {
-	
+	Parameters::ITypedParameter<char>* typedParam = dynamic_cast<Parameters::ITypedParameter<char>*>(param);
+	if (typedParam)
+	{
+		::cv::FileNode myNode = (*fs)[param->GetName()];
+		std::string type = (std::string)myNode["Type"];
+		signed char data;
+		if (type == param->GetTypeInfo().name())
+		{
+			myNode["Data"] >> data;
+			*typedParam->Data() = (char)data;
+		}
+		else
+			::cv::error(::cv::Error::StsAssert, "Datatype " + std::string(param->GetTypeInfo().name()) + " requested, but " + type + " found in file", CV_Func, __FILE__, __LINE__);
+	}
 }

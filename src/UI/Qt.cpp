@@ -18,36 +18,44 @@ void SignalProxy::on_update()
 	}
 	
 }
-void SignalProxy::on_update(int)
+void SignalProxy::on_update(int val)
 {
 	if (lastCallTime.elapsed() > 15)
 	{
 		lastCallTime.start();
-		handler->OnUiUpdate(sender());
+		handler->OnUiUpdate(sender(), val);
 	}
 }
-void SignalProxy::on_update(double)
+void SignalProxy::on_update(double val)
 {
 	if (lastCallTime.elapsed() > 15)
 	{
 		lastCallTime.start();
-		handler->OnUiUpdate(sender());
+		handler->OnUiUpdate(sender(), val);
 	}
 }
-void SignalProxy::on_update(bool)
+void SignalProxy::on_update(bool val)
 {
 	if (lastCallTime.elapsed() > 15)
 	{
 		lastCallTime.start();
-		handler->OnUiUpdate(sender());
+		handler->OnUiUpdate(sender(), val);
 	}
 }
-void SignalProxy::on_update(QString)
+void SignalProxy::on_update(QString val)
 {
 	if (lastCallTime.elapsed() > 15)
 	{
 		lastCallTime.start();
-		handler->OnUiUpdate(sender());
+		handler->OnUiUpdate(sender(), val);
+	}
+}
+void SignalProxy::on_update(int row, int col)
+{
+	if (lastCallTime.elapsed() > 15)
+	{
+		lastCallTime.start();
+		handler->OnUiUpdate(sender(), row, col);
 	}
 }
 std::map<Loki::TypeInfo, WidgetFactory::HandlerCreator> WidgetFactory::registry = std::map<Loki::TypeInfo, WidgetFactory::HandlerCreator>();

@@ -2,23 +2,21 @@
 
 
 // Check if being built with OpenCV
-
 #include <map>
 #include <functional>
+
 #include <opencv2/core/persistence.hpp>
-#include <LokiTypeInfo.h>
+#include <opencv2/core/types.hpp>
+#include <opencv2/core/mat.hpp>
+
 #include <boost/lexical_cast.hpp>
-//#include <Parameters.hpp>
-#ifdef Parameter_EXPORTS
-#undef Parameter_EXPORTS
-#endif
-#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && defined libParameter_EXPORTS
-#  define Parameter_EXPORTS __declspec(dllexport)
-#elif defined __GNUC__ && __GNUC__ >= 4
-#  define Parameter_EXPORTS __attribute__ ((visibility ("default")))
-#else
-#  define Parameter_EXPORTS
-#endif
+#include <boost/function.hpp>
+
+#include <LokiTypeInfo.h>
+#include <Parameter_def.hpp>
+#include <Types.hpp>
+
+class ::cv::cuda::GpuMat;
 namespace Parameters
 {
 	class Parameter;
@@ -39,44 +37,154 @@ namespace Parameters
 				// Mapping from Loki::typeinfo to file writing functors
 				static	std::map<Loki::TypeInfo, std::pair<SerializerFunction, DeSerializerFunction >> registry;
 			};
-			void Serialize(::cv::FileStorage* fs, Parameters::Parameter* param);
-			void DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param);
-			Parameters::Parameter* DeSerialize(::cv::FileNode* fs);
+			Parameter_EXPORTS void Serialize(::cv::FileStorage* fs, Parameters::Parameter* param);
+			Parameter_EXPORTS void DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param);
+			Parameter_EXPORTS Parameters::Parameter* DeSerialize(::cv::FileNode* fs);
 
-			template<typename T> void Serializer(::cv::FileStorage* fs, Parameters::Parameter* param)
+			template<typename T, typename Enable = void> struct Serializer
 			{
-				/*ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
-				if (typedParam)
+				static void Serialize(::cv::FileStorage* fs, Parameters::Parameter* param)
 				{
-					const std::string& toolTip = typedParam->GetTooltip();
-					(*fs) << typedParam->GetName().c_str() << "{";
-					(*fs) << "Data" << *typedParam->Data();
-					(*fs) << "Type" << typedParam->GetTypeInfo().name();
-					if (toolTip.size())
-						(*fs) << "ToolTip" << toolTip;
-					(*fs) << "}";
-				}*/
-			}
-			template<typename T> void DeSerializer(::cv::FileNode* fs, Parameters::Parameter* param)
+					/*ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
+					if (typedParam)
+					{
+						const std::string& toolTip = typedParam->GetTooltip();
+						(*fs) << typedParam->GetName().c_str() << "{";
+						(*fs) << "Data" << *typedParam->Data();
+						(*fs) << "Type" << typedParam->GetTypeInfo().name();
+						if (toolTip.size())
+							(*fs) << "ToolTip" << toolTip;
+						(*fs) << "}";
+					}*/
+				}
+				static void DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param)
+				{
+
+				}
+			};
+			template<> struct Parameter_EXPORTS Serializer<char, void>
 			{
-				/*ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
-				if (typedParam)
+				static void Serialize(::cv::FileStorage* fs, Parameters::Parameter* param);
+				static void DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param);
+			};
+			template<typename T> struct Serializer<T,typename  std::enable_if<std::is_unsigned<T>::value, void>::type>
+			{
+				static void Serialize(::cv::FileStorage* fs, Parameters::Parameter* param)
 				{
-					::cv::FileNode myNode = (*fs)[param->GetName()];
-					std::string type = (std::string)myNode["Type"];
-					if (type == param->GetTypeInfo().name())
-						myNode["Data"] >> *typedParam->Data();
-					else
-						::cv::error(::cv::Error::StsAssert, "Datatype " + std::string(param->GetTypeInfo().name()) + " requested, but " + type + " found in file", CV_Func, __FILE__, __LINE__);
-				}*/
-			}
+					Parameters::ITypedParameter<T>* typedParam = dynamic_cast<Parameters::ITypedParameter<T>*>(param);
+					if (typedParam)
+					{
+						const std::string& toolTip = typedParam->GetTooltip();
+						(*fs) << typedParam->GetName().c_str() << "{";
+						(*fs) << "Data" << (int)*typedParam->Data();
+						(*fs) << "Type" << typedParam->GetTypeInfo().name();
+						if (toolTip.size())
+							(*fs) << "ToolTip" << toolTip;
+						(*fs) << "}";
+					}
+				}
+				static void DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param)
+				{
+					ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
+					if (typedParam)
+					{
+						::cv::FileNode myNode = (*fs)[param->GetName()];
+						std::string type = (std::string)myNode["Type"];
+						int data;
+						if (type == param->GetTypeInfo().name())
+						{
+							myNode["Data"] >> data; 
+							*typedParam->Data() = data;
+						}							
+						else
+							::cv::error(::cv::Error::StsAssert, "Datatype " + std::string(param->GetTypeInfo().name()) + " requested, but " + type + " found in file", CV_Func, __FILE__, __LINE__);
+					}
+				}
+			}; 
+				
+			template<typename T> struct Serializer<T, typename std::enable_if<
+				std::is_same<typename std::remove_cv<T>::type, Parameters::EnumParameter		>::value || 
+				std::is_same<typename std::remove_cv<T>::type, ::cv::cuda::GpuMat				>::value ||
+				std::is_same<typename std::remove_cv<T>::type, boost::function<void(void)>		>::value, void>::type>
+			{
+				static void Serialize(::cv::FileStorage* fs, Parameters::Parameter* param)
+				{
+
+				}
+				static void DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param)
+				{
+
+				}
+			};
+			template<typename T> struct Serializer < T, typename std::enable_if<std::is_integral<T>::value && !std::is_unsigned<T>::value, void>::type>
+			{
+				static void Serialize(::cv::FileStorage* fs, Parameters::Parameter* param)
+				{
+					ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
+					if (typedParam)
+					{
+						const std::string& toolTip = typedParam->GetTooltip();
+						(*fs) << typedParam->GetName().c_str() << "{";
+						(*fs) << "Data" << *typedParam->Data();
+						(*fs) << "Type" << typedParam->GetTypeInfo().name();
+						if (toolTip.size())
+							(*fs) << "ToolTip" << toolTip;
+						(*fs) << "}";
+					}
+				}
+				static void DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param)
+				{
+					ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
+					if (typedParam)
+					{
+						::cv::FileNode myNode = (*fs)[param->GetName()];
+						std::string type = (std::string)myNode["Type"];
+						if (type == param->GetTypeInfo().name())
+							myNode["Data"] >> *typedParam->Data();
+						else
+							::cv::error(::cv::Error::StsAssert, "Datatype " + std::string(param->GetTypeInfo().name()) + " requested, but " + type + " found in file", CV_Func, __FILE__, __LINE__);
+					}
+				}
+			};
+			
+			template<typename T> struct Serializer<T, typename std::enable_if<std::is_same<T, ::cv::Mat>::value, void>::type>
+			{
+				static void Serialize(::cv::FileStorage* fs, Parameters::Parameter* param)
+				{
+					ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
+					if (typedParam)
+					{
+						const std::string& toolTip = typedParam->GetTooltip();
+						(*fs) << typedParam->GetName().c_str() << "{";
+						(*fs) << "Data" << *typedParam->Data();
+						(*fs) << "Type" << typedParam->GetTypeInfo().name();
+						if (toolTip.size())
+							(*fs) << "ToolTip" << toolTip;
+						(*fs) << "}";
+					}
+				}
+				static void DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param)
+				{
+					ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
+					if (typedParam)
+					{
+						::cv::FileNode myNode = (*fs)[param->GetName()];
+						std::string type = (std::string)myNode["Type"];
+						if (type == param->GetTypeInfo().name())
+							myNode["Data"] >> *typedParam->Data();
+						else
+							::cv::error(::cv::Error::StsAssert, "Datatype " + std::string(param->GetTypeInfo().name()) + " requested, but " + type + " found in file", CV_Func, __FILE__, __LINE__);
+					}
+				}
+			};
+
 			template<typename T> class PersistencePolicy
 			{
 				//static const Registerer<T> registerer = Registerer<T>();
 			public:
 				PersistencePolicy()
 				{
-					InterpreterRegistry::RegisterFunction(Loki::TypeInfo(typeid(T)), std::bind(Serializer<T>, std::placeholders::_1, std::placeholders::_2), std::bind(DeSerializer<T>, std::placeholders::_1, std::placeholders::_2));
+					InterpreterRegistry::RegisterFunction(Loki::TypeInfo(typeid(T)), std::bind(Serializer<T>::Serialize, std::placeholders::_1, std::placeholders::_2), std::bind(Serializer<T>::DeSerialize, std::placeholders::_1, std::placeholders::_2));
 				}
 			};
 		}
