@@ -17,7 +17,10 @@ namespace Parameters
 	{
 		ReadDirectory(const boost::filesystem::path& path) : boost::filesystem::path(path){}
 	};
-	struct WriteDirectory : public boost::filesystem::path{};
+	struct WriteDirectory : public boost::filesystem::path
+	{
+		WriteDirectory(const std::string& str) : boost::filesystem::path(str){}
+	};
 
 	class EnumParameter
 	{

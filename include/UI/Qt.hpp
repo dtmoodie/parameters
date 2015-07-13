@@ -11,6 +11,7 @@
 #include "QtCore/qdatetime.h"
 #include "QtWidgets/qpushbutton.h"
 #include <QtWidgets/qlineedit.h>
+#include <QtWidgets/qfiledialog.h>
 #include <functional>
 #include <LokiTypeInfo.h>
 #include <boost/function.hpp>
@@ -110,6 +111,68 @@ namespace Parameters{
 					return std::vector<QWidget*>();
 				}
 			};
+
+			// **********************************************************************************
+			// *************************** Files ************************************************
+			// **********************************************************************************
+
+			
+			template<typename T> class Handler<T, typename std::enable_if<
+				std::is_same<T, Parameters::WriteDirectory>::value || 
+				std::is_same<T, Parameters::ReadDirectory>::value || 
+				std::is_same<T, Parameters::WriteFile>::value || 
+				std::is_same<T, Parameters::ReadFile>::value, void>::type> : public IHandler
+			{
+				QPushButton* btn;
+				QWidget* parent;
+				T* fileData;
+			public:
+				Handler(): btn(nullptr), parent(nullptr){}
+
+				virtual void UpdateUi(const T& data)
+				{
+					btn->setText(QString::fromStdString(data.string()));
+				}
+				virtual void OnUiUpdate(QObject* sender)
+				{
+					QString filename;
+					if (std::is_same<T, Parameters::WriteDirectory>::value || std::is_same<T, Parameters::ReadDirectory>::value)
+					{
+						filename = QFileDialog::getExistingDirectory(parent, "Select save directory");
+					}
+					if (std::is_same<T, Parameters::WriteFile>::value)
+					{
+						filename = QFileDialog::getSaveFileName(parent, "Select file to save");
+					}
+					if (std::is_same<T, Parameters::ReadFile>::value)
+					{
+						filename = QFileDialog::getOpenFileName(parent, "Select file to open");
+					}
+					btn->setText(filename);
+					*fileData = T(filename.toStdString());
+				}
+				virtual void SetData(T* data_)
+				{
+					fileData = data_;
+					if (btn)
+						UpdateUi(*data_);
+				}
+				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent_)
+				{
+					std::vector< QWidget* > output;
+					parent = parent_;
+					if (btn == nullptr)
+						btn = new QPushButton(parent);
+					btn->connect(btn, SIGNAL(clicked()), proxy, SLOT(on_update()));
+					output.push_back(btn);
+					return output;
+				}
+			};
+
+			
+
+
+
 			
 			// **********************************************************************************
 			// *************************** Enums ************************************************
@@ -150,6 +213,7 @@ namespace Parameters{
 					if (enumCombo == nullptr)
 						enumCombo = new QComboBox(parent);
 					enumCombo->connect(enumCombo, SIGNAL(currentIndexChanged(int)), proxy, SLOT(on_update(int)));
+					output.push_back(enumCombo);
 					return output;
 				}
 			};
