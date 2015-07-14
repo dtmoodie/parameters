@@ -105,7 +105,10 @@ namespace Parameters{
 			{
 				T* currentData;
 			public:
-				Handler() :currentData(nullptr) {}
+				Handler() :currentData(nullptr) 
+				{
+					std::cout << "Creating handler for default unspecialized parameter" << std::endl;
+				}
 				virtual void UpdateUi(const T& data)
 				{}
 				virtual void OnUiUpdate(QObject* sender)
@@ -116,6 +119,7 @@ namespace Parameters{
 				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
+					std::cout << "Creating widget for default unspecialized parameter" << std::endl;
 					return std::vector<QWidget*>();
 				}
 			};
@@ -232,20 +236,26 @@ namespace Parameters{
 			public:
 				Handler() : table(nullptr), matData(nullptr), IHandler()
 				{
-					table = new QTable();
+					table = new QTableWidget();
 					items.reserve(ROW*COL);
+					table->setColumnCount(COL);
+					table->setRowCount(ROW);
 					for (int i = 0; i < ROW; ++i)
 					{
 						for (int j = 0; j < COL; ++j)
 						{
-							QTableWidgetItem* item = new QTableWigetItem(table);
+							QTableWidgetItem* item = new QTableWidgetItem();
 							items.push_back(item);
 							table->setItem(i, j, item);
 						}
 					}
 					proxy->connect(table, SIGNAL(cellChanged(int, int)), proxy, SLOT(on_update(int, int)));
 				}
-
+				virtual void SetData(::cv::Matx<T, ROW, COL>* data)
+				{
+					matData = data;
+					UpdateUi(*data);
+				}
 				virtual void UpdateUi(const ::cv::Matx<T, ROW, COL>& data)
 				{
 					for (int i = 0; i < ROW; ++i)
@@ -277,8 +287,15 @@ namespace Parameters{
 				{
 					std::vector<QWidget*> output;
 					output.push_back(table);
-					return table;
+					return output;
 				}
+			};
+			template<typename T, int ROW> class Handler<typename ::cv::Vec<T, ROW>, void> : public Handler<::cv::Matx<T,ROW,1>>
+			{
+			};
+
+			template<typename T> class Handler<typename ::cv::Scalar_<T>, void> : public Handler<::cv::Vec<T, 4>>
+			{
 			};
 
 #endif
@@ -300,11 +317,10 @@ namespace Parameters{
 						enumCombo->addItem(QString::fromStdString(data.enumerations[i]));
 					}
 				}
-				virtual void OnUiUpdate(QObject* sender)
+				virtual void OnUiUpdate(QObject* sender, int idx)
 				{
 					if (sender == enumCombo && enumData)
 					{
-						auto idx = enumCombo->currentIndex();
 						enumData->currentSelection = enumData->values[idx];
 						if (onUpdate)
 							onUpdate();
@@ -428,7 +444,7 @@ namespace Parameters{
 				{
 					box->setValue(data);
 				}
-				virtual void OnUiUpdate(QObject* sender)
+				virtual void OnUiUpdate(QObject* sender, double val = 0)
 				{
 					if (sender == box && floatData)
 						*floatData = box->value();
@@ -473,10 +489,13 @@ namespace Parameters{
 				{
 					box->setValue(data);
 				}
-				virtual void OnUiUpdate(QObject* sender)
+				virtual void OnUiUpdate(QObject* sender, int val = -1)
 				{
 					if (sender == box && intData)
-						*intData = box->value();
+						if(val == -1)
+							*intData = box->value();
+						else
+							*intData = val;
 					if (onUpdate)
 						onUpdate();
 				}
@@ -591,11 +610,11 @@ namespace Parameters{
 					index->setMaximum(data.size() - 1);
 					Handler<T>::UpdateUi(data[index->value()]);
 				}
-				virtual void OnUiUpdate(QObject* sender)
+				virtual void OnUiUpdate(QObject* sender, int idx)
 				{
 					Handler<T>::OnUiUpdate(sender);
 					if (sender == index && vectorData)
-						Handler<T>::SetData(&(*vectorData)[index->value()]);
+						Handler<T>::SetData(&(*vectorData)[idx]);
 				}
 				virtual void SetData(std::vector<T>* data_)
 				{

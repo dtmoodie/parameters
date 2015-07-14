@@ -29,68 +29,45 @@ Parameters::Parameter* Parameters::Persistence::cv::DeSerialize(::cv::FileNode* 
 	//TODO object factory based on serialized type
 	return nullptr;
 }
-void Serializer<char, void>::Serialize(::cv::FileStorage* fs, Parameters::Parameter* param)
+void Serializer<char, void>::Serialize(::cv::FileStorage* fs, char* param)
 {
-	Parameters::ITypedParameter<char>* typedParam = dynamic_cast<Parameters::ITypedParameter<char>*>(param);
-	if (typedParam)
-	{
-		const std::string& toolTip = typedParam->GetTooltip();
-		(*fs) << typedParam->GetName().c_str() << "{";
-		(*fs) << "Data" << (signed char)*typedParam->Data();
-		(*fs) << "Type" << typedParam->GetTypeInfo().name();
-		if (toolTip.size())
-			(*fs) << "ToolTip" << toolTip;
-		(*fs) << "}";
-	}
+	(*fs) << "Data" << (signed char)*param;
 }
 
-void Serializer<char, void>::DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param)
+void Serializer<char, void>::DeSerialize(::cv::FileNode* fs, char* param)
 {
-	Parameters::ITypedParameter<char>* typedParam = dynamic_cast<Parameters::ITypedParameter<char>*>(param);
-	if (typedParam)
-	{
-		::cv::FileNode myNode = (*fs)[param->GetName()];
-		std::string type = (std::string)myNode["Type"];
-		signed char data;
-		if (type == param->GetTypeInfo().name())
-		{
-			myNode["Data"] >> data;
-			*typedParam->Data() = (char)data;
-		}
-		else
-			::cv::error(::cv::Error::StsAssert, "Datatype " + std::string(param->GetTypeInfo().name()) + " requested, but " + type + " found in file", CV_Func, __FILE__, __LINE__);
-	}
+	signed char data;
+	(*fs)["Data"] >> data;
+	*param = (char)data;
 }
 
-void Serializer<std::string, void>::Serialize(::cv::FileStorage* fs, Parameters::Parameter* param)
+void Serializer<std::string, void>::Serialize(::cv::FileStorage* fs, std::string* param)
 {
-	ITypedParameter<std::string>* typedParam = dynamic_cast<ITypedParameter<std::string>*>(param);
-	if (typedParam)
-	{
-		const std::string& toolTip = typedParam->GetTooltip();
-		(*fs) << typedParam->GetName().c_str() << "{";
-		(*fs) << "Data" << *typedParam->Data();
-		(*fs) << "Type" << typedParam->GetTypeInfo().name();
-		if (toolTip.size())
-			(*fs) << "ToolTip" << toolTip;
-		(*fs) << "}";
-	}
+	(*fs) << "Data" << *param;
 }
 
-void Serializer<std::string, void>::DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param)
+void Serializer<std::string, void>::DeSerialize(::cv::FileNode* fs, std::string* param)
 {
-	ITypedParameter<std::string>* typedParam = dynamic_cast<ITypedParameter<std::string>*>(param);
-	if (typedParam)
-	{
-		::cv::FileNode myNode = (*fs)[param->GetName()];
-		std::string type = (std::string)myNode["Type"];
-		if (type == param->GetTypeInfo().name())
-		{
-			//(*typedParam->Data()) = ;
-			typedParam->UpdateData((std::string)myNode["Data"]);
-		}
-			
-		
-	}
+	*param = (std::string)(*fs)["Data"];
 }
-			
+void Serializer<::cv::Mat, void>::Serialize(::cv::FileStorage* fs, ::cv::Mat* param)
+{
+	(*fs) << "Data" << *param;
+}
+
+void Serializer<::cv::Mat, void>::DeSerialize(::cv::FileNode* fs, ::cv::Mat* param)
+{
+	(*fs)["Data"] >> *param;
+}
+void Serializer<Parameters::EnumParameter, void>::Serialize(::cv::FileStorage* fs, Parameters::EnumParameter* param)
+{
+	(*fs) << "Values" << param->values;
+	(*fs) << "Enumerations" << param->enumerations;
+	(*fs) << "Current value" << param->currentSelection;
+}
+void Serializer<Parameters::EnumParameter, void>::DeSerialize(::cv::FileNode* fs, Parameters::EnumParameter* param)
+{
+	(*fs)["Values"] >> param->values;
+	(*fs)["Enumerations"] >> param->enumerations;
+	(*fs)["Current value"] >> param->currentSelection;
+}

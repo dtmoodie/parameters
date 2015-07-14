@@ -52,9 +52,9 @@ INCLUDE_DIRECTORIES(
 SET(Parameters_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include" PARENT_SCOPE)
 
 add_library(libParameter SHARED ${hdr} ${src} ${MOC})
-TARGET_LINK_LIBRARIES(libParameter ${OpenCV_LIBS} ${Boost_LIBRARIES})
+TARGET_LINK_LIBRARIES(libParameter opencv_core ${Boost_LIBRARIES})
 add_executable(test_parameter "test/parameter_test.cpp")
-TARGET_LINK_LIBRARIES(test_parameter libParameter ${OpenCV_LIBS} ${Boost_LIBRARIES})
+TARGET_LINK_LIBRARIES(test_parameter libParameter opencv_core ${Boost_LIBRARIES})
 ADD_DEPENDENCIES(test_parameter libParameter)
 
 IF(${Qt5_FOUND})
@@ -74,7 +74,7 @@ IF(${Qt5_FOUND})
 		Qt5::Core
 		Qt5::Gui
 		Qt5::Widgets
-		${OpenCV_LIBS}
+		opencv_core
 		${Boost_LIBRARIES}
 		libParameter
 	)
@@ -83,7 +83,7 @@ IF(${Qt5_FOUND})
 		Qt5::Core
 		Qt5::Gui
 		Qt5::Widgets
-		${OpenCV_LIBS}
+		opencv_core
 		${Boost_LIBRARIES}
 		libParameter
 	)

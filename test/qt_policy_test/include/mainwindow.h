@@ -21,9 +21,8 @@ public:
 	void on_btnSerialize_clicked();
 private:
     Ui::MainWindow *ui;
-	std::shared_ptr<Parameters::UI::qt::IParameterProxy> testProxy;
-	//Parameters::UI::qt::ParameterProxy<std::vector<float>> testProxy; // (testParam);
-	Parameters::TypedParameter<std::vector<float>>::Ptr testParam; // (new Parameters::TypedParameter<std::vector<float>>("TestParam"));
+	std::vector<std::shared_ptr<Parameters::UI::qt::IParameterProxy>> proxies;
+	std::vector<Parameters::Parameter::Ptr> parameters;
 };
 
 #endif // MAINWINDOW_H
