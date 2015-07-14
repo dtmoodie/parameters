@@ -4,6 +4,7 @@
 // Check if being built with OpenCV
 #include <map>
 #include <functional>
+#include <string>
 
 #include <opencv2/core/persistence.hpp>
 #include <opencv2/core/types.hpp>
@@ -67,6 +68,12 @@ namespace Parameters
 				static void Serialize(::cv::FileStorage* fs, Parameters::Parameter* param);
 				static void DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param);
 			};
+			template<> struct Parameter_EXPORTS Serializer < std::string, void >
+			{
+				static void Serialize(::cv::FileStorage* fs, Parameters::Parameter* param);
+				static void DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param);
+			};
+
 			template<typename T> struct Serializer<T,typename  std::enable_if<std::is_unsigned<T>::value, void>::type>
 			{
 				static void Serialize(::cv::FileStorage* fs, Parameters::Parameter* param)
@@ -146,7 +153,7 @@ namespace Parameters
 					}
 				}
 			};
-			
+
 			template<typename T> struct Serializer<T, typename std::enable_if<std::is_same<T, ::cv::Mat>::value, void>::type>
 			{
 				static void Serialize(::cv::FileStorage* fs, Parameters::Parameter* param)

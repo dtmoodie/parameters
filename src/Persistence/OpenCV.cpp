@@ -61,3 +61,36 @@ void Serializer<char, void>::DeSerialize(::cv::FileNode* fs, Parameters::Paramet
 			::cv::error(::cv::Error::StsAssert, "Datatype " + std::string(param->GetTypeInfo().name()) + " requested, but " + type + " found in file", CV_Func, __FILE__, __LINE__);
 	}
 }
+
+void Serializer<std::string, void>::Serialize(::cv::FileStorage* fs, Parameters::Parameter* param)
+{
+	ITypedParameter<std::string>* typedParam = dynamic_cast<ITypedParameter<std::string>*>(param);
+	if (typedParam)
+	{
+		const std::string& toolTip = typedParam->GetTooltip();
+		(*fs) << typedParam->GetName().c_str() << "{";
+		(*fs) << "Data" << *typedParam->Data();
+		(*fs) << "Type" << typedParam->GetTypeInfo().name();
+		if (toolTip.size())
+			(*fs) << "ToolTip" << toolTip;
+		(*fs) << "}";
+	}
+}
+
+void Serializer<std::string, void>::DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param)
+{
+	ITypedParameter<std::string>* typedParam = dynamic_cast<ITypedParameter<std::string>*>(param);
+	if (typedParam)
+	{
+		::cv::FileNode myNode = (*fs)[param->GetName()];
+		std::string type = (std::string)myNode["Type"];
+		if (type == param->GetTypeInfo().name())
+		{
+			//(*typedParam->Data()) = ;
+			typedParam->UpdateData((std::string)myNode["Data"]);
+		}
+			
+		
+	}
+}
+			

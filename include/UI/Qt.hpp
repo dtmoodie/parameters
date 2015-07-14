@@ -8,6 +8,7 @@
 #include "QtWidgets/qlayout.h"
 #include "QtWidgets/qlabel.h"
 #include "QtWidgets/qcombobox.h"
+#include "QtWidgets/qcheckbox.h"
 #include "QtCore/qdatetime.h"
 #include "QtWidgets/qpushbutton.h"
 #include <QtWidgets/qlineedit.h>
@@ -120,10 +121,51 @@ namespace Parameters{
 			};
 
 			// **********************************************************************************
+			// *************************** Bool ************************************************
+			// **********************************************************************************
+			template<> class Handler<bool, void>: public IHandler
+			{
+				QCheckBox* chkBox;
+				bool* boolData;
+			public:
+				Handler() : chkBox(nullptr), boolData(nullptr) {}
+				virtual void UpdateUi(const bool& data)
+				{
+					chkBox->setChecked(data);
+				}
+				virtual void OnUiUpdate(QObject* sender)
+				{
+					if (sender == chkBox)
+					{
+						if (boolData)
+						{
+							*boolData = chkBox->isChecked();
+							if (onUpdate)
+								onUpdate();
+						}							
+					}
+				}
+				virtual void SetData(bool* data_)
+				{
+					boolData = data_;
+					if (chkBox)
+						UpdateUi(*data_);
+				}
+				virtual std::vector < QWidget*> GetUiWidgets(QWidget* parent_)
+				{
+					std::vector<QWidget*> output;
+					if (chkBox == nullptr)
+						chkBox = new QCheckBox(parent_);
+					chkBox->connect(chkBox, SIGNAL(stateChanged(int)), IHandler::proxy, SLOT(on_update(int)));
+					output.push_back(chkBox);
+					return output;
+				}
+			};
+
+			// **********************************************************************************
 			// *************************** Files ************************************************
 			// **********************************************************************************
 
-			
 			template<typename T> class Handler<T, typename std::enable_if<
 				std::is_same<T, Parameters::WriteDirectory>::value || 
 				std::is_same<T, Parameters::ReadDirectory>::value || 
@@ -135,28 +177,30 @@ namespace Parameters{
 				T* fileData;
 			public:
 				Handler(): btn(nullptr), parent(nullptr){}
-
 				virtual void UpdateUi(const T& data)
 				{
 					btn->setText(QString::fromStdString(data.string()));
 				}
 				virtual void OnUiUpdate(QObject* sender)
 				{
-					QString filename;
-					if (std::is_same<T, Parameters::WriteDirectory>::value || std::is_same<T, Parameters::ReadDirectory>::value)
+					if (sender == btn)
 					{
-						filename = QFileDialog::getExistingDirectory(parent, "Select save directory");
-					}
-					if (std::is_same<T, Parameters::WriteFile>::value)
-					{
-						filename = QFileDialog::getSaveFileName(parent, "Select file to save");
-					}
-					if (std::is_same<T, Parameters::ReadFile>::value)
-					{
-						filename = QFileDialog::getOpenFileName(parent, "Select file to open");
-					}
-					btn->setText(filename);
-					*fileData = T(filename.toStdString());
+						QString filename;
+						if (std::is_same<T, Parameters::WriteDirectory>::value || std::is_same<T, Parameters::ReadDirectory>::value)
+						{
+							filename = QFileDialog::getExistingDirectory(parent, "Select save directory");
+						}
+						if (std::is_same<T, Parameters::WriteFile>::value)
+						{
+							filename = QFileDialog::getSaveFileName(parent, "Select file to save");
+						}
+						if (std::is_same<T, Parameters::ReadFile>::value)
+						{
+							filename = QFileDialog::getOpenFileName(parent, "Select file to open");
+						}
+						btn->setText(filename);
+						*fileData = T(filename.toStdString());
+					}					
 				}
 				virtual void SetData(T* data_)
 				{
@@ -282,9 +326,11 @@ namespace Parameters{
 					return output;
 				}
 			};
+
 			// **********************************************************************************
 			// *************************** std::string ******************************************
 			// **********************************************************************************
+
 			template<> class Handler<std::string, void> :public IHandler
 			{
 				std::string* strData;
@@ -322,9 +368,11 @@ namespace Parameters{
 					return output;
 				}
 			};
+
 			// **********************************************************************************
 			// *************************** boost::function<void(void)> **************************
 			// **********************************************************************************
+
 			template<> class Handler<boost::function<void(void)>, void> : public IHandler
 			{
 				boost::function<void(void)>* funcData;
@@ -364,9 +412,11 @@ namespace Parameters{
 					return output;
 				}
 			};
+
 			// **********************************************************************************
 			// *************************** floating point data **********************************
 			// **********************************************************************************
+
 			template<typename T>
 			class Handler<T, typename std::enable_if<std::is_floating_point<T>::value, void>::type> : public IHandler
 			{
@@ -411,6 +461,7 @@ namespace Parameters{
 			// **********************************************************************************
 			// *************************** integers *********************************************
 			// **********************************************************************************
+
 			template<typename T>
 			class Handler<T, typename std::enable_if<std::is_integral<T>::value, void>::type> : public IHandler
 			{
@@ -463,7 +514,7 @@ namespace Parameters{
 			};
 
 			// **********************************************************************************
-			// *************************** std::pair ******************************************
+			// *************************** std::pair ********************************************
 			// **********************************************************************************
 
 			template<typename T1> class Handler<std::pair<T1, T1>> : public Handler<T1>
@@ -496,8 +547,6 @@ namespace Parameters{
 				}
 			};
 
-
-
 			template<typename T1, typename T2> class Handler<std::pair<T1, T2>>: public Handler<T1>, public Handler<T2>
 			{
 				std::pair<T1,T2>* pairData;
@@ -527,8 +576,6 @@ namespace Parameters{
 					return output;
 				}
 			};
-
-
 
 			// **********************************************************************************
 			// *************************** std::vector ******************************************
@@ -567,7 +614,9 @@ namespace Parameters{
 					return output;
 				}
 			};
-
+			// **********************************************************************************
+			// *************************** ParameterProxy ***************************************
+			// **********************************************************************************
 			template<typename T> class ParameterProxy : public IParameterProxy
 			{
 				Handler<T> paramHandler;
@@ -626,6 +675,11 @@ namespace Parameters{
 					return output;
 				}
 			};
+
+			// **********************************************************************************
+			// *************************** Factory **********************************************
+			// **********************************************************************************
+
 			template<typename T> class Factory
 			{
 			public:
