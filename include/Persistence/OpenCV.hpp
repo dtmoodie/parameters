@@ -77,11 +77,11 @@ namespace Parameters
 			{
 				virtual void Serialize(::cv::FileStorage* fs, T* param)
 				{
-					(*fs) << "Data" << (int)*param;
+					(*fs) << "Data" << boost::lexical_cast<std::string>(*param);
 				}
 				virtual void DeSerialize(::cv::FileNode* fs, T* param)
 				{
-					(*fs)["Data"] >> *param;
+					*param = boost::lexical_cast<T>((std::string)(*fs)["Data"]);
 				}
 			}; 
 			template<typename T> struct Serializer<T, typename std::enable_if<

@@ -62,12 +62,23 @@ void Serializer<::cv::Mat, void>::DeSerialize(::cv::FileNode* fs, ::cv::Mat* par
 void Serializer<Parameters::EnumParameter, void>::Serialize(::cv::FileStorage* fs, Parameters::EnumParameter* param)
 {
 	(*fs) << "Values" << param->values;
-	(*fs) << "Enumerations" << param->enumerations;
+	(*fs) << "Enumerations" << "[:";
+	for (int i = 0; i < param->enumerations.size(); ++i)
+	{
+		(*fs) << param->enumerations[i];
+	}
+	(*fs) << "]";
 	(*fs) << "Current value" << param->currentSelection;
 }
 void Serializer<Parameters::EnumParameter, void>::DeSerialize(::cv::FileNode* fs, Parameters::EnumParameter* param)
 {
 	(*fs)["Values"] >> param->values;
-	(*fs)["Enumerations"] >> param->enumerations;
+	
+	auto end = (*fs)["Enumerations"].end();
+	param->enumerations.clear();
+	for (auto itr = (*fs)["Enumerations"].begin(); itr != end; ++itr)
+	{
+		param->enumerations.push_back((std::string)(*itr));
+	}
 	(*fs)["Current value"] >> param->currentSelection;
 }

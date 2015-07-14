@@ -14,6 +14,7 @@
 #include <QtWidgets/qlineedit.h>
 #include <QtWidgets/qfiledialog.h>
 #include "QtWidgets/qtablewidget.h"
+#include "QtWidgets/qheaderview.h"
 #include <functional>
 #include <LokiTypeInfo.h>
 #include <boost/function.hpp>
@@ -83,7 +84,6 @@ namespace Parameters{
 				std::function<void(void)> onUpdate;
 			public:
 				IHandler() : write(true), proxy(new SignalProxy(this)){}
-				virtual void OnUiUpdate(){}
 				virtual void OnUiUpdate(QObject* sender) {};
 				virtual void OnUiUpdate(QObject* sender, double val) {}
 				virtual void OnUiUpdate(QObject* sender, int val) {}
@@ -237,6 +237,8 @@ namespace Parameters{
 				Handler() : table(nullptr), matData(nullptr), IHandler()
 				{
 					table = new QTableWidget();
+					table->horizontalHeader()->hide();
+					table->verticalHeader()->hide();
 					items.reserve(ROW*COL);
 					table->setColumnCount(COL);
 					table->setRowCount(ROW);
@@ -266,7 +268,7 @@ namespace Parameters{
 						}
 					}
 				}
-				virtual void OnUiUpdate(QObject* sender, int row, int col)
+				virtual void OnUiUpdate(QObject* sender, int row = -1, int col = -1)
 				{
 					if (sender == table)
 					{
@@ -282,6 +284,12 @@ namespace Parameters{
 								(*matData)(row, col) = (T)items[row* COL + col]->data(Qt::EditRole).toUInt();
 						}
 					}
+					else if (row == -1 && col == -1)
+					{
+						if (matData)
+							UpdateUi(*matData);
+					}
+
 				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
@@ -296,6 +304,69 @@ namespace Parameters{
 
 			template<typename T> class Handler<typename ::cv::Scalar_<T>, void> : public Handler<::cv::Vec<T, 4>>
 			{
+			};
+
+			template<typename T> class Handler<typename ::cv::Point_<T>, void>: public IHandler
+			{
+				QTableWidget* table;
+				QTableWidgetItem* first;
+				QTableWidgetItem* second;
+				::cv::Point_<T>* ptData;
+			public:
+				Handler():ptData(nullptr)
+				{
+					table = new QTableWidget();
+					first = new QTableWidgetItem();
+					second = new QTableWidgetItem();
+					table->horizontalHeader()->hide();
+					table->verticalHeader()->hide();
+					table->setItem(0, 0, first);
+					table->setItem(0, 1, second);
+					table->setRowCount(1);
+					table->setColumnCount(2);
+					proxy->connect(table, SIGNAL(cellChanged(int, int)), proxy, SLOT(on_update(int, int)));
+				}
+				virtual void UpdateUi(const ::cv::Point_<T>& data)
+				{
+					first->setData(Qt::EditRole, ptData->x);
+					second->setData(Qt::EditRole, ptData->y);
+				}
+				virtual void OnUiUpdate(QObject* sender, int row = -1, int col = -1)
+				{
+					if (ptData == nullptr)
+						return;
+					if (typeid(T) == typeid(double))
+					{
+						ptData->x = (T)first->data(Qt::EditRole).toDouble();
+						ptData->y = (T)second->data(Qt::EditRole).toDouble();
+					}
+					if (typeid(T) == typeid(float))
+					{
+						ptData->x = (T)first->data(Qt::EditRole).toFloat();
+						ptData->y = (T)second->data(Qt::EditRole).toFloat();
+					}
+					if (typeid(T) == typeid(int))
+					{
+						ptData->x = (T)first->data(Qt::EditRole).toInt();
+						ptData->y = (T)second->data(Qt::EditRole).toInt();
+					}
+					if (typeid(T) == typeid(unsigned int))
+					{
+						ptData->x = (T)first->data(Qt::EditRole).toUInt();
+						ptData->y = (T)second->data(Qt::EditRole).toUInt();
+					}
+				}
+				virtual void SetData(::cv::Point_<T>* data_)
+				{
+					ptData = data_;
+					UpdateUi(*ptData);
+				}
+				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
+				{
+					std::vector<QWidget*> output;
+					output.push_back(table);
+					return output;
+				}
 			};
 
 #endif
@@ -607,21 +678,29 @@ namespace Parameters{
 				Handler() : index(new QSpinBox()), vectorData(nullptr) {}
 				virtual void UpdateUi(const std::vector<T>& data)
 				{
-					index->setMaximum(data.size() - 1);
-					Handler<T>::UpdateUi(data[index->value()]);
+					if (data.size())
+					{
+						index->setMaximum(data.size() - 1);
+						Handler<T>::UpdateUi(data[index->value()]);
+					}
+					
 				}
-				virtual void OnUiUpdate(QObject* sender, int idx)
+				virtual void OnUiUpdate(QObject* sender, int idx = 0)
 				{
-					Handler<T>::OnUiUpdate(sender);
-					if (sender == index && vectorData)
+					if (sender == index && vectorData && vectorData->size() && idx < vectorData->size())
+					{
 						Handler<T>::SetData(&(*vectorData)[idx]);
+						Handler<T>::OnUiUpdate(sender);
+					}						
 				}
 				virtual void SetData(std::vector<T>* data_)
 				{
 					vectorData = data_;
-					if (index && index->value() < vectorData->size())
-						Handler<T>::SetData(&(*vectorData)[index->value()]);
-
+					if (data_->size())
+					{
+						if (index && index->value() < vectorData->size())
+							Handler<T>::SetData(&(*vectorData)[index->value()]);
+					}
 				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
