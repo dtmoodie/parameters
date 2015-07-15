@@ -10,7 +10,7 @@ ELSE(WIN32)
 	set(Boost_USE_MULTITHREADED      ON)
 	set(Boost_USE_STATIC_RUNTIME     OFF)
 ENDIF(WIN32)
-FIND_PACKAGE(Boost COMPONENTS filesystem system thread chrono date_time)
+FIND_PACKAGE(Boost REQUIRED COMPONENTS filesystem system thread chrono date_time)
 FIND_PACKAGE(Qt5 COMPONENTS Gui Widgets)
 FIND_PACKAGE(OpenCV COMPONENTS core)
 
@@ -35,7 +35,8 @@ ENDIF()
 
 message(STATUS
 "============== libParameter =============
-  Boost libs: ${Boost_LIBRARIES}
+  Boost libs: ${Boost_LIBRARIES} 
+
    
    
  " )
@@ -49,7 +50,8 @@ INCLUDE_DIRECTORIES(
 	${OpenCV_INCLUDE_DIRS}
  )
  
-SET(Parameters_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include" PARENT_SCOPE)
+SET(Parameters_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include;${Qt5Gui_INCLUDE_DIRS};${Qt5Widgets_INCLUDE_DIRS}" PARENT_SCOPE)
+SET(Parameters_LIBS "${Boost_LIBRARIES};${OpenCV_LIBS}" PARENT_SCOPE)
 
 add_library(libParameter SHARED ${hdr} ${src} ${MOC})
 TARGET_LINK_LIBRARIES(libParameter ${OpenCV_LIBS} ${Boost_LIBRARIES})

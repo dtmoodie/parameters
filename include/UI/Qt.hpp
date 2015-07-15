@@ -630,8 +630,12 @@ namespace Parameters{
 				void onParamUpdate()
 				{
 					auto dataPtr = parameter->Data();
-					if(dataPtr)
-						paramHandler.UpdateUi(*dataPtr);
+					
+					if (dataPtr)
+					{
+						UiCallbackService::Instance().post(boost::bind(&Handler<T>::UpdateUi, &paramHandler, boost::ref(*dataPtr)));
+					}
+						//paramHandler.UpdateUi(*dataPtr);
 				}
 			public:
 				ParameterProxy(std::shared_ptr<Parameters::Parameter> param)
