@@ -20,7 +20,7 @@
 #include <boost/function.hpp>
 #include "../Types.hpp"
 #include "InterThread.hpp"
-#ifdef OPENCV_FOUND || def(CV_EXPORTS) || def(CVAPI_EXPORTS)
+#if defined(OPENCV_FOUND) || defined(CV_EXPORTS) || defined(CVAPI_EXPORTS)
 #include <opencv2/core/types.hpp>
 #endif
 #include <memory>
@@ -225,7 +225,7 @@ namespace Parameters{
 				}
 			};
 
-#ifdef OPENCV_FOUND || def(CV_EXPORTS) || def(CVAPI_EXPORTS)
+#if defined(OPENCV_FOUND) || defined(CV_EXPORTS) || defined(CVAPI_EXPORTS)
 			// **********************************************************************************
 			// *************************** cv::Matx ************************************************
 			// **********************************************************************************
