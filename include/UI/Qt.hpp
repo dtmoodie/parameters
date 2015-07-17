@@ -19,6 +19,7 @@
 #include <LokiTypeInfo.h>
 #include <boost/function.hpp>
 #include "../Types.hpp"
+#include "InterThread.hpp"
 #ifdef OPENCV_FOUND || def(CV_EXPORTS) || def(CVAPI_EXPORTS)
 #include <opencv2/core/types.hpp>
 #endif
@@ -231,7 +232,7 @@ namespace Parameters{
 			template<typename T, int ROW, int COL> class Handler<typename ::cv::Matx<T, ROW, COL>, void> : public IHandler
 			{
 				QTableWidget* table;
-				std::vector<typename QTableWidgetItem*> items;
+				std::vector<QTableWidgetItem*> items;
 				::cv::Matx<T, ROW, COL>* matData;
 			public:
 				Handler() : table(nullptr), matData(nullptr), IHandler()
