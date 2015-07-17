@@ -116,8 +116,13 @@ IF(${Parameters_persistence})
 		INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
 		
 		GET_TARGET_PROPERTY(cv_core_lib_deb opencv_core IMPORTED_IMPLIB_DEBUG)
+		IF(${cv_core_lib_deb} MATCHES "NOTFOUND")
+		GET_TARGET_PROPERTY(cv_core_lib_deb opencv_core LOCATION)
+		ENDIF()
 		GET_TARGET_PROPERTY(cv_core_lib_rel opencv_core IMPORTED_IMPLIB_RELEASE)
-
+		IF(${cv_core_lib_rel} MATCHES "NOTFOUND")
+		GET_TARGET_PROPERTY(cv_core_lib_rel opencv_core LOCATION)
+		ENDIF()
 		
 		#directories
 		GET_FILENAME_COMPONENT(cv_core_lib_dir_rel_ ${cv_core_lib_rel} DIRECTORY)
