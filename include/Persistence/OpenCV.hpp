@@ -32,8 +32,8 @@ namespace Parameters
 			public:
 				typedef std::function<void(::cv::FileStorage*, Parameters::Parameter*)> SerializerFunction;
 				typedef std::function<void(::cv::FileNode*, Parameters::Parameter*)> DeSerializerFunction;
-				static void RegisterFunction(Loki::TypeInfo& type, SerializerFunction serializer, DeSerializerFunction deserializer);
-				static std::pair<SerializerFunction,	DeSerializerFunction >& GetInterpretingFunction(Loki::TypeInfo& type);
+				static void RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, DeSerializerFunction deserializer);
+				static std::pair<SerializerFunction,	DeSerializerFunction >& GetInterpretingFunction(Loki::TypeInfo type);
 			private:
 				// Mapping from Loki::typeinfo to file writing functors
 				static	std::map<Loki::TypeInfo, std::pair<SerializerFunction, DeSerializerFunction >> registry;
