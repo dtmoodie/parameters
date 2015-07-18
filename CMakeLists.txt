@@ -84,14 +84,14 @@ IF(${Parameters_UI})
 			LIST(APPEND UI_LIB_DIR_DEB_ ${qt_core_dir_rel})
 			
 			
-			GET_FILENAME_COMPONENT(qt_gui_rel ${qt_gui_rel} NAME)
-			GET_FILENAME_COMPONENT(qt_gui_deb ${qt_gui_deb} NAME)
+			#GET_FILENAME_COMPONENT(qt_gui_rel ${qt_gui_rel} NAME)
+			#GET_FILENAME_COMPONENT(qt_gui_deb ${qt_gui_deb} NAME)
 			
-			GET_FILENAME_COMPONENT(qt_widgets_rel ${qt_widgets_rel} NAME)
-			GET_FILENAME_COMPONENT(qt_widgets_deb ${qt_widgets_deb} NAME)
+			#GET_FILENAME_COMPONENT(qt_widgets_rel ${qt_widgets_rel} NAME)
+			#GET_FILENAME_COMPONENT(qt_widgets_deb ${qt_widgets_deb} NAME)
 			
-			GET_FILENAME_COMPONENT(qt_core_rel ${qt_core_rel} NAME)
-			GET_FILENAME_COMPONENT(qt_core_deb ${qt_core_deb} NAME)
+			#GET_FILENAME_COMPONENT(qt_core_rel ${qt_core_rel} NAME)
+			#GET_FILENAME_COMPONENT(qt_core_deb ${qt_core_deb} NAME)
 			
 			
 			LIST(APPEND UI_LIBS "optimized;${qt_gui_rel}")
@@ -131,8 +131,8 @@ IF(${Parameters_persistence})
 		LIST(APPEND PERSISTENCE_LIB_DIR_REL_ ${cv_core_lib_dir_rel_})
 		LIST(APPEND PERSISTENCE_LIB_DIR_DEB_ ${cv_core_lib_dir_deb_})
 		
-		GET_FILENAME_COMPONENT(cv_core_lib_deb ${cv_core_lib_deb} NAME)
-		GET_FILENAME_COMPONENT(cv_core_lib_rel ${cv_core_lib_rel} NAME)
+		#GET_FILENAME_COMPONENT(cv_core_lib_deb ${cv_core_lib_deb} NAME)
+		#GET_FILENAME_COMPONENT(cv_core_lib_rel ${cv_core_lib_rel} NAME)
 		LIST(APPEND PERSITENCE_LIBS "debug;${cv_core_lib_deb}")
 		LIST(APPEND PERSITENCE_LIBS "optimized;${cv_core_lib_rel}")
 	ENDIF()
