@@ -7,11 +7,11 @@ namespace Parameters
 		T data;
 	public:
 		typedef std::shared_ptr<TypedParameter<T>> Ptr;
-		static Ptr create(const T& init, const std::string& name, const ParameterType& type = ParameterType::Control, const std::string& tooltip = "")
+		static std::shared_ptr<TypedParameter<T>> create(const T& init, const std::string& name, const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "")
 		{
-			return Ptr(new TypedParameter<T>(name, init, type, tooltip));
+			return std::shared_ptr<TypedParameter<T>>(new TypedParameter<T>(name, init, type, tooltip));
 		}
-		TypedParameter(const std::string& name, const T& init = T(), const ParameterType& type = ParameterType::Control, const std::string& tooltip = "") :
+		TypedParameter(const std::string& name, const T& init = T(), const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "") :
 			MetaTypedParameter<T>(name, type, tooltip), data(init) {}
 
 		virtual T* Data()
@@ -21,20 +21,20 @@ namespace Parameters
 		virtual void UpdateData(T& data_)
 		{
 			data = data_;
-			changed = true;
-			UpdateSignal();
+			Parameter::changed = true;
+			Parameter::UpdateSignal();
 		}
 		virtual void UpdateData(const T& data_)
 		{
 			data = data_;
-			changed = true;
-			UpdateSignal();
+			Parameter::changed = true;
+			Parameter::UpdateSignal();
 		}
 		virtual void UpdateData(T* data_)
 		{
 			data = *data_;
-			changed = true;
-			UpdateSignal();
+			Parameter::changed = true;
+			Parameter::UpdateSignal();
 		}
 	};
 
@@ -43,7 +43,7 @@ namespace Parameters
 		T& data;
 	public:
 		typedef std::shared_ptr<TypedParameterRef<T>> Ptr;
-		TypedParameterRef(const std::string& name, const ParameterType& type = ParameterType::Control, const std::string& tooltip = "") :
+		TypedParameterRef(const std::string& name, const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "") :
 			MetaTypedParameter<T>(name, type, tooltip){}
 		virtual T* Data()
 		{
@@ -52,14 +52,14 @@ namespace Parameters
 		virtual void UpdateData(const T& data_)
 		{
 			data = data_;
-			changed = true;
-			UpdateSignal();
+			Parameter::changed = true;
+			Parameter::UpdateSignal();
 		}
 		virtual void UpdateData(const T* data_)
 		{
 			data = *data_;
-			changed = true;
-			UpdateSignal();
+			Parameter::changed = true;
+			Parameter::UpdateSignal();
 		}
 
 	};
@@ -70,13 +70,13 @@ namespace Parameters
 		bool ownsData;
 	public:
 		typedef std::shared_ptr<TypedParameterPtr<T>> Ptr;
-		static Ptr create(const std::string& name, T* ptr_ = nullptr,
-			const ParameterType& type = ParameterType::Control, const std::string& tooltip = "")
+		static std::shared_ptr<TypedParameterPtr<T>> create(const std::string& name, T* ptr_ = nullptr,
+			const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "")
 		{
-			return Ptr(new TypedInputParameterPtr(name, ptr_, type, tooltip));
+			return std::shared_ptr<TypedParameterPtr<T>>(new TypedParameterPtr(name, ptr_, type, tooltip));
 		}
 		TypedParameterPtr(const std::string& name, T* ptr_ = nullptr,
-			const ParameterType& type = ParameterType::Control, const std::string& tooltip = "", bool ownsData_ = false) :
+			const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "", bool ownsData_ = false) :
 			ptr(ptr_),
 			MetaTypedParameter<T>(name, type, tooltip), ownsData(ownsData_){}
 
@@ -87,21 +87,21 @@ namespace Parameters
 		virtual void UpdateData(T& data)
 		{
 			ptr = &data;
-			changed = true;
-			UpdateSignal();
+			Parameter::changed = true;
+			Parameter::UpdateSignal();
 		}
 		virtual void UpdateData(const T& data)
 		{
 			if (ptr)
 				*ptr = data;
-			changed = true;
-			UpdateSignal();
+			Parameter::changed = true;
+			Parameter::UpdateSignal();
 		}
 		virtual void UpdateData(T* data_)
 		{
 			ptr = data_;
-			changed = true;
-			UpdateSignal();
+			Parameter::changed = true;
+			Parameter::UpdateSignal();
 		}
 	};
 }

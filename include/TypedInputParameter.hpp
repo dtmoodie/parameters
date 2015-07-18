@@ -1,11 +1,12 @@
 #pragma once
 #include "MetaParameter.hpp"
 #include "InputParameter.hpp"
+
 namespace Parameters
 {
 	template<typename T> class TypedInputParameter : public MetaTypedParameter<T>, public InputParameter
 	{
-		ITypedParameter<T>::Ptr input;
+		typename ITypedParameter<T>::Ptr input;
 		boost::signals2::connection inputConnection;
 		virtual void onInputUpdate()
 		{
@@ -14,7 +15,7 @@ namespace Parameters
 	public:
 		typedef std::shared_ptr<TypedInputParameter<T>> Ptr;
 		TypedInputParameter(const std::string& name, const std::string& tooltip = "", const boost::function<bool(Parameter*)>& qualifier_ = boost::function<bool(Parameter*)>()) :
-			MetaTypedParameter<T>(name, ParameterType::Input, tooltip){ qualifier = qualifier_; }
+			MetaTypedParameter<T>(name, Parameter::ParameterType::Input, tooltip){ qualifier = qualifier_; }
 		virtual bool SetInput(const std::string& name_)
 		{
 			return false;
@@ -22,7 +23,7 @@ namespace Parameters
 
 		virtual bool SetInput(const Parameter::Ptr param)
 		{
-			ITypedParameter<T>::Ptr castedParam = std::dynamic_pointer_cast<ITypedParameter<T>>(param);
+			typename ITypedParameter<T>::Ptr castedParam = std::dynamic_pointer_cast<ITypedParameter<T>>(param);
 			if (castedParam)
 			{
 				input = castedParam;
@@ -70,7 +71,7 @@ namespace Parameters
 	template<typename T> class TypedInputParameterPtr : public MetaTypedParameter<T>, public InputParameter
 	{
 		T** userVar; // Pointer to the user space pointer variable of type T
-		ITypedParameter<T>::Ptr input;
+		typename ITypedParameter<T>::Ptr input;
 		boost::signals2::connection inputConnection;
 		virtual void onInputUpdate()
 		{
@@ -84,7 +85,7 @@ namespace Parameters
 			return Ptr(new TypedInputParameterPtr(userVar_));
 		}
 		TypedInputParameterPtr(const std::string& name, T** userVar_,
-			const ParameterType& type = ParameterType::Control, const std::string& tooltip = "") :
+			const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "") :
 			MetaTypedParameter<T>(name, type, tooltip), userVar(userVar_){}
 
 		virtual bool SetInput(const std::string& name_)
@@ -94,7 +95,7 @@ namespace Parameters
 
 		virtual bool SetInput(const Parameter::Ptr param)
 		{
-			ITypedParameter<T>::Ptr castedParam = std::dynamic_pointer_cast<ITypedParameter<T>>(param);
+			typename ITypedParameter<T>::Ptr castedParam = std::dynamic_pointer_cast<ITypedParameter<T>>(param);
 			if (castedParam)
 			{
 				input = castedParam;

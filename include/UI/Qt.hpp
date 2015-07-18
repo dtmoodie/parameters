@@ -18,6 +18,7 @@
 #include <functional>
 #include <LokiTypeInfo.h>
 #include <boost/function.hpp>
+#include <boost/bind.hpp>
 #include "../Types.hpp"
 #include "InterThread.hpp"
 #if defined(OPENCV_FOUND) || defined(CV_EXPORTS) || defined(CVAPI_EXPORTS)

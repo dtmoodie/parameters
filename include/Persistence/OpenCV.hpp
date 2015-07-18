@@ -15,9 +15,10 @@
 
 #include <LokiTypeInfo.h>
 #include <Parameter_def.hpp>
+#include <ITypedParameter.hpp>
 #include <Types.hpp>
 
-class ::cv::cuda::GpuMat;
+//class ::cv::cuda::GpuMat;
 namespace Parameters
 {
 	class Parameter;
