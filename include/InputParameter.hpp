@@ -15,11 +15,13 @@ namespace Parameters
 		typedef std::shared_ptr<InputParameter> Ptr;
 		virtual bool SetInput(const std::string& name_) = 0;
 		virtual bool SetInput(const Parameter::Ptr param) = 0;
+		virtual std::shared_ptr<Parameter> GetInput() = 0;
 		virtual bool AcceptsInput(const Parameter::Ptr param) = 0;
 		virtual bool AcceptsType(const Loki::TypeInfo& type) = 0;
 		virtual void SetQualifier(const boost::function<bool(Parameter*)>& f)
 		{
 			qualifier = f;
 		}
+		virtual Loki::TypeInfo GetTypeInfo() = 0;
 	};
 }

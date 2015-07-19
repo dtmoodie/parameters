@@ -11,8 +11,12 @@ namespace Parameters
 		{
 			return std::shared_ptr<TypedParameter<T>>(new TypedParameter<T>(name, init, type, tooltip));
 		}
-		TypedParameter(const std::string& name, const T& init = T(), const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "") :
-			MetaTypedParameter<T>(name, type, tooltip), data(init) {}
+		TypedParameter(const std::string& name, 
+			const T& init = T(), 
+			const Parameter::ParameterType& type = Parameter::ParameterType::Control, 
+			const std::string& tooltip = "") :
+			MetaTypedParameter<T>(name, type, tooltip), data(init) 
+		{}
 
 		virtual T* Data()
 		{
@@ -36,6 +40,12 @@ namespace Parameters
 			Parameter::changed = true;
 			Parameter::UpdateSignal();
 		}
+		/*virtual void UpdateData(const T* data_)
+		{
+			data = *data_;
+			Parameter::changed = true;
+			Parameter::UpdateSignal();
+		}*/
 	};
 
 	template<typename T> class TypedParameterRef : public MetaTypedParameter < T >
@@ -45,6 +55,7 @@ namespace Parameters
 		typedef std::shared_ptr<TypedParameterRef<T>> Ptr;
 		TypedParameterRef(const std::string& name, const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "") :
 			MetaTypedParameter<T>(name, type, tooltip){}
+		
 		virtual T* Data()
 		{
 			return &data;
@@ -55,12 +66,24 @@ namespace Parameters
 			Parameter::changed = true;
 			Parameter::UpdateSignal();
 		}
-		virtual void UpdateData(const T* data_)
+		virtual void UpdateData(T& data_)
+		{
+			data = data_;
+			Parameter::changed = true;
+			Parameter::UpdateSignal();
+		}
+		virtual void UpdateData(T* data_)
 		{
 			data = *data_;
 			Parameter::changed = true;
 			Parameter::UpdateSignal();
 		}
+		/*virtual void UpdateData(const T* data_)
+		{
+			data = *data_;
+			Parameter::changed = true;
+			Parameter::UpdateSignal();
+		}*/
 
 	};
 
@@ -75,10 +98,20 @@ namespace Parameters
 		{
 			return std::shared_ptr<TypedParameterPtr<T>>(new TypedParameterPtr(name, ptr_, type, tooltip));
 		}
-		TypedParameterPtr(const std::string& name, T* ptr_ = nullptr,
+
+		TypedParameterPtr(const std::string& name, 
+			T* ptr_ = nullptr,
 			const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "", bool ownsData_ = false) :
 			ptr(ptr_),
-			MetaTypedParameter<T>(name, type, tooltip), ownsData(ownsData_){}
+			MetaTypedParameter<T>(name, type, tooltip), ownsData(ownsData_)
+		{}
+
+		TypedParameterPtr(const std::string& name,
+			const T* ptr_ = nullptr,
+			const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "", bool ownsData_ = false) :
+			ptr(ptr_),
+			MetaTypedParameter<T>(name, type, tooltip), ownsData(ownsData_)
+		{}
 
 		virtual T* Data()
 		{
@@ -103,5 +136,11 @@ namespace Parameters
 			Parameter::changed = true;
 			Parameter::UpdateSignal();
 		}
+		/*virtual void UpdateData(const T* data_)
+		{
+			ptr = data_;
+			Parameter::changed = true;
+			Parameter::UpdateSignal();
+		}*/
 	};
 }

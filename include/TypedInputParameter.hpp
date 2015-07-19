@@ -1,10 +1,10 @@
 #pragma once
-#include "MetaParameter.hpp"
+#include <ITypedParameter.hpp>
 #include "InputParameter.hpp"
 
 namespace Parameters
 {
-	template<typename T> class TypedInputParameter : public MetaTypedParameter<T>, public InputParameter
+	template<typename T> class TypedInputParameter : public ITypedParameter<T>, public InputParameter
 	{
 		typename ITypedParameter<T>::Ptr input;
 		boost::signals2::connection inputConnection;
@@ -14,8 +14,14 @@ namespace Parameters
 		}
 	public:
 		typedef std::shared_ptr<TypedInputParameter<T>> Ptr;
-		TypedInputParameter(const std::string& name, const std::string& tooltip = "", const boost::function<bool(Parameter*)>& qualifier_ = boost::function<bool(Parameter*)>()) :
-			MetaTypedParameter<T>(name, Parameter::ParameterType::Input, tooltip){ qualifier = qualifier_; }
+
+		TypedInputParameter(const std::string& name, 
+			const std::string& tooltip = "", 
+			const boost::function<bool(Parameter*)>& qualifier_ = boost::function<bool(Parameter*)>()) :
+			ITypedParameter<T>(name, Parameter::ParameterType::Input, tooltip)
+		{ 
+				qualifier = qualifier_; 
+		}
 		virtual bool SetInput(const std::string& name_)
 		{
 			return false;
@@ -32,6 +38,10 @@ namespace Parameters
 				return true;
 			}
 			return false;
+		}
+		std::shared_ptr<Parameter> GetInput()
+		{
+			return input;
 		}
 
 		virtual bool AcceptsInput(const Parameter::Ptr param)
@@ -61,6 +71,14 @@ namespace Parameters
 		{
 
 		}
+		virtual Loki::TypeInfo GetTypeInfo()
+		{
+			return Loki::TypeInfo(typeid(T));
+		}
+		/*virtual void UpdateData(const T* data_)
+		{
+
+		}*/
 
 	};
 
@@ -106,6 +124,10 @@ namespace Parameters
 			}
 			return false;
 		}
+		std::shared_ptr<Parameter> GetInput()
+		{
+			return input;
+		}
 
 		virtual bool AcceptsInput(const Parameter::Ptr param)
 		{
@@ -134,5 +156,13 @@ namespace Parameters
 		{
 
 		}
+		virtual Loki::TypeInfo GetTypeInfo()
+		{
+			return Loki::TypeInfo(typeid(T));
+		}
+		/*virtual void UpdateData(const T* data_)
+		{
+
+		}*/
 	};
 }

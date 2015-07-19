@@ -698,10 +698,13 @@ namespace Parameters{
 				virtual void SetData(std::vector<T>* data_)
 				{
 					vectorData = data_;
-					if (data_->size())
+					if (vectorData)
 					{
-						if (index && index->value() < vectorData->size())
-							Handler<T>::SetData(&(*vectorData)[index->value()]);
+						if (data_->size())
+						{
+							if (index && index->value() < vectorData->size())
+								Handler<T>::SetData(&(*vectorData)[index->value()]);
+						}
 					}
 				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
@@ -714,6 +717,7 @@ namespace Parameters{
 					return output;
 				}
 			};
+
 			// **********************************************************************************
 			// *************************** ParameterProxy ***************************************
 			// **********************************************************************************
@@ -721,6 +725,7 @@ namespace Parameters{
 			{
 				Handler<T> paramHandler;
 				std::shared_ptr<Parameters::ITypedParameter<T>> parameter;
+			public:
 				void onUiUpdate()
 				{
 					//TODO Notify parameter of update on the processing thread.
