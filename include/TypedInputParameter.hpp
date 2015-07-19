@@ -46,6 +46,8 @@ namespace Parameters
 
 		virtual bool AcceptsInput(const Parameter::Ptr param)
 		{
+			if (qualifier)
+				return qualifier(param.get());
 			return Loki::TypeInfo(typeid(T)) == param->GetTypeInfo();
 		}
 
@@ -131,6 +133,8 @@ namespace Parameters
 
 		virtual bool AcceptsInput(const Parameter::Ptr param)
 		{
+			if (qualifier)
+				return qualifier(param.get());
 			return Loki::TypeInfo(typeid(T)) == param->GetTypeInfo();
 		}
 
