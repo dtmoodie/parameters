@@ -35,6 +35,7 @@ namespace Parameters
 				input = castedParam;
 				inputConnection.disconnect();
 				inputConnection = castedParam->RegisterNotifier(boost::bind(&TypedInputParameter<T>::onInputUpdate, this));
+				Parameter::UpdateSignal();
 				return true;
 			}
 			return false;

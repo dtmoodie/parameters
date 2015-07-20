@@ -160,6 +160,7 @@ namespace Parameters
 					{
 						const std::string& toolTip = typedParam->GetTooltip();
 						(*fs) << typedParam->GetName().c_str() << "{";
+						(*fs) << "TreeName" << typedParam->GetTreeName();
 						serializer.Serialize(fs, typedParam->Data());
 						(*fs) << "Type" << typedParam->GetTypeInfo().name();
 						if (toolTip.size())
