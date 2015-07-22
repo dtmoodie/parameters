@@ -581,10 +581,15 @@ namespace Parameters{
 				{
 					boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
 					if (sender == box && intData)
+                    {
 						if(val == -1)
+                        {
 							*intData = box->value();
-						else
+                        }else
+                        {
 							*intData = val;
+                        }
+                    }
 					if (onUpdate)
 						onUpdate();
 				}
