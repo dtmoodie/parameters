@@ -1,4 +1,4 @@
-#include "Parameters.hpp"
+/*#include "Parameters.hpp"
 #include "UI/Qt.hpp"
 
 
@@ -62,5 +62,10 @@ int main()
 	//Parameters::Persistence::cv::InterpreterRegistry::GetInterpretingFunction()
 
 
+    return 0;
+}
+*/
+int main()
+{
     return 0;
 }

@@ -60,7 +60,7 @@ void SignalProxy::on_update(int row, int col)
 }
 std::map<Loki::TypeInfo, WidgetFactory::HandlerCreator> WidgetFactory::registry = std::map<Loki::TypeInfo, WidgetFactory::HandlerCreator>();
 
-void WidgetFactory::RegisterCreator(Loki::TypeInfo& type, HandlerCreator f)
+void WidgetFactory::RegisterCreator(Loki::TypeInfo type, HandlerCreator f)
 {
 	WidgetFactory::registry[type] = f;
 }

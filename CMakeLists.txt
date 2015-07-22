@@ -145,8 +145,6 @@ INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DI
 #GET_FILENAME_COMPONENT(boost_libs_ "${Boost_LIBRARIES}" NAME)
 SET(boost_libs_)
 FOREACH(lib ${Boost_LIBRARIES})
-MESSAGE(STATUS "${lib}
-")
 IF(${lib} MATCHES "debug")
 ELSE()
 IF(${lib} MATCHES "optimized")
@@ -163,7 +161,7 @@ ENDFOREACH()
 
 
 #SET(Parameters_LIBRARIES "${boost_libs_};${PERSITENCE_LIBS};${UI_LIBS}")
-SET(Parameters_LIBRARIES "${PERSITENCE_LIBS};${UI_LIBS}")
+SET(Parameters_LIBRARIES "${PERSITENCE_LIBS};${UI_LIBS};${boost_libs_}")
 
 SET(Parameters_LIB_DIRS_RELEASE "${Boost_LIBRARY_DIR};${UI_LIB_DIR_REL_};${PERSISTENCE_LIB_DIR_REL_}")
 SET(Parameters_LIB_DIRS_DEBUG "${Boost_LIBRARY_DIR};${UI_LIB_DIR_DEB_};${PERSISTENCE_LIB_DIR_DEB_}")
@@ -178,11 +176,14 @@ message(STATUS
 	Release lib dirs: ${Parameters_LIB_DIRS_RELEASE}
 
 	Debug lib dirs: ${Parameters_LIB_DIRS_DEBUG}
+
+        Parameter Libs: ${Parameters_LIBRARIES}
 ")
 LINK_DIRECTORIES(${Parameters_LIB_DIRS_RELEASE})
 LINK_DIRECTORIES(${Parameters_LIB_DIRS_DEBUG})
 
 add_library(libParameter SHARED ${hdr} ${src} ${MOC})
+
 TARGET_LINK_LIBRARIES(libParameter 
 	${Parameters_LIBRARIES}
 )

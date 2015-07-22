@@ -40,7 +40,7 @@ namespace Parameters{
 			{
 			public:
 				typedef std::function<std::shared_ptr<IParameterProxy>(std::shared_ptr<Parameters::Parameter>)> HandlerCreator;
-				static void RegisterCreator(Loki::TypeInfo& type, HandlerCreator f);
+                static void RegisterCreator(Loki::TypeInfo type, HandlerCreator f);
 				static std::shared_ptr<IParameterProxy> Createhandler(std::shared_ptr<Parameters::Parameter> param);
 
 			private:

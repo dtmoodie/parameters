@@ -6,9 +6,11 @@
 #include <functional>
 #include <string>
 
-#include <opencv2/core/persistence.hpp>
-#include <opencv2/core/types.hpp>
-#include <opencv2/core/mat.hpp>
+#include <opencv2/core.hpp>
+//#include <opencv2/core/persistence.hpp>
+//#include <opencv2/core/types.hpp>
+//#include <opencv2/core/mat.hpp>
+
 
 #include <boost/lexical_cast.hpp>
 #include <boost/function.hpp>
