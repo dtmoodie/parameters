@@ -102,10 +102,13 @@ IF(Parameters_UI)
 			LIST(APPEND UI_LIBS "debug;${qt_widgets_deb}")
 			LIST(APPEND UI_LIBS "debug;${qt_core_deb}")
 			
-		ENDIF(${Qt5_FOUND})
+		ELSE(Qt5_FOUND)
+
+		ENDIF(Qt5_FOUND)
 	ENDIF(Parameters_UI_qt)
 ELSE(Parameters_UI)
 	SET(Parameters_UI_qt FALSE CACHE BOOL "Enable qt UI generators" FORCE)
+	LIST(REMOVE_ITEM src "src/UI/Qt.cpp")
 	MESSAGE("Disabling QT ui generators")
 ENDIF(Parameters_UI)
 
