@@ -1,6 +1,6 @@
 #pragma once
 
-//#ifdef PARAMTERS_USE_UI && !def(PARAMETERS_NO_UI)
+#ifdef PARAMETERS_USE_UI
 
 #include "Qt.hpp"
 namespace Parameters
@@ -15,7 +15,7 @@ namespace Parameters
 	}
 }
 
-/*#else
+#else
 namespace Parameters
 {
 	namespace UI
@@ -27,4 +27,4 @@ namespace Parameters
 		};
 	}
 }
-#endif*/
+#endif
