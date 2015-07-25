@@ -182,6 +182,7 @@ namespace Parameters
 							if (type == param->GetTypeInfo().name())
 							{
 								serializer.DeSerialize(fs, typedParam->Data());
+                                typedParam->changed = true;
 								typedParam->UpdateSignal();
 							}
 							else
@@ -194,6 +195,7 @@ namespace Parameters
 							if (type == param->GetTypeInfo().name())
 							{
 								serializer.DeSerialize(&myNode, typedParam->Data());
+                                typedParam->changed = true;
 								typedParam->UpdateSignal();
 							}
 							else
