@@ -10,19 +10,19 @@ namespace Parameters
 {
 	struct ReadFile : public boost::filesystem::path
 	{
-		ReadFile(const ::std::string& str) : boost::filesystem::path(str){}
+        ReadFile(const ::std::string& str = "") : boost::filesystem::path(str){}
 	};
 	struct WriteFile : public boost::filesystem::path
 	{
-		WriteFile(const ::std::string& file) : boost::filesystem::path(file){}
+        WriteFile(const ::std::string& file = "") : boost::filesystem::path(file){}
 	};
 	struct ReadDirectory : public boost::filesystem::path
 	{
-		ReadDirectory(const boost::filesystem::path& path) : boost::filesystem::path(path){}
+        ReadDirectory(const boost::filesystem::path& path = "") : boost::filesystem::path(path){}
 	};
 	struct WriteDirectory : public boost::filesystem::path
 	{
-		WriteDirectory(const ::std::string& str) : boost::filesystem::path(str){}
+        WriteDirectory(const ::std::string& str = "") : boost::filesystem::path(str){}
 	};
 
 	class EnumParameter

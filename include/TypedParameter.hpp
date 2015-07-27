@@ -106,12 +106,12 @@ namespace Parameters
 			MetaTypedParameter<T>(name, type, tooltip), ownsData(ownsData_)
 		{}
 
-		TypedParameterPtr(const std::string& name,
+        /*TypedParameterPtr(const std::string& name,
 			const T* ptr_ = nullptr,
 			const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "", bool ownsData_ = false) :
 			ptr(ptr_),
 			MetaTypedParameter<T>(name, type, tooltip), ownsData(ownsData_)
-		{}
+        {}*/
 
 		virtual T* Data()
 		{

@@ -18,7 +18,9 @@
 
 #include <typeinfo>
 #include <cassert>
-//#include "Typelist.h"
+#include <cstdlib>
+#include <memory>
+#include <cxxabi.h>
 
 namespace Loki
 {
@@ -36,7 +38,7 @@ namespace Loki
          const std::type_info& Get() const;
          // Compatibility functions
         bool before(const TypeInfo& rhs) const;
-         const char* name() const;
+         std::string name() const;
 
      private:
          const std::type_info* pInfo_;
@@ -68,10 +70,22 @@ namespace Loki
          return *pInfo_;
      }
 
-     inline const char* TypeInfo::name() const
+     inline std::string TypeInfo::name() const
      {
          assert(pInfo_);
+#ifdef _MSC_VER
          return pInfo_->name();
+#else
+         int status = -4; // some arbitrary value to eliminate the compiler warning
+
+         // enable c++11 by passing the flag -std=c++11 to g++
+         std::unique_ptr<char, void(*)(void*)> res {
+             abi::__cxa_demangle(pInfo_->name(), NULL, NULL, &status),
+             std::free
+         };
+
+         return (status==0) ? res.get() : pInfo_->name() ;
+#endif
      }
 
     // Comparison operators

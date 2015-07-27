@@ -33,3 +33,4 @@ boost::signals2::connection Parameter::RegisterNotifier(const boost::function<vo
 {
 	return UpdateSignal.connect(f);
 }
+

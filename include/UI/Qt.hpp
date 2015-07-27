@@ -87,7 +87,7 @@ namespace Parameters{
 			public:
 				
 				IHandler() : write(true), paramMtx(nullptr), proxy(new SignalProxy(this)) {}
-				virtual void OnUiUpdate(QObject* sender) {};
+                virtual void OnUiUpdate(QObject* sender) {}
 				virtual void OnUiUpdate(QObject* sender, double val) {}
 				virtual void OnUiUpdate(QObject* sender, int val) {}
 				virtual void OnUiUpdate(QObject* sender, bool val) {}
