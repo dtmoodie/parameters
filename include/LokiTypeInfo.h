@@ -73,9 +73,9 @@ namespace Loki
      inline std::string TypeInfo::name() const
      {
          assert(pInfo_);
-#ifdef _MSC_VER
-         return pInfo_->name();
-#else
+//#ifdef _MSC_VER
+//         return pInfo_->name();
+//#else
          int status = -4; // some arbitrary value to eliminate the compiler warning
 
          // enable c++11 by passing the flag -std=c++11 to g++
@@ -85,7 +85,7 @@ namespace Loki
          };
 
          return (status==0) ? res.get() : pInfo_->name() ;
-#endif
+//#endif
      }
 
     // Comparison operators

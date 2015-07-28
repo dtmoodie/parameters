@@ -211,6 +211,8 @@ namespace Parameters{
 						}
 						btn->setText(filename);
 						*fileData = T(filename.toStdString());
+                        if(onUpdate)
+                            onUpdate();
 					}					
 				}
 				virtual void SetData(T* data_)
@@ -796,7 +798,7 @@ namespace Parameters{
 					else
 					{
 						QLabel* nameLbl = new QLabel(QString::fromStdString(parameter->GetName()), output);
-						nameLbl->setToolTip(QString(parameter->GetTypeInfo().name()));
+                        nameLbl->setToolTip(QString::fromStdString(parameter->GetTypeInfo().name()));
 						layout->addWidget(nameLbl, 0, 0);
 						int count = 1;
 						output->setLayout(layout);

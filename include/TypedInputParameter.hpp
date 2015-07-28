@@ -22,6 +22,11 @@ namespace Parameters
 		{ 
 				qualifier = qualifier_; 
 		}
+        ~TypedInputParameter()
+        {
+            inputConnection.disconnect();
+        }
+
 		virtual bool SetInput(const std::string& name_)
 		{
 			return false;
@@ -106,7 +111,10 @@ namespace Parameters
 		TypedInputParameterCopy(const std::string& name, T* userVar_,
 			const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "") :
 			MetaTypedParameter<T>(name, type, tooltip), userVar(userVar_) {}
-
+        ~TypedInputParameterCopy()
+        {
+            inputConnection.disconnect();
+        }
 		virtual bool SetInput(const std::string& name_)
 		{
 			return false;
@@ -187,7 +195,10 @@ namespace Parameters
 		TypedInputParameterPtr(const std::string& name, T** userVar_,
 			const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "") :
 			MetaTypedParameter<T>(name, type, tooltip), userVar(userVar_){}
-
+        ~TypedInputParameterPtr()
+        {
+            inputConnection.disconnect();
+        }
 		virtual bool SetInput(const std::string& name_)
 		{
 			return false;
