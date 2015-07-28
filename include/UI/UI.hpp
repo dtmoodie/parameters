@@ -20,7 +20,9 @@ namespace Parameters
 {
 	namespace UI
 	{
-		template<typename T> class UiPolicy
+		class NoUiPolicy
+		{		};
+		template<typename T> class UiPolicy: public NoUiPolicy
 		{
 		public:
 

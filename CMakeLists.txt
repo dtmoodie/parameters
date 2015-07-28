@@ -34,14 +34,17 @@ SET(UI_LIB_DIR_REL_)
 SET(UI_LIB_DIR_DEB_)
 SET(MOC "")
 IF(Parameters_UI)
+	
+	LIST(APPEND definitions_ "-DPARAMETERS_USE_UI")
+	
 	IF(Parameters_UI_qt)
+		
 		FIND_PACKAGE(Qt5 COMPONENTS Gui Widgets Core)
-                IF(Qt5_FOUND)
+        IF(Qt5_FOUND)
+
 			SET(USING_UI_ "QT")
-			ADD_DEFINITIONS(-DQt5_FOUND)
-			ADD_DEFINITIONS(-DPARAMTERS_USE_UI)
-                        LIST(APPEND definitions_ "-DQt5_FOUND")
-                        LIST(APPEND definitions_ "-DPARAMTERS_USE_UI")
+            LIST(APPEND definitions_ "-DQt5_FOUND")
+            
 			QT5_WRAP_CPP(MOC ${hdr} ${src})
 			INCLUDE_DIRECTORIES(${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS})
 			LIST(APPEND UI_INCLUDES_ "${Qt5Gui_INCLUDE_DIRS};${Qt5Widgets_INCLUDE_DIRS};${Qt5Core_INCLUDE_DIRS}")

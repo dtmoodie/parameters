@@ -77,7 +77,18 @@ namespace Parameters{
 				void on_update(QString);
 				void on_update(int row, int col);
 			};
-			
+			class Parameter_EXPORTS DefaultProxy: public IParameterProxy
+			{
+				std::shared_ptr<Parameters::Parameter> parameter;
+				void onUiUpdate()
+				{			}
+				void onParamUpdate()
+				{				}
+			public:
+				DefaultProxy(std::shared_ptr<Parameters::Parameter> param);
+				virtual bool CheckParameter(Parameter* param);
+				QWidget* GetParameterWidget(QWidget* parent);
+			};
 			class Parameter_EXPORTS IHandler
 			{
 				
