@@ -18,9 +18,12 @@
 
 #include <typeinfo>
 #include <cassert>
+// Needed to demangle GCC's name mangling.
+#ifndef _MSC_VER
 #include <cstdlib>
 #include <memory>
 #include <cxxabi.h>
+#endif
 
 namespace Loki
 {
