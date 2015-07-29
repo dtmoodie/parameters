@@ -764,7 +764,7 @@ namespace Parameters{
 					auto dataPtr = parameter->Data();	
 					if (dataPtr)
 					{
-						UiCallbackService::Instance().post(boost::bind(&Handler<T>::UpdateUi, &paramHandler, boost::ref(*dataPtr)));
+                        UiCallbackService::Instance()->post(boost::bind(&Handler<T>::UpdateUi, &paramHandler, boost::ref(*dataPtr)));
 					}
 				}
 			public:
