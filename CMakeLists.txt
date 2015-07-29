@@ -13,7 +13,7 @@ ENDIF(WIN32)
 FIND_PACKAGE(Boost REQUIRED COMPONENTS filesystem system thread chrono date_time)
 IF(Boost_FOUND)
 	#ADD_DEFINITIONS(-DBoost_FOUND)
-	ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB) 
+	ADD_DEFINITIONS(-DBOOST_ALL_DYN_LIB) 
 	INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 ENDIF()
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -34,14 +34,17 @@ SET(UI_LIB_DIR_REL_)
 SET(UI_LIB_DIR_DEB_)
 SET(MOC "")
 IF(Parameters_UI)
+	
+	LIST(APPEND definitions_ "-DPARAMETERS_USE_UI")
+	
 	IF(Parameters_UI_qt)
+		
 		FIND_PACKAGE(Qt5 COMPONENTS Gui Widgets Core)
-                IF(Qt5_FOUND)
+        IF(Qt5_FOUND)
+
 			SET(USING_UI_ "QT")
-			ADD_DEFINITIONS(-DQt5_FOUND)
-			ADD_DEFINITIONS(-DPARAMTERS_USE_UI)
-                        LIST(APPEND definitions_ "-DQt5_FOUND")
-                        LIST(APPEND definitions_ "-DPARAMTERS_USE_UI")
+            LIST(APPEND definitions_ "-DQt5_FOUND")
+            
 			QT5_WRAP_CPP(MOC ${hdr} ${src})
 			INCLUDE_DIRECTORIES(${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS})
 			LIST(APPEND UI_INCLUDES_ "${Qt5Gui_INCLUDE_DIRS};${Qt5Widgets_INCLUDE_DIRS};${Qt5Core_INCLUDE_DIRS}")
@@ -172,12 +175,7 @@ ENDIF()
 ENDIF()
 ENDFOREACH()
 
-
-
-
-
-#SET(Parameters_LIBRARIES "${boost_libs_};${PERSITENCE_LIBS};${UI_LIBS}")
-SET(Parameters_LIBRARIES "${PERSITENCE_LIBS};${UI_LIBS};${boost_libs_}")
+SET(Parameters_LIBRARIES "${PERSITENCE_LIBS};${UI_LIBS};")
 
 SET(Parameters_LIB_DIRS_RELEASE "${Boost_LIBRARY_DIR};${UI_LIB_DIR_REL_};${PERSISTENCE_LIB_DIR_REL_}")
 SET(Parameters_LIB_DIRS_DEBUG "${Boost_LIBRARY_DIR};${UI_LIB_DIR_DEB_};${PERSISTENCE_LIB_DIR_DEB_}")

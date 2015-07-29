@@ -74,9 +74,30 @@ std::shared_ptr<IParameterProxy> WidgetFactory::Createhandler(std::shared_ptr<Pa
         std::string typeName = param->GetTypeInfo().name();
         std::string treeName = param->GetTreeName();
         std::cout << "No Widget Factory registered for type " << typeName << " unable to make widget for parameter: " << treeName << std::endl;
-		return std::shared_ptr<IParameterProxy>();
+		return std::shared_ptr<IParameterProxy>(new DefaultProxy(param));
 	}
 		
 	return itr->second(param);
 }
 
+DefaultProxy::DefaultProxy(std::shared_ptr<Parameters::Parameter> param)
+{
+	parameter = param;
+}
+
+bool DefaultProxy::CheckParameter(Parameters::Parameter* param)
+{
+	return param == parameter.get();
+}
+QWidget* DefaultProxy::GetParameterWidget(QWidget* parent)
+{
+	QWidget* output = new QWidget(parent);
+
+	QGridLayout* layout = new QGridLayout(output);
+	QLabel* nameLbl = new QLabel(QString::fromStdString(parameter->GetName()), output);
+	nameLbl->setToolTip(QString::fromStdString(parameter->GetTypeInfo().name()));
+	layout->addWidget(nameLbl, 0, 0);
+	int count = 1;
+	output->setLayout(layout);
+	return output;
+}

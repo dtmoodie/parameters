@@ -1,3 +1,5 @@
+#pragma once
+
 #include <boost/asio/io_service.hpp>
 #include "Parameter_def.hpp"
 #include <boost/function.hpp>
