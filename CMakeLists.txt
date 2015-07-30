@@ -10,10 +10,10 @@ ELSE(WIN32)
 	set(Boost_USE_MULTITHREADED      ON)
 	set(Boost_USE_STATIC_RUNTIME     OFF)
 ENDIF(WIN32)
-FIND_PACKAGE(Boost REQUIRED COMPONENTS filesystem system thread chrono date_time)
+FIND_PACKAGE(Boost REQUIRED COMPONENTS filesystem system thread chrono date_time log log_setup)
 IF(Boost_FOUND)
 	#ADD_DEFINITIONS(-DBoost_FOUND)
-	ADD_DEFINITIONS(-DBOOST_ALL_DYN_LIB) 
+	ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB) 
 	INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 ENDIF()
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -175,7 +175,12 @@ ENDIF()
 ENDIF()
 ENDFOREACH()
 
-SET(Parameters_LIBRARIES "${PERSITENCE_LIBS};${UI_LIBS};")
+
+
+
+
+#SET(Parameters_LIBRARIES "${boost_libs_};${PERSITENCE_LIBS};${UI_LIBS}")
+SET(Parameters_LIBRARIES "${PERSITENCE_LIBS};${UI_LIBS};${boost_libs_}")
 
 SET(Parameters_LIB_DIRS_RELEASE "${Boost_LIBRARY_DIR};${UI_LIB_DIR_REL_};${PERSISTENCE_LIB_DIR_REL_}")
 SET(Parameters_LIB_DIRS_DEBUG "${Boost_LIBRARY_DIR};${UI_LIB_DIR_DEB_};${PERSISTENCE_LIB_DIR_DEB_}")
@@ -184,13 +189,9 @@ message(STATUS
 	Boost libs: ${Boost_LIBRARIES}
 	UI: ${USING_UI_}
 	qt_gui: ${qt_gui_}
-
 	qt_widgets: ${qt_widgets_}
-
 	Release lib dirs: ${Parameters_LIB_DIRS_RELEASE}
-
 	Debug lib dirs: ${Parameters_LIB_DIRS_DEBUG}
-
         Parameter Libs: ${Parameters_LIBRARIES}
 ")
 LINK_DIRECTORIES(${Parameters_LIB_DIRS_RELEASE})
