@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(Parameters)
 IF(NOT WIN32)
-SET(Boost_REQUIRED_COMPONENTS  filesystem system thread chrono date_time log log_setup)
+	SET(Boost_REQUIRED_COMPONENTS  filesystem system thread chrono date_time log log_setup)
 ENDIF(NOT WIN32)
 FIND_PACKAGE(Boost REQUIRED COMPONENTS ${Boost_REQUIRED_COMPONENTS})
 IF(Boost_FOUND)
