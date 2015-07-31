@@ -96,8 +96,7 @@ QWidget* DefaultProxy::GetParameterWidget(QWidget* parent)
 	QGridLayout* layout = new QGridLayout(output);
 	QLabel* nameLbl = new QLabel(QString::fromStdString(parameter->GetName()), output);
 	nameLbl->setToolTip(QString::fromStdString(parameter->GetTypeInfo().name()));
-	layout->addWidget(nameLbl, 0, 0);
-	int count = 1;
+    layout->addWidget(nameLbl, 0, 0);
 	output->setLayout(layout);
 	return output;
 }
