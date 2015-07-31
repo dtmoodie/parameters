@@ -161,8 +161,17 @@ namespace Parameters
 					if (typedParam)
 					{
 						const std::string& toolTip = typedParam->GetTooltip();
-						(*fs) << typedParam->GetName().c_str() << "{";
-						(*fs) << "TreeName" << typedParam->GetTreeName();
+						try
+						{
+							(*fs) << typedParam->GetName().c_str() << "{";
+							(*fs) << "TreeName" << typedParam->GetTreeName();
+						}
+						catch (::cv::Exception& e)
+						{
+							std::cout << "Invalid tree name for parameter: " << typedParam->GetTreeName();
+							return;
+						}			
+						
 						serializer.Serialize(fs, typedParam->Data());
 						(*fs) << "Type" << typedParam->GetTypeInfo().name();
 						if (toolTip.size())

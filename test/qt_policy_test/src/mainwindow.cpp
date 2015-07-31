@@ -26,6 +26,37 @@ MainWindow::MainWindow(QWidget *parent) :
 		parameters.push_back(Parameters::Parameter::Ptr(param));
 	}
 	{
+		auto param = new Parameters::TypedParameter<cv::Point3f>("Point3f");
+		param->Data()->z = 15;
+		parameters.push_back(Parameters::Parameter::Ptr(param));
+	}
+	{
+		Parameters::Parameter::Ptr param(new Parameters::TypedParameterPtr<std::vector<cv::Point2f>>("Vector cv::Point2f", &testRefVec));
+		testRefVec.push_back(cv::Point2f(0, 1));
+		testRefVec.push_back(cv::Point2f(2, 3));
+		testRefVec.push_back(cv::Point2f(4, 5));
+		testRefVec.push_back(cv::Point2f(6, 7));
+		testRefVec.push_back(cv::Point2f(8, 1));
+		testRefVec.push_back(cv::Point2f(9, 1));
+		testRefVec.push_back(cv::Point2f(10, 1));
+		param->UpdateSignal();
+		parameters.push_back(param);
+	}
+	{
+		Parameters::Parameter::Ptr  param(new Parameters::TypedParameterPtr<std::vector<cv::Scalar>>("Vector cv::Scalar", &testRefScalar));
+		testRefScalar.push_back(cv::Scalar(0));
+		testRefScalar.push_back(cv::Scalar(1));
+		testRefScalar.push_back(cv::Scalar(2));
+		testRefScalar.push_back(cv::Scalar(3));
+		testRefScalar.push_back(cv::Scalar(4));
+		testRefScalar.push_back(cv::Scalar(5));
+		testRefScalar.push_back(cv::Scalar(6));
+		testRefScalar.push_back(cv::Scalar(7));
+		testRefScalar.push_back(cv::Scalar(8));
+		param->UpdateSignal();
+		parameters.push_back(param);
+	}
+	{
 		auto param = new Parameters::TypedParameter<int>("int");
 		*param->Data() = 10;
 		parameters.push_back(Parameters::Parameter::Ptr(param));

@@ -23,6 +23,8 @@ private:
     Ui::MainWindow *ui;
 	std::vector<std::shared_ptr<Parameters::UI::qt::IParameterProxy>> proxies;
 	std::vector<Parameters::Parameter::Ptr> parameters;
+	std::vector<cv::Point2f> testRefVec;
+	std::vector<cv::Scalar> testRefScalar;
 };
 
 #endif // MAINWINDOW_H
