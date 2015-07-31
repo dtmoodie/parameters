@@ -351,8 +351,12 @@ namespace Parameters{
 				virtual void UpdateUi(const ::cv::Point_<T>& data)
 				{
 					boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+                    first = new QTableWidgetItem();
+                    second = new QTableWidgetItem();
 					first->setData(Qt::EditRole, ptData->x);
 					second->setData(Qt::EditRole, ptData->y);
+                    table->setItem(0, 0, first);
+                    table->setItem(0, 1, second);
 				}
 				virtual void OnUiUpdate(QObject* sender, int row = -1, int col = -1)
 				{
@@ -392,7 +396,84 @@ namespace Parameters{
 					return output;
 				}
 			};
-
+            template<typename T> class Handler<typename ::cv::Point3_<T>, void>: public IHandler
+            {
+                QTableWidget* table;
+                QTableWidgetItem* first;
+                QTableWidgetItem* second;
+                QTableWidgetItem* third;
+                ::cv::Point3_<T>* ptData;
+            public:
+                Handler():ptData(nullptr)
+                {
+                    table = new QTableWidget();
+                    first = new QTableWidgetItem();
+                    second = new QTableWidgetItem();
+                    third = new QTableWidgetItem();
+                    table->horizontalHeader()->hide();
+                    table->verticalHeader()->hide();
+                    table->setItem(0, 0, first);
+                    table->setItem(0, 1, second);
+                    table->setItem(0, 2, third);
+                    table->setRowCount(1);
+                    table->setColumnCount(3);
+                    proxy->connect(table, SIGNAL(cellChanged(int, int)), proxy, SLOT(on_update(int, int)));
+                }
+                virtual void UpdateUi(const ::cv::Point3_<T>& data)
+                {
+                    boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+                    first = new QTableWidgetItem();
+                    second = new QTableWidgetItem();
+                    third = new QTableWidgetItem();
+                    first->setData(Qt::EditRole, ptData->x);
+                    second->setData(Qt::EditRole, ptData->y);
+                    third->setData(Qt::EditRole, ptData->z);
+                    table->setItem(0, 0, first);
+                    table->setItem(0, 1, second);
+                    table->setItem(0, 2, third);
+                }
+                virtual void OnUiUpdate(QObject* sender, int row = -1, int col = -1)
+                {
+                    boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+                    if (ptData == nullptr)
+                        return;
+                    if (typeid(T) == typeid(double))
+                    {
+                        ptData->x = (T)first->data(Qt::EditRole).toDouble();
+                        ptData->y = (T)second->data(Qt::EditRole).toDouble();
+                        ptData->z = (T)third->data(Qt::EditRole).toDouble();
+                    }
+                    if (typeid(T) == typeid(float))
+                    {
+                        ptData->x = (T)first->data(Qt::EditRole).toFloat();
+                        ptData->y = (T)second->data(Qt::EditRole).toFloat();
+                        ptData->z = (T)third->data(Qt::EditRole).toFloat();
+                    }
+                    if (typeid(T) == typeid(int))
+                    {
+                        ptData->x = (T)first->data(Qt::EditRole).toInt();
+                        ptData->y = (T)second->data(Qt::EditRole).toInt();
+                        ptData->z = (T)third->data(Qt::EditRole).toInt();
+                    }
+                    if (typeid(T) == typeid(unsigned int))
+                    {
+                        ptData->x = (T)first->data(Qt::EditRole).toUInt();
+                        ptData->y = (T)second->data(Qt::EditRole).toUInt();
+                        ptData->z = (T)third->data(Qt::EditRole).toUInt();
+                    }
+                }
+                virtual void SetData(::cv::Point3_<T>* data_)
+                {
+                    ptData = data_;
+                    UpdateUi(*ptData);
+                }
+                virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
+                {
+                    std::vector<QWidget*> output;
+                    output.push_back(table);
+                    return output;
+                }
+            };
 #endif
 			
 			// **********************************************************************************
