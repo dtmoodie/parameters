@@ -128,11 +128,11 @@ IF(${Parameters_persistence})
 		
 		GET_TARGET_PROPERTY(cv_core_lib_deb opencv_core IMPORTED_IMPLIB_DEBUG)
 		IF(${cv_core_lib_deb} MATCHES "NOTFOUND")
-		GET_TARGET_PROPERTY(cv_core_lib_deb opencv_core LOCATION)
+			GET_TARGET_PROPERTY(cv_core_lib_deb opencv_core LOCATION)
 		ENDIF()
 		GET_TARGET_PROPERTY(cv_core_lib_rel opencv_core IMPORTED_IMPLIB_RELEASE)
 		IF(${cv_core_lib_rel} MATCHES "NOTFOUND")
-		GET_TARGET_PROPERTY(cv_core_lib_rel opencv_core LOCATION)
+			GET_TARGET_PROPERTY(cv_core_lib_rel opencv_core LOCATION)
 		ENDIF()
 		
 		#directories
@@ -157,17 +157,17 @@ INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DI
 SET(boost_lib_)
 SET(boost_libs_)
 FOREACH(lib ${Boost_LIBRARIES})
-IF(${lib} MATCHES "debug")
-SET(boost_lib_ "debug")
-ELSE()
-IF(${lib} MATCHES "optimized")
-SET(boost_lib_ "optimized")
-ELSE()
-GET_FILENAME_COMPONENT(lib "${lib}" NAME)
-LIST(APPEND boost_libs_ "${boost_lib_};${lib}")
-ENDIF()
-
-ENDIF()
+	
+	IF(${lib} MATCHES "debug")
+		SET(boost_lib_ "debug")
+	ELSE()
+		IF(${lib} MATCHES "optimized")
+			SET(boost_lib_ "optimized")
+		ELSE()
+			GET_FILENAME_COMPONENT(lib "${lib}" NAME)
+			LIST(APPEND boost_libs_ "${boost_lib_};${lib}")
+		ENDIF()
+	ENDIF()
 ENDFOREACH()
 
 
@@ -177,8 +177,8 @@ ENDFOREACH()
 #SET(Parameters_LIBRARIES "${boost_libs_};${PERSITENCE_LIBS};${UI_LIBS}")
 SET(Parameters_LIBRARIES "${PERSITENCE_LIBS};${UI_LIBS};${boost_libs_}")
 
-SET(Parameters_LIB_DIRS_RELEASE "${Boost_LIBRARY_DIR};${UI_LIB_DIR_REL_};${PERSISTENCE_LIB_DIR_REL_}")
-SET(Parameters_LIB_DIRS_DEBUG "${Boost_LIBRARY_DIR};${UI_LIB_DIR_DEB_};${PERSISTENCE_LIB_DIR_DEB_}")
+SET(Parameters_LIB_DIRS_RELEASE "${Boost_LIBRARY_DIR_RELEASE};${UI_LIB_DIR_REL_};${PERSISTENCE_LIB_DIR_REL_}")
+SET(Parameters_LIB_DIRS_DEBUG "${Boost_LIBRARY_DIR_DEBUG};${UI_LIB_DIR_DEB_};${PERSISTENCE_LIB_DIR_DEB_}")
 message(STATUS
 "============== libParameter =============
 	Boost libs: ${Boost_LIBRARIES}
