@@ -8,12 +8,7 @@
 #include <boost/signals2/signal.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 
-#ifdef _MSC_VER
-#define LOG_TRIVIAL(severity) BOOST_LOG_NAMED_SCOPE(__FUNCTION__); BOOST_LOG_TRIVIAL(severity)
-#else
-#define LOG_TRIVIAL(severity) BOOST_LOG_NAMED_SCOPE(__PRETTY_FUNCTION__); BOOST_LOG_TRIVIAL(severity)
-#endif
-#define LOG_TRACE  LOG_TRIVIAL(trace) << " "
+
 
 
 

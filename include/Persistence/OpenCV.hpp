@@ -19,7 +19,8 @@
 #include <Parameter_def.hpp>
 #include <ITypedParameter.hpp>
 #include <Types.hpp>
-
+#include <boost/log/trivial.hpp>
+#include <boost/log/attributes/named_scope.hpp>
 //class ::cv::cuda::GpuMat;
 namespace Parameters
 {
@@ -49,11 +50,12 @@ namespace Parameters
 			{
 				virtual void Serialize(::cv::FileStorage* fs, T* param)
 				{
-					std::cout << "Default non specialized serializer called for " << typeid(T).name();
+					LOG_TRIVIAL(info) << "Default non specialized serializer called for " << typeid(T).name();
+					//std::cout << "Default non specialized serializer called for " << typeid(T).name();
 				}
 				virtual void DeSerialize(::cv::FileNode* fs, T* param)
 				{
-					std::cout << "Default non specialized DeSerializer called for " << typeid(T).name();
+					LOG_TRIVIAL(info) << "Default non specialized DeSerializer called for " << typeid(T).name();
 				}
 			};
 			template<> struct Parameter_EXPORTS Serializer<char, void>
@@ -80,10 +82,12 @@ namespace Parameters
 			{
 				virtual void Serialize(::cv::FileStorage* fs, T* param)
 				{
+					LOG_TRACE;
 					(*fs) << "Data" << boost::lexical_cast<std::string>(*param);
 				}
 				virtual void DeSerialize(::cv::FileNode* fs, T* param)
 				{
+					LOG_TRACE;
 					*param = boost::lexical_cast<T>((std::string)(*fs)["Data"]);
 				}
 			}; 
@@ -99,10 +103,12 @@ namespace Parameters
 			{
 				virtual void Serialize(::cv::FileStorage* fs, T* param)
 				{
+					LOG_TRACE;
 					(*fs) << "Data" << *param;
 				}
 				virtual void DeSerialize(::cv::FileNode* fs, T* param)
 				{
+					LOG_TRACE;
 					(*fs)["Data"] >> *param;
 				}
 			};
@@ -110,6 +116,7 @@ namespace Parameters
 			{
 				virtual void Serialize(::cv::FileStorage* fs, ::cv::Matx<T, M, N>* param)
 				{
+					LOG_TRACE;
 					(*fs) << "Rows" << M;
 					(*fs) << "Cols" << N;
 					(*fs) << "Data" << "[";
@@ -126,6 +133,7 @@ namespace Parameters
 				}
 				virtual void DeSerialize(::cv::FileNode* fs, ::cv::Matx<T, M, N>* param)
 				{
+					LOG_TRACE;
 					if ((int)(*fs)["Rows"] != M || (int)(*fs)["Cols"] != N)
 						return;
 					auto rowItr = (*fs)["Data"].begin();
@@ -145,10 +153,12 @@ namespace Parameters
 			{
 				virtual void Serialize(::cv::FileStorage* fs, std::vector<T>* param)
 				{
+					LOG_TRACE;
 					(*fs) << "Data" << *param;
 				}
 				virtual void DeSerialize(::cv::FileNode* fs, std::vector<T>* param)
 				{
+					LOG_TRACE;
 					(*fs)["Data"] >> *param;
 				}
 			};
@@ -156,6 +166,7 @@ namespace Parameters
 			{
 				static void Write(::cv::FileStorage* fs, Parameter* param)
 				{
+					LOG_TRIVIAL(info) << "Writing parameter with name " << param->GetName();
 					ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
 					Serializer<T> serializer;
 					if (typedParam)
@@ -168,10 +179,9 @@ namespace Parameters
 						}
 						catch (::cv::Exception& e)
 						{
-							std::cout << "Invalid tree name for parameter: " << typedParam->GetTreeName();
+							LOG_TRIVIAL(warning) << "Invalid tree name for parameter: " << typedParam->GetTreeName() << " " << e.what();
 							return;
-						}			
-						
+						}						
 						serializer.Serialize(fs, typedParam->Data());
 						(*fs) << "Type" << typedParam->GetTypeInfo().name();
 						if (toolTip.size())
@@ -181,6 +191,7 @@ namespace Parameters
 				}
 				static void Read(::cv::FileNode* fs, Parameter* param)
 				{
+					LOG_TRIVIAL(info) << "Reading parameter with name " << param->GetName();
 					ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
 					Serializer<T> serializer;
 					if (typedParam)
@@ -193,9 +204,13 @@ namespace Parameters
 								serializer.DeSerialize(fs, typedParam->Data());
                                 typedParam->changed = true;
 								typedParam->UpdateSignal();
+								LOG_TRIVIAL(info) << "Successfully read " << param->GetName();
 							}
 							else
+							{
+								LOG_TRIVIAL(error) << "Datatype " + std::string(param->GetTypeInfo().name()) + " requested, but " + type + " found in file";
 								::cv::error(::cv::Error::StsAssert, "Datatype " + std::string(param->GetTypeInfo().name()) + " requested, but " + type + " found in file", CV_Func, __FILE__, __LINE__);
+							}								
 						}
 						else
 						{
@@ -206,9 +221,13 @@ namespace Parameters
 								serializer.DeSerialize(&myNode, typedParam->Data());
                                 typedParam->changed = true;
 								typedParam->UpdateSignal();
+								LOG_TRIVIAL(info) << "Successfully read " << param->GetName();
 							}
 							else
+							{
+								LOG_TRIVIAL(error) << "Datatype " + std::string(param->GetTypeInfo().name()) + " requested, but " + type + " found in file";
 								::cv::error(::cv::Error::StsAssert, "Datatype " + std::string(param->GetTypeInfo().name()) + " requested, but " + type + " found in file", CV_Func, __FILE__, __LINE__);
+							}	
 						}
 					}
 				}

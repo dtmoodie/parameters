@@ -1,8 +1,9 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-
+CMAKE_POLICY(SET CMP0020 NEW)
 PROJECT(Parameters)
 IF(NOT WIN32)
 	SET(Boost_REQUIRED_COMPONENTS  filesystem system thread chrono date_time log log_setup)
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 ENDIF(NOT WIN32)
 FIND_PACKAGE(Boost REQUIRED COMPONENTS ${Boost_REQUIRED_COMPONENTS})
 IF(Boost_FOUND)
@@ -11,7 +12,7 @@ IF(Boost_FOUND)
 	ENDIF(NOT WIN32)
 	INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 ENDIF()
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
 
 FILE(GLOB_RECURSE hdr "include/*.hpp" "include/*.h")
 FILE(GLOB_RECURSE src "src/*.c" "src/*.cpp")
@@ -40,7 +41,8 @@ IF(Parameters_UI)
 			SET(USING_UI_ "QT")
             LIST(APPEND definitions_ "-DQt5_FOUND")
             
-			QT5_WRAP_CPP(MOC ${hdr} ${src})
+			QT5_WRAP_CPP(MOC ${hdr})
+			SOURCE_GROUP("MOC"  FILES ${MOC})
 			INCLUDE_DIRECTORIES(${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS})
 			LIST(APPEND UI_INCLUDES_ "${Qt5Gui_INCLUDE_DIRS};${Qt5Widgets_INCLUDE_DIRS};${Qt5Core_INCLUDE_DIRS}")
 			

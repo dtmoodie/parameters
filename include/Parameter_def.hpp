@@ -10,3 +10,11 @@
 #else
 #  define Parameter_EXPORTS
 #endif
+
+// These are the logging calls that are extensively used
+#ifdef _MSC_VER
+#define LOG_TRIVIAL(severity) BOOST_LOG_FUNCTION(); BOOST_LOG_TRIVIAL(severity)
+#else
+#define LOG_TRIVIAL(severity) BOOST_LOG_FUNCTION(); BOOST_LOG_TRIVIAL(severity)
+#endif
+#define LOG_TRACE  LOG_TRIVIAL(trace) << " "
