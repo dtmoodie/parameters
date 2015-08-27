@@ -117,6 +117,7 @@ namespace Parameters{
 				virtual void OnUiUpdate(QObject* sender, bool val) {}
 				virtual void OnUiUpdate(QObject* sender, QString val) {}
 				virtual void OnUiUpdate(QObject* sender, int row, int col) {}
+				
 				std::function<void(void)>& GetUpdateSignal()
 				{
 					LOG_TRACE;
@@ -129,6 +130,12 @@ namespace Parameters{
 				}
 				bool write;
 				boost::recursive_mutex* paramMtx;
+			};
+
+			class UiUpdateHandler: public IHandler
+			{
+			public:
+				static const bool UiUpdateRequired = true;
 			};
 			// *****************************************************************************
 			//								Default Handler
@@ -156,12 +163,13 @@ namespace Parameters{
 					std::cout << "Creating widget for default unspecialized parameter" << std::endl;
 					return std::vector<QWidget*>();
 				}
+				static const bool UiUpdateRequired = false;
 			};
 
 			// **********************************************************************************
 			// *************************** Bool ************************************************
 			// **********************************************************************************
-			template<> class Handler<bool, void>: public IHandler
+			template<> class Handler<bool, void> : public UiUpdateHandler
 			{
 				QCheckBox* chkBox;
 				bool* boolData;
@@ -172,7 +180,7 @@ namespace Parameters{
 					LOG_TRACE;
 					chkBox->setChecked(data);
 				}
-				virtual void OnUiUpdate(QObject* sender)
+				virtual void OnUiUpdate(QObject* sender, int val)
 				{
 					LOG_TRACE;
 					if (sender == chkBox)
@@ -204,6 +212,7 @@ namespace Parameters{
 					output.push_back(chkBox);
 					return output;
 				}
+				static const bool UiUpdateRequired = true;
 			};
 
 			// **********************************************************************************
@@ -214,7 +223,7 @@ namespace Parameters{
 				std::is_same<T, Parameters::WriteDirectory>::value || 
 				std::is_same<T, Parameters::ReadDirectory>::value || 
 				std::is_same<T, Parameters::WriteFile>::value || 
-				std::is_same<T, Parameters::ReadFile>::value, void>::type> : public IHandler
+				std::is_same<T, Parameters::ReadFile>::value, void>::type> : public UiUpdateHandler
 			{
 				QPushButton* btn;
 				QWidget* parent;
@@ -276,13 +285,13 @@ namespace Parameters{
 			// **********************************************************************************
 			// *************************** cv::Matx *********************************************
 			// **********************************************************************************
-			template<typename T, int ROW, int COL> class Handler<typename ::cv::Matx<T, ROW, COL>, void> : public IHandler
+			template<typename T, int ROW, int COL> class Handler<typename ::cv::Matx<T, ROW, COL>, void> : public UiUpdateHandler
 			{
 				QTableWidget* table;
 				std::vector<QTableWidgetItem*> items;
 				::cv::Matx<T, ROW, COL>* matData;
 			public:
-				Handler() : table(nullptr), matData(nullptr), IHandler()
+				Handler() : table(nullptr), matData(nullptr), UiUpdateHandler()
 				{
 					LOG_TRACE;
 					table = new QTableWidget();
@@ -363,7 +372,7 @@ namespace Parameters{
 			// **********************************************************************************
 			// *************************** cv::Point_ *********************************************
 			// **********************************************************************************
-			template<typename T> class Handler<typename ::cv::Point_<T>, void>: public IHandler
+			template<typename T> class Handler<typename ::cv::Point_<T>, void> : public UiUpdateHandler
 			{
 				QTableWidget* table;
 				QTableWidgetItem* first;
@@ -443,7 +452,7 @@ namespace Parameters{
 			// **********************************************************************************
 			// *************************** cv::Point3_ *********************************************
 			// **********************************************************************************
-            template<typename T> class Handler<typename ::cv::Point3_<T>, void>: public IHandler
+			template<typename T> class Handler<typename ::cv::Point3_<T>, void> : public UiUpdateHandler
             {
                 QTableWidget* table;
                 QTableWidgetItem* first;
@@ -531,7 +540,7 @@ namespace Parameters{
 			// **********************************************************************************
 			// *************************** Enums ************************************************
 			// **********************************************************************************
-			template<> class Handler<Parameters::EnumParameter, void> : public IHandler
+			template<> class Handler<Parameters::EnumParameter, void> : public UiUpdateHandler
 			{
 				QComboBox* enumCombo;
 				Parameters::EnumParameter* enumData;
@@ -581,7 +590,7 @@ namespace Parameters{
 			// *************************** std::string ******************************************
 			// **********************************************************************************
 
-			template<> class Handler<std::string, void> : public IHandler
+			template<> class Handler<std::string, void> : public UiUpdateHandler
 			{
 				std::string* strData;
 				QLineEdit* lineEdit;
@@ -628,7 +637,7 @@ namespace Parameters{
 			// *************************** boost::function<void(void)> **************************
 			// **********************************************************************************
 
-			template<> class Handler<boost::function<void(void)>, void> : public IHandler
+			template<> class Handler<boost::function<void(void)>, void> : public UiUpdateHandler
 			{
 				boost::function<void(void)>* funcData;
 				QPushButton* btn;
@@ -676,7 +685,7 @@ namespace Parameters{
 			// **********************************************************************************
 
 			template<typename T>
-			class Handler<T, typename std::enable_if<std::is_floating_point<T>::value, void>::type> : public IHandler
+			class Handler<T, typename std::enable_if<std::is_floating_point<T>::value, void>::type> : public UiUpdateHandler
 			{
 				T* floatData;
 				QDoubleSpinBox* box;
@@ -727,7 +736,7 @@ namespace Parameters{
 			// **********************************************************************************
 
 			template<typename T>
-			class Handler<T, typename std::enable_if<std::is_integral<T>::value, void>::type> : public IHandler
+			class Handler<T, typename std::enable_if<std::is_integral<T>::value, void>::type> : public UiUpdateHandler
 			{
 				T* intData;
 				QSpinBox* box;
@@ -939,7 +948,11 @@ namespace Parameters{
 					auto dataPtr = parameter->Data();	
 					if (dataPtr)
 					{
-                        UiCallbackService::Instance()->post(boost::bind(&Handler<T>::UpdateUi, &paramHandler, boost::ref(*dataPtr)));
+						if (Handler<T>::UiUpdateRequired)
+						{
+							UiCallbackService::Instance()->post(boost::bind(&Handler<T>::UpdateUi, &paramHandler, boost::ref(*dataPtr)));
+						}
+							
 					}
 				}
 			public:

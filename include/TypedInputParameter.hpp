@@ -34,6 +34,13 @@ namespace Parameters
 
 		virtual bool SetInput(const Parameter::Ptr param)
 		{
+			if (param == nullptr)
+			{
+				input.reset();
+				inputConnection.disconnect();
+				Parameter::UpdateSignal();
+				return true;
+			}				
 			typename ITypedParameter<T>::Ptr castedParam = std::dynamic_pointer_cast<ITypedParameter<T>>(param);
 			if (castedParam)
 			{
