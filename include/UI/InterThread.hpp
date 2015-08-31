@@ -10,9 +10,9 @@ namespace Parameters
 		class Parameter_EXPORTS UiCallbackService
 		{
             boost::function<void(boost::function<void(void)>)> user_thread_callback_service;
-            static UiCallbackService* g_instance;
+            //static UiCallbackService* g_instance;
 
-			static boost::asio::io_service service;
+			boost::asio::io_service service;
 		public:
             static UiCallbackService* Instance();
 
@@ -24,10 +24,14 @@ namespace Parameters
 		};
 		class Parameter_EXPORTS ProcessingThreadCallbackService
 		{
-			static boost::asio::io_service service;
-            static ProcessingThreadCallbackService* g_instance;
+			boost::asio::io_service service;
+            //static ProcessingThreadCallbackService* g_instance;
+			boost::function<void(boost::function<void(void)>)> user_processing_thread_callback_function;
 		public:
             static ProcessingThreadCallbackService* Instance();
+			static void setCallback(boost::function<void(boost::function<void(void)>)> f);
+			static void run();
+			static void post(boost::function<void(void)> f);
 		};
 	}
 }

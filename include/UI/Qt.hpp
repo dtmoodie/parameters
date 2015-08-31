@@ -654,9 +654,13 @@ namespace Parameters{
 						// TODO processing thread callback
 						if (funcData)
 						{
-							(*funcData)();
+							ProcessingThreadCallbackService::post(*funcData);
+							//(*funcData)();
 							if (onUpdate)
-								onUpdate();
+							{
+								ProcessingThreadCallbackService::post(onUpdate);
+							}
+								//onUpdate();
 						}
 					}
 				}
