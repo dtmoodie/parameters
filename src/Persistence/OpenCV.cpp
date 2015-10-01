@@ -1,3 +1,4 @@
+#ifdef OPENCV_FOUND
 #include "Parameters.hpp"
 #include <opencv2/core/base.hpp>
 #include <boost/log/trivial.hpp>
@@ -101,3 +102,4 @@ void Serializer<Parameters::EnumParameter, void>::DeSerialize(::cv::FileNode* fs
 	}
 	(*fs)["Current value"] >> param->currentSelection;
 }
+#endif // OPENCV_FOUND
