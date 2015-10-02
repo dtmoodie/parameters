@@ -35,7 +35,7 @@ namespace Parameters
 				static std::pair<SerializerFunction,	DeSerializerFunction >& GetInterpretingFunction(Loki::TypeInfo type);
 			private:
 				// Mapping from Loki::typeinfo to file writing functors
-				static	std::map<Loki::TypeInfo, std::pair<SerializerFunction, DeSerializerFunction >> registry;
+				static	std::map<Loki::TypeInfo, std::pair<SerializerFunction, DeSerializerFunction >>& registry();
 			};
 			Parameter_EXPORTS void Serialize(::cv::FileStorage* fs, Parameters::Parameter* param);
 			Parameter_EXPORTS void DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param);

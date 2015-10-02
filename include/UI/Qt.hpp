@@ -47,7 +47,7 @@ namespace Parameters{
 				static std::shared_ptr<IParameterProxy> Createhandler(std::shared_ptr<Parameters::Parameter> param);
 
 			private:
-				static std::map<Loki::TypeInfo, HandlerCreator> registry;
+				static std::map<Loki::TypeInfo, HandlerCreator>& registry();
 			};			
 			// *****************************************************************************
 			//								IParameterProxy
