@@ -1,3 +1,4 @@
+#ifdef OPENCV_FOUND
 #include "Parameters.hpp"
 #include <opencv2/core/base.hpp>
 #include <boost/log/trivial.hpp>
@@ -5,24 +6,28 @@
 
 using namespace Parameters::Persistence::cv;
 
-std::map<Loki::TypeInfo, std::pair<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSerializerFunction >> InterpreterRegistry::registry;
+std::map<Loki::TypeInfo, std::pair<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSerializerFunction >>& InterpreterRegistry::registry()
+{
+	static std::map<Loki::TypeInfo, std::pair<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSerializerFunction >> instance;
+	return instance;
+}
 
 void InterpreterRegistry::RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, DeSerializerFunction deserializer)
 {
 	LOG_TRACE;
-	registry[type] = std::make_pair(serializer, deserializer);
+	registry()[type] = std::make_pair(serializer, deserializer);
 }
 
 std::pair<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSerializerFunction >& InterpreterRegistry::GetInterpretingFunction(Loki::TypeInfo type)
 {
 	LOG_TRACE;
-	if (registry.find(type) == registry.end())
+	if (registry().find(type) == registry().end())
 	{
 		LOG_TRIVIAL(warning) << type.name() << " not registered to the registry";
 		::cv::error(::cv::Error::StsAssert, "Datatype not registered to the registry", CV_Func, __FILE__, __LINE__);
 	}
 		
-	return registry[type];
+	return registry()[type];
 }
 void Parameters::Persistence::cv::Serialize(::cv::FileStorage* fs, Parameters::Parameter* param)
 {
@@ -101,3 +106,4 @@ void Serializer<Parameters::EnumParameter, void>::DeSerialize(::cv::FileNode* fs
 	}
 	(*fs)["Current value"] >> param->currentSelection;
 }
+#endif // OPENCV_FOUND

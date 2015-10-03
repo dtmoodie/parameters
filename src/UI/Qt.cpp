@@ -66,20 +66,24 @@ void SignalProxy::on_update(int row, int col)
 		handler->OnUiUpdate(sender(), row, col);
 	}
 }
-std::map<Loki::TypeInfo, WidgetFactory::HandlerCreator> WidgetFactory::registry = std::map<Loki::TypeInfo, WidgetFactory::HandlerCreator>();
+std::map<Loki::TypeInfo, WidgetFactory::HandlerCreator>& WidgetFactory::registry()
+{
+	static auto instance = std::map<Loki::TypeInfo, WidgetFactory::HandlerCreator>();
+	return instance;
+}
 
 void WidgetFactory::RegisterCreator(Loki::TypeInfo type, HandlerCreator f)
 {
 	LOG_TRIVIAL(info) << "Registering type " << type.name();
-	WidgetFactory::registry[type] = f;
+	WidgetFactory::registry()[type] = f;
 }
 
 std::shared_ptr<IParameterProxy> WidgetFactory::Createhandler(std::shared_ptr<Parameters::Parameter> param)
 {
 	std::string typeName = param->GetTypeInfo().name();
 	std::string treeName = param->GetTreeName();
-	auto itr = registry.find(param->GetTypeInfo());
-    if (itr == registry.end())
+	auto itr = registry().find(param->GetTypeInfo());
+    if (itr == registry().end())
 	{
         
 		LOG_TRIVIAL(warning) << "No Widget Factory registered for type " << typeName << " unable to make widget for parameter: " << treeName;

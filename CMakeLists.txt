@@ -48,27 +48,27 @@ IF(Parameters_UI)
 			
 			GET_TARGET_PROPERTY(qt_gui_rel Qt5::Gui IMPORTED_IMPLIB_RELEASE)
 			IF(${qt_gui_rel} MATCHES "NOTFOUND")
-			GET_TARGET_PROPERTY(qt_gui_rel Qt5::Gui LOCATION)
+				GET_TARGET_PROPERTY(qt_gui_rel Qt5::Gui LOCATION)
 			ENDIF()
-			GET_TARGET_PROPERTY(qt_gui_deb Qt5::Gui IMPORTED_IMPLIB_DEBUG)
+				GET_TARGET_PROPERTY(qt_gui_deb Qt5::Gui IMPORTED_IMPLIB_DEBUG)
 			IF(${qt_gui_deb} MATCHES "NOTFOUND")
-			GET_TARGET_PROPERTY(qt_gui_deb Qt5::Gui LOCATION)
+				GET_TARGET_PROPERTY(qt_gui_deb Qt5::Gui LOCATION)
 			ENDIF()
-			GET_TARGET_PROPERTY(qt_widgets_rel Qt5::Widgets IMPORTED_IMPLIB_RELEASE)
+				GET_TARGET_PROPERTY(qt_widgets_rel Qt5::Widgets IMPORTED_IMPLIB_RELEASE)
 			IF(${qt_widgets_rel} MATCHES "NOTFOUND")
-			GET_TARGET_PROPERTY(qt_widgets_rel Qt5::Widgets LOCATION)
+				GET_TARGET_PROPERTY(qt_widgets_rel Qt5::Widgets LOCATION)
 			ENDIF()
-			GET_TARGET_PROPERTY(qt_widgets_deb Qt5::Widgets IMPORTED_IMPLIB_DEBUG)
+				GET_TARGET_PROPERTY(qt_widgets_deb Qt5::Widgets IMPORTED_IMPLIB_DEBUG)
 			IF(${qt_widgets_deb} MATCHES "NOTFOUND")
-			GET_TARGET_PROPERTY(qt_widgets_deb Qt5::Widgets LOCATION)
+				GET_TARGET_PROPERTY(qt_widgets_deb Qt5::Widgets LOCATION)
 			ENDIF()
-			GET_TARGET_PROPERTY(qt_core_deb Qt5::Core IMPORTED_IMPLIB_DEBUG)
+				GET_TARGET_PROPERTY(qt_core_deb Qt5::Core IMPORTED_IMPLIB_DEBUG)
 			IF(${qt_core_deb} MATCHES "NOTFOUND")
-			GET_TARGET_PROPERTY(qt_core_deb Qt5::Core LOCATION)
+				GET_TARGET_PROPERTY(qt_core_deb Qt5::Core LOCATION)
 			ENDIF()
-			GET_TARGET_PROPERTY(qt_core_rel Qt5::Core IMPORTED_IMPLIB_RELEASE)
+				GET_TARGET_PROPERTY(qt_core_rel Qt5::Core IMPORTED_IMPLIB_RELEASE)
 			IF(${qt_core_rel} MATCHES "NOTFOUND")
-			GET_TARGET_PROPERTY(qt_core_rel Qt5::Core LOCATION)
+				GET_TARGET_PROPERTY(qt_core_rel Qt5::Core LOCATION)
 			ENDIF()
 			
 			# Directories
@@ -160,7 +160,6 @@ INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DI
 SET(boost_lib_)
 SET(boost_libs_)
 FOREACH(lib ${Boost_LIBRARIES})
-	
 	IF(${lib} MATCHES "debug")
 		SET(boost_lib_ "debug")
 	ELSE()
@@ -179,7 +178,7 @@ SET(Parameters_LIB_DIRS_RELEASE "${UI_LIB_DIR_REL_};${PERSISTENCE_LIB_DIR_REL_}"
 SET(Parameters_LIB_DIRS_DEBUG "${UI_LIB_DIR_DEB_};${PERSISTENCE_LIB_DIR_DEB_}")
 
 IF(Boost_LIBRARY_DIR_RELEASE)
-LIST(APPEND Parameters_LIB_DIRS_RELEASE ${Boost_LIBRARY_DIR_RELEASE})
+	LIST(APPEND Parameters_LIB_DIRS_RELEASE ${Boost_LIBRARY_DIR_RELEASE})
 ELSE()
 	IF(Boost_LIBRARY_DIR)
 		LIST(APPEND Parameters_LIB_DIRS_RELEASE ${Boost_LIBRARY_DIR})
@@ -188,7 +187,7 @@ ELSE()
 	ENDIF()
 ENDIF()
 IF(Boost_LIBRARY_DIR_DEBUG)
-LIST(APPEND Parameters_LIB_DIRS_DEBUG ${Boost_LIBRARY_DIR_DEBUG})
+	LIST(APPEND Parameters_LIB_DIRS_DEBUG ${Boost_LIBRARY_DIR_DEBUG})
 ENDIF()
 
 
@@ -200,7 +199,7 @@ message(STATUS
 	qt_widgets: ${qt_widgets_}
 	Release lib dirs: ${Parameters_LIB_DIRS_RELEASE}
 	Debug lib dirs: ${Parameters_LIB_DIRS_DEBUG}
-        Parameter Libs: ${Parameters_LIBRARIES}
+    Parameter Libs: ${Parameters_LIBRARIES}
 ")
 LINK_DIRECTORIES(${Parameters_LIB_DIRS_RELEASE})
 LINK_DIRECTORIES(${Parameters_LIB_DIRS_DEBUG})

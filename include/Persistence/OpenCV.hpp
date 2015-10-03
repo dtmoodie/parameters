@@ -1,16 +1,11 @@
 #pragma once
 
-
 // Check if being built with OpenCV
 #include <map>
 #include <functional>
 #include <string>
 
 #include <opencv2/core.hpp>
-//#include <opencv2/core/persistence.hpp>
-//#include <opencv2/core/types.hpp>
-//#include <opencv2/core/mat.hpp>
-
 
 #include <boost/lexical_cast.hpp>
 #include <boost/function.hpp>
@@ -21,7 +16,7 @@
 #include <Types.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/attributes/named_scope.hpp>
-//class ::cv::cuda::GpuMat;
+
 namespace Parameters
 {
 	class Parameter;
@@ -40,7 +35,7 @@ namespace Parameters
 				static std::pair<SerializerFunction,	DeSerializerFunction >& GetInterpretingFunction(Loki::TypeInfo type);
 			private:
 				// Mapping from Loki::typeinfo to file writing functors
-				static	std::map<Loki::TypeInfo, std::pair<SerializerFunction, DeSerializerFunction >> registry;
+				static	std::map<Loki::TypeInfo, std::pair<SerializerFunction, DeSerializerFunction >>& registry();
 			};
 			Parameter_EXPORTS void Serialize(::cv::FileStorage* fs, Parameters::Parameter* param);
 			Parameter_EXPORTS void DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param);
@@ -78,7 +73,7 @@ namespace Parameters
 				virtual void Serialize(::cv::FileStorage* fs, Parameters::EnumParameter* param);
 				virtual void DeSerialize(::cv::FileNode* fs, Parameters::EnumParameter* param);
 			};
-			template<typename T> struct Serializer<T,typename  std::enable_if<std::is_unsigned<T>::value, void>::type>
+			template<typename T> struct Serializer<T,typename  std::enable_if<std::is_unsigned<T>::value || std::is_same<T,long>::value || std::is_same<T, long long>::value, void>::type>
 			{
 				virtual void Serialize(::cv::FileStorage* fs, T* param)
 				{
@@ -99,7 +94,7 @@ namespace Parameters
 				virtual void Serialize(::cv::FileStorage* fs, T* param){}
 				virtual void DeSerialize(::cv::FileNode* fs, T* param){}
 			};
-			template<typename T> struct Serializer < T, typename std::enable_if<std::is_integral<T>::value && !std::is_unsigned<T>::value, void>::type>
+			template<typename T> struct Serializer < T, typename std::enable_if<std::is_integral<T>::value && !std::is_unsigned<T>::value && !std::is_same<T, long>::value && !std::is_same<T, long long>::value, void>::type>
 			{
 				virtual void Serialize(::cv::FileStorage* fs, T* param)
 				{
@@ -149,17 +144,31 @@ namespace Parameters
 			};
 			template<typename T, int M> struct Serializer<::cv::Vec<T, M>, void> : public Serializer<::cv::Matx<T,M,1>>{};
 			template<typename T> struct Serializer<::cv::Scalar_<T>, void> : public Serializer<::cv::Vec<T, 4>>{};
-			template<typename T> struct Serializer<std::vector<T>, typename std::enable_if<std::is_floating_point<T>::value || std::is_integral<T>::value, void>::type>
+			// TODO, this doesn't work for types like std::vector<unsigned int> because opencv doesn't natively support it.  Instead needs to be modified to manually handle serialization
+			template<typename T> struct Serializer<std::vector<T>, typename std::enable_if<std::is_floating_point<T>::value || std::is_integral<T>::value, void>::type>: public Serializer<T>
 			{
 				virtual void Serialize(::cv::FileStorage* fs, std::vector<T>* param)
 				{
 					LOG_TRACE;
-					(*fs) << "Data" << *param;
+					//(*fs) << "Data" << *param;
+					(*fs) << "Data" << "[";
+					for (auto itr = param->begin(); itr != param->end(); ++itr)
+					{
+						Serializer<T>::Serialize(fs, &(*itr));
+					}
+					(*fs) << "]";
+					
 				}
 				virtual void DeSerialize(::cv::FileNode* fs, std::vector<T>* param)
 				{
 					LOG_TRACE;
-					(*fs)["Data"] >> *param;
+					//(*fs)["Data"] >> *param;
+					
+					for (auto itr = (*fs)["Data"].begin(); itr != (*fs)["Data"].end(); ++itr)
+					{
+						param->push_back(T());
+						Serializer<T>::DeSerialize(&(*itr), &(*param)[param->size() - 1]);
+					}
 				}
 			};
 			template<typename T> struct SerializeWrapper
