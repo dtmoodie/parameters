@@ -10,7 +10,7 @@ namespace Parameters
 		boost::signals2::connection inputConnection;
 		virtual void onInputUpdate()
 		{
-
+			Parameter::UpdateSignal();
 		}
 	public:
 		typedef std::shared_ptr<TypedInputParameter<T>> Ptr;
