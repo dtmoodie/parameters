@@ -1,7 +1,9 @@
-/*#include "Parameters.hpp"
+
+#include "Parameters.hpp"
 #include "UI/Qt.hpp"
-
-
+#include <string>
+#include <iostream>
+/*
 int main()
 {
 	{
@@ -67,5 +69,9 @@ int main()
 */
 int main()
 {
+    Parameters::TypedParameter<int> param("test");
+    std::stringstream test;
+    Parameters::Persistence::Text::Serialize(&test, &param);
+    std::cout << test.str() << std::endl;
     return 0;
 }

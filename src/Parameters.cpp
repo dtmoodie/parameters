@@ -2,7 +2,7 @@
 
 using namespace Parameters;
 Parameter::Parameter(const std::string& name_, const ParameterType& type_, const std::string& tooltip_):
-	name(name_), type(type_), tooltip(tooltip_)
+name(name_), type(type_), tooltip(tooltip_), treeName(name_)
 {
 }
 std::string& Parameter::GetName()

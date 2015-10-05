@@ -562,7 +562,7 @@ namespace Parameters{
 					boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
 					if (idx != -1 && sender == enumCombo && enumData)
 					{
-						enumData->currentSelection = enumData->values[idx];
+						enumData->currentSelection = idx;
 						if (onUpdate)
 							onUpdate();
 					}

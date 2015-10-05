@@ -18,6 +18,7 @@
 
 #include <typeinfo>
 #include <cassert>
+#include <string>
 // Needed to demangle GCC's name mangling.
 #ifndef _MSC_VER
 #include <cstdlib>
