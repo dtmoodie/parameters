@@ -7,6 +7,7 @@
 #include <LokiTypeInfo.h>
 #include <Parameter_def.hpp>
 #include <Types.hpp>
+#include <TypedParameter.hpp>
 template<typename T> 
 using is_vector = std::is_same<T, std::vector< typename T::value_type, typename T::allocator_type > >;
 
@@ -28,28 +29,33 @@ namespace Parameters
             {
             public:
                 typedef std::function<void(::std::stringstream*, Parameters::Parameter*)> SerializerFunction;
-                typedef std::function<void(::std::stringstream*, Parameters::Parameter*)> DeSerializerFunction;
-                static void RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, DeSerializerFunction deserializer);
-                static std::pair<SerializerFunction, DeSerializerFunction >& GetInterpretingFunction(Loki::TypeInfo type);
+                typedef std::function<void(::std::stringstream*, Parameters::Parameter*)> SSDeSerializerFunction;
+                typedef std::function<void(::std::string*, Parameters::Parameter*)> DeSerializerFunction;
+                typedef std::function<Parameters::Parameter::Ptr(const ::std::string&)> FactoryFunction;
+                typedef std::tuple<SerializerFunction, SSDeSerializerFunction, DeSerializerFunction> InterpreterSet;
+                static void RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, SSDeSerializerFunction ssdeserializer, DeSerializerFunction deserializer, FactoryFunction factory);
+                static InterpreterSet& GetInterpretingFunction(Loki::TypeInfo type);
             private:
                 // Mapping from Loki::typeinfo to file writing functors
-                static	std::map<Loki::TypeInfo, std::pair<SerializerFunction, DeSerializerFunction >>& registry();
+                static std::map<Loki::TypeInfo, InterpreterSet>& registry();
+                static std::map<std::string, FactoryFunction>& factory();
             };
             Parameter_EXPORTS void Serialize(::std::stringstream* ss, Parameters::Parameter* param);
             Parameter_EXPORTS void DeSerialize(::std::stringstream* ss, Parameters::Parameter* param);
+            Parameter_EXPORTS void DeSerialize(::std::string* ss, Parameters::Parameter* param);
             Parameter_EXPORTS Parameters::Parameter* DeSerialize(::std::stringstream* ss);
+            Parameter_EXPORTS Parameters::Parameter* DeSerialize(::std::string* ss);
 
             template<typename T, typename Enable = void> struct Serializer
             {
                 static void Serialize(::std::stringstream* ss, T* param)
                 {
-                    //(*ss) << boost::lexical_cast<std::string>(*param);
                 }
                 static void DeSerialize(::std::stringstream* ss, T* param)
                 {
-                    //std::string line;
-                    //(*ss) >> line;
-                    //*param = boost::lexical_cast<T>(line);
+                }
+                static void DeSerialize(::std::string* ss, T* param)
+                {
                 }
             };
             template<typename T> struct Serializer<T, typename std::enable_if<
@@ -79,22 +85,25 @@ namespace Parameters
             {
                 static void Serialize(::std::stringstream* ss, T* param)
                 {
-
                 }
                 static void DeSerialize(::std::stringstream* ss, T* param)
                 {
-
+                }
+                static void DeSerialize(::std::string* ss, T* param)
+                {
                 }
             };
             template<> struct Parameter_EXPORTS Serializer<EnumParameter, void>
             {
                 static void Serialize(::std::stringstream* ss, EnumParameter* param);
                 static void DeSerialize(::std::stringstream* ss, EnumParameter* param);
+                static void DeSerialize(::std::string* ss, EnumParameter* param);
             };
             template<> struct Parameter_EXPORTS Serializer<::cv::cuda::GpuMat, void>
             {
                 static void Serialize(::std::stringstream* ss, ::cv::cuda::GpuMat* param);
                 static void DeSerialize(::std::stringstream* ss, ::cv::cuda::GpuMat* param);
+                static void DeSerialize(::std::string* ss, ::cv::cuda::GpuMat* param);
             };
             template<typename T> struct Serializer<std::vector<T>, void>: public Serializer<T>
             {
@@ -110,6 +119,10 @@ namespace Parameters
                     }
                 }
                 static void DeSerialize(::std::stringstream* ss, std::vector<T>* param)
+                {
+
+                }
+                static void DeSerialize(::std::string* ss, std::vector<T>* param)
                 {
 
                 }
@@ -131,7 +144,16 @@ namespace Parameters
                         (*ss) << "\n";
                     }
                 }
-                static void Read(::std::stringstream* ss, Parameter* param)
+                static void ssRead(::std::stringstream* ss, Parameter* param)
+                {
+                    LOG_TRIVIAL(info) << "Reading parameter with name " << param->GetName();
+                    ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
+                    if (typedParam)
+                    {
+                        
+                    }
+                }
+                static void Read(::std::string* ss, Parameter* param)
                 {
                     LOG_TRIVIAL(info) << "Reading parameter with name " << param->GetName();
                     ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
@@ -141,6 +163,13 @@ namespace Parameters
                     }
                 }
             };
+            template<typename T> struct ParameterFactory
+            {
+                static Parameters::Parameter::Ptr create(const std::string& name)
+                {
+                    return Parameters::Parameter::Ptr(new Parameters::TypedParameter<T>(name));
+                }
+            };
             template<typename T> class PersistencePolicy
             {
             public:
@@ -148,7 +177,9 @@ namespace Parameters
                 {
                     InterpreterRegistry::RegisterFunction(Loki::TypeInfo(typeid(T)), 
                         std::bind(SerializeWrapper<T>::Write, std::placeholders::_1, std::placeholders::_2), 
-                        std::bind(SerializeWrapper<T>::Read,  std::placeholders::_1, std::placeholders::_2));
+                        std::bind(SerializeWrapper<T>::ssRead,  std::placeholders::_1, std::placeholders::_2),
+                        std::bind(SerializeWrapper<T>::Read, std::placeholders::_1, std::placeholders::_2),
+                        std::bind(ParameterFactory<T>::create, std::placeholders::_1));
                 }
             };
         }
