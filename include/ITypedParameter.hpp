@@ -19,5 +19,15 @@ namespace Parameters
 		{
 			return Loki::TypeInfo(typeid(T));
 		}
+		bool Update(Parameter::Ptr other)
+		{
+			auto typedParameter = std::dynamic_pointer_cast<TypedParameter<T>>(other);
+			if (typedParameter)
+			{
+				*Data() = *typedParameter->Data();
+				UpdateSignal();
+			}
+			return false;
+		}
 	};
 }

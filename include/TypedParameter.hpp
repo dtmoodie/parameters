@@ -17,7 +17,6 @@ namespace Parameters
 			const std::string& tooltip = "") :
 			MetaTypedParameter<T>(name, type, tooltip), data(init) 
 		{}
-
 		virtual T* Data()
 		{
 			return &data;

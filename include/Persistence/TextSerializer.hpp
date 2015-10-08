@@ -35,16 +35,22 @@ namespace Parameters
                 typedef std::tuple<SerializerFunction, SSDeSerializerFunction, DeSerializerFunction> InterpreterSet;
                 static void RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, SSDeSerializerFunction ssdeserializer, DeSerializerFunction deserializer, FactoryFunction factory);
                 static InterpreterSet& GetInterpretingFunction(Loki::TypeInfo type);
+
             private:
                 // Mapping from Loki::typeinfo to file writing functors
-                static std::map<Loki::TypeInfo, InterpreterSet>& registry();
-                static std::map<std::string, FactoryFunction>& factory();
+				static std::map<Loki::TypeInfo, InterpreterSet>& registry();
+				static std::map<std::string, FactoryFunction>& factory();
+				friend Parameter_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::string* ss);
+				friend Parameter_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::stringstream* ss);
+				friend Parameter_EXPORTS void DeSerialize(::std::string* ss, Parameters::Parameter* param);
+				friend Parameter_EXPORTS void DeSerialize(::std::stringstream* ss, Parameters::Parameter* param);
+				friend Parameter_EXPORTS void Serialize(::std::stringstream* ss, Parameters::Parameter* param);
             };
             Parameter_EXPORTS void Serialize(::std::stringstream* ss, Parameters::Parameter* param);
             Parameter_EXPORTS void DeSerialize(::std::stringstream* ss, Parameters::Parameter* param);
             Parameter_EXPORTS void DeSerialize(::std::string* ss, Parameters::Parameter* param);
-            Parameter_EXPORTS Parameters::Parameter* DeSerialize(::std::stringstream* ss);
-            Parameter_EXPORTS Parameters::Parameter* DeSerialize(::std::string* ss);
+			Parameter_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::stringstream* ss);
+			Parameter_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::string* ss);
 
             template<typename T, typename Enable = void> struct Serializer
             {
@@ -72,9 +78,14 @@ namespace Parameters
                 static void DeSerialize(::std::stringstream* ss, T* param)
                 {
                     std::string line;
-                    (*ss) >> line;
+					std::getline(*ss, line);
                     *param = boost::lexical_cast<T>(line);
                 }
+				static void DeSerialize(::std::string* str, T* param)
+				{
+					*param = boost::lexical_cast<T>(*str);
+					return;
+				}
             };
 
             template<typename T> struct Serializer<T, typename std::enable_if<
@@ -120,11 +131,22 @@ namespace Parameters
                 }
                 static void DeSerialize(::std::stringstream* ss, std::vector<T>* param)
                 {
-
+					std::string len;
+					std::getline(*ss, len, '>');
+					const int size = boost::lexical_cast<size_t>(len.substr(1));
+					param->resize(size);
+					int i;
+					for (i = 0; i < size - 1; ++i)
+					{
+						std::getline(*ss, len, ',');
+						Serializer<T>::DeSerialize(&len, &(*param)[i]);
+					}
+					std::getline(*ss, len);
+					Serializer<T>::DeSerialize(&len, &(*param)[i]);
                 }
                 static void DeSerialize(::std::string* ss, std::vector<T>* param)
                 {
-
+					
                 }
             };
 
@@ -139,7 +161,7 @@ namespace Parameters
                     if (typedParam)
                     {
                         (*ss) << "[" << param->GetTypeInfo().name() << "]";
-                        (*ss) << param->GetTreeName() << ":";
+						(*ss) << param->GetTreeName() << "#";
                         Serializer<T>::Serialize(ss, typedParam->Data());
                         (*ss) << "\n";
                     }
@@ -150,7 +172,7 @@ namespace Parameters
                     ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
                     if (typedParam)
                     {
-                        
+						Serializer<T>::DeSerialize(ss, typedParam->Data());
                     }
                 }
                 static void Read(::std::string* ss, Parameter* param)
@@ -159,7 +181,7 @@ namespace Parameters
                     ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
                     if (typedParam)
                     {
-
+						Serializer<T>::DeSerialize(ss, typedParam->Data());
                     }
                 }
             };

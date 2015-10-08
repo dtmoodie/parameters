@@ -8,10 +8,6 @@
 #include <boost/signals2/signal.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 
-
-
-
-
 namespace Parameters
 {
 	class Parameter_EXPORTS Parameter
@@ -32,13 +28,13 @@ namespace Parameters
 		virtual void SetName(const std::string& name_);
 		virtual void SetTooltip(const std::string& tooltip_);
 		virtual void SetTreeName(const std::string& treeName_);
-		virtual void SetTreeRoot(const std::string& treeRoot_)
-		{
-			SetTreeName(treeRoot_ + ":" + GetName());
-		}
-		virtual ::std::string& GetName();
-		virtual const ::std::string& GetTooltip();
-		virtual const ::std::string& GetTreeName();
+		virtual void SetTreeRoot(const std::string& treeRoot_);
+		virtual const ::std::string& GetName() const;
+		virtual const ::std::string& GetTooltip() const;
+		virtual const ::std::string GetTreeName() const;
+		virtual const ::std::string& GetTreeRoot() const;
+		// Update with the values from another parameter
+		virtual bool Update(Parameter::Ptr other);
 
 		virtual boost::signals2::connection RegisterNotifier(const boost::function<void(void)>& f);
 
@@ -51,7 +47,7 @@ namespace Parameters
 	private:
 		std::string name;
 		std::string tooltip;
-		std::string treeName;
+		std::string treeRoot;
 
 	};
 }

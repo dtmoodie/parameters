@@ -50,14 +50,25 @@ void Parameters::Persistence::Text::DeSerialize(::std::string* ss, Parameters::P
     std::get<2>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo())).operator()(ss, param);
 }
 
-Parameters::Parameter* DeSerialize(::std::stringstream* ss)
+std::shared_ptr<Parameters::Parameter> Parameters::Persistence::Text::DeSerialize(::std::stringstream* ss)
 {
     LOG_TRACE;
     //TODO object factory based on serialized type
-    std::string line;
-    (*ss) >> line;
-
-    return nullptr;
+    std::string type;
+	std::getline(*ss, type, ']');
+	std::string name;
+	std::getline(*ss, name, '#');
+	auto pos = name.find_first_of(':');
+	std::string root;
+	if (pos != std::string::npos)
+	{
+		root = name.substr(0, pos);
+		name = name.substr(pos+1);
+	}
+	auto param = InterpreterRegistry::factory()[type.substr(1)](name);
+	param->SetTreeRoot(root);
+	std::get<1>(InterpreterRegistry::registry()[param->GetTypeInfo()])(ss, param.get());
+	return param;
 }
 
 void Serializer<Parameters::EnumParameter, void>::Serialize(::std::stringstream* ss, Parameters::EnumParameter* param)

@@ -70,8 +70,14 @@ int main()
 int main()
 {
     Parameters::TypedParameter<int> param("test");
+	Parameters::TypedParameter<std::vector<int>> vecParam("test");
+	vecParam.Data()->push_back(10);
+	vecParam.Data()->push_back(15);
     std::stringstream test;
     Parameters::Persistence::Text::Serialize(&test, &param);
+	Parameters::Persistence::Text::Serialize(&test, &vecParam);
     std::cout << test.str() << std::endl;
+	auto param1 = Parameters::Persistence::Text::DeSerialize(&test);
+	auto param2 = Parameters::Persistence::Text::DeSerialize(&test);
     return 0;
 }
