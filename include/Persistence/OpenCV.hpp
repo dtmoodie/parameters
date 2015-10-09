@@ -43,44 +43,70 @@ namespace Parameters
 
 			template<typename T, typename Enable = void> struct Serializer
 			{
-				virtual void Serialize(::cv::FileStorage* fs, T* param)
+				static void Serialize(::cv::FileStorage* fs, T* param)
 				{
 					LOG_TRIVIAL(info) << "Default non specialized serializer called for " << typeid(T).name();
 					//std::cout << "Default non specialized serializer called for " << typeid(T).name();
 				}
-				virtual void DeSerialize(::cv::FileNode* fs, T* param)
+				template<typename U> static void DeSerialize(U fs, T* param)
 				{
 					LOG_TRIVIAL(info) << "Default non specialized DeSerializer called for " << typeid(T).name();
 				}
 			};
 			template<> struct Parameter_EXPORTS Serializer<char, void>
 			{
-				virtual void Serialize(::cv::FileStorage* fs, char* param);
-				virtual void DeSerialize(::cv::FileNode* fs, char* param);
+				static void Serialize(::cv::FileStorage* fs, char* param);
+				template<typename U> static void DeSerialize(U fs, char* param)
+				{
+					LOG_TRACE;
+					signed char data;
+					(*fs)["Data"] >> data;
+					*param = (char)data;
+				}
 			};
 			template<> struct Parameter_EXPORTS Serializer < std::string, void >
 			{
-				virtual void Serialize(::cv::FileStorage* fs, std::string* param);
-				virtual void DeSerialize(::cv::FileNode* fs, std::string* param);
+				static void Serialize(::cv::FileStorage* fs, std::string* param);
+				template<typename U> static void DeSerialize(U fs, std::string* param)
+				{
+					LOG_TRACE;
+					*param = (std::string)(*fs)["Data"];
+				}
 			};
 			template<> struct Parameter_EXPORTS Serializer<::cv::Mat, void>
 			{
-				virtual void Serialize(::cv::FileStorage* fs, ::cv::Mat* param);
-				virtual void DeSerialize(::cv::FileNode* fs, ::cv::Mat* param);
+				static void Serialize(::cv::FileStorage* fs, ::cv::Mat* param);
+				template<typename U> static void DeSerialize(U fs, ::cv::Mat* param)
+				{
+					LOG_TRACE;
+					(*fs)["Data"] >> *param;
+				}
 			};
 			template<> struct Parameter_EXPORTS Serializer<Parameters::EnumParameter, void>
 			{
-				virtual void Serialize(::cv::FileStorage* fs, Parameters::EnumParameter* param);
-				virtual void DeSerialize(::cv::FileNode* fs, Parameters::EnumParameter* param);
+				static void Serialize(::cv::FileStorage* fs, Parameters::EnumParameter* param);
+				template<typename U> static void DeSerialize(U fs, Parameters::EnumParameter* param)
+				{
+					LOG_TRACE;
+					(*fs)["Values"] >> param->values;
+
+					auto end = (*fs)["Enumerations"].end();
+					param->enumerations.clear();
+					for (auto itr = (*fs)["Enumerations"].begin(); itr != end; ++itr)
+					{
+						param->enumerations.push_back((std::string)(*itr));
+					}
+					(*fs)["Current value"] >> param->currentSelection;
+				}
 			};
 			template<typename T> struct Serializer<T,typename  std::enable_if<std::is_unsigned<T>::value || std::is_same<T,long>::value || std::is_same<T, long long>::value, void>::type>
 			{
-				virtual void Serialize(::cv::FileStorage* fs, T* param)
+				static void Serialize(::cv::FileStorage* fs, T* param)
 				{
 					LOG_TRACE;
 					(*fs) << "Data" << boost::lexical_cast<std::string>(*param);
 				}
-				virtual void DeSerialize(::cv::FileNode* fs, T* param)
+				template<typename U> static void DeSerialize(U fs, T* param)
 				{
 					LOG_TRACE;
 					*param = boost::lexical_cast<T>((std::string)(*fs)["Data"]);
@@ -91,17 +117,17 @@ namespace Parameters
 				std::is_same<typename std::remove_cv<T>::type, ::cv::cuda::GpuMat				>::value ||
 				std::is_same<typename std::remove_cv<T>::type, boost::function<void(void)>		>::value, void>::type>
 			{
-				virtual void Serialize(::cv::FileStorage* fs, T* param){}
+				static void Serialize(::cv::FileStorage* fs, T* param){}
 				virtual void DeSerialize(::cv::FileNode* fs, T* param){}
 			};
 			template<typename T> struct Serializer < T, typename std::enable_if<std::is_integral<T>::value && !std::is_unsigned<T>::value && !std::is_same<T, long>::value && !std::is_same<T, long long>::value, void>::type>
 			{
-				virtual void Serialize(::cv::FileStorage* fs, T* param)
+				static void Serialize(::cv::FileStorage* fs, T* param)
 				{
 					LOG_TRACE;
 					(*fs) << "Data" << *param;
 				}
-				virtual void DeSerialize(::cv::FileNode* fs, T* param)
+				template<typename U> static void DeSerialize(U fs, T* param)
 				{
 					LOG_TRACE;
 					(*fs)["Data"] >> *param;
@@ -109,7 +135,7 @@ namespace Parameters
 			};
 			template<typename T, int M, int N> struct Serializer<::cv::Matx<T, M, N>, void>
 			{
-				virtual void Serialize(::cv::FileStorage* fs, ::cv::Matx<T, M, N>* param)
+				static void Serialize(::cv::FileStorage* fs, ::cv::Matx<T, M, N>* param)
 				{
 					LOG_TRACE;
 					(*fs) << "Rows" << M;
@@ -126,7 +152,7 @@ namespace Parameters
 					}
 					(*fs) << "]";
 				}
-				virtual void DeSerialize(::cv::FileNode* fs, ::cv::Matx<T, M, N>* param)
+				template<typename U> static void DeSerialize(U fs, ::cv::Matx<T, M, N>* param)
 				{
 					LOG_TRACE;
 					if ((int)(*fs)["Rows"] != M || (int)(*fs)["Cols"] != N)
@@ -141,13 +167,14 @@ namespace Parameters
 						}
 					}
 				}
+
 			};
 			template<typename T, int M> struct Serializer<::cv::Vec<T, M>, void> : public Serializer<::cv::Matx<T,M,1>>{};
 			template<typename T> struct Serializer<::cv::Scalar_<T>, void> : public Serializer<::cv::Vec<T, 4>>{};
 			// TODO, this doesn't work for types like std::vector<unsigned int> because opencv doesn't natively support it.  Instead needs to be modified to manually handle serialization
 			template<typename T> struct Serializer<std::vector<T>, typename std::enable_if<std::is_floating_point<T>::value || std::is_integral<T>::value, void>::type>: public Serializer<T>
 			{
-				virtual void Serialize(::cv::FileStorage* fs, std::vector<T>* param)
+				static void Serialize(::cv::FileStorage* fs, std::vector<T>* param)
 				{
 					LOG_TRACE;
 					//(*fs) << "Data" << *param;
@@ -159,7 +186,7 @@ namespace Parameters
 					(*fs) << "]";
 					
 				}
-				virtual void DeSerialize(::cv::FileNode* fs, std::vector<T>* param)
+				template<typename U> static void DeSerialize(U fs, std::vector<T>* param)
 				{
 					LOG_TRACE;
 					//(*fs)["Data"] >> *param;
@@ -167,9 +194,10 @@ namespace Parameters
 					for (auto itr = (*fs)["Data"].begin(); itr != (*fs)["Data"].end(); ++itr)
 					{
 						param->push_back(T());
-						Serializer<T>::DeSerialize(&(*itr), &(*param)[param->size() - 1]);
+						Serializer<T>::DeSerialize(itr, &(*param)[param->size() - 1]);
 					}
 				}
+
 			};
 			template<typename T> struct SerializeWrapper
 			{

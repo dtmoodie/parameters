@@ -51,13 +51,13 @@ void Serializer<char, void>::Serialize(::cv::FileStorage* fs, char* param)
 	(*fs) << "Data" << (signed char)*param;
 }
 
-void Serializer<char, void>::DeSerialize(::cv::FileNode* fs, char* param)
+/*void Serializer<char, void>::DeSerialize(::cv::FileNode* fs, char* param)
 {
 	LOG_TRACE;
 	signed char data;
 	(*fs)["Data"] >> data;
 	*param = (char)data;
-}
+}*/
 
 void Serializer<std::string, void>::Serialize(::cv::FileStorage* fs, std::string* param)
 {
@@ -65,22 +65,23 @@ void Serializer<std::string, void>::Serialize(::cv::FileStorage* fs, std::string
 	(*fs) << "Data" << *param;
 }
 
-void Serializer<std::string, void>::DeSerialize(::cv::FileNode* fs, std::string* param)
+/*void Serializer<std::string, void>::DeSerialize(::cv::FileNode* fs, std::string* param)
 {
 	LOG_TRACE;
 	*param = (std::string)(*fs)["Data"];
-}
+}*/
 void Serializer<::cv::Mat, void>::Serialize(::cv::FileStorage* fs, ::cv::Mat* param)
 {
 	LOG_TRACE;
 	(*fs) << "Data" << *param;
 }
 
-void Serializer<::cv::Mat, void>::DeSerialize(::cv::FileNode* fs, ::cv::Mat* param)
+/*void Serializer<::cv::Mat, void>::DeSerialize(::cv::FileNode* fs, ::cv::Mat* param)
 {
 	LOG_TRACE;
 	(*fs)["Data"] >> *param;
-}
+}*/
+
 void Serializer<Parameters::EnumParameter, void>::Serialize(::cv::FileStorage* fs, Parameters::EnumParameter* param)
 {
 	LOG_TRACE;
@@ -93,7 +94,7 @@ void Serializer<Parameters::EnumParameter, void>::Serialize(::cv::FileStorage* f
 	(*fs) << "]";
 	(*fs) << "Current value" << param->currentSelection;
 }
-void Serializer<Parameters::EnumParameter, void>::DeSerialize(::cv::FileNode* fs, Parameters::EnumParameter* param)
+/*void Serializer<Parameters::EnumParameter, void>::DeSerialize(::cv::FileNode* fs, Parameters::EnumParameter* param)
 {
 	LOG_TRACE;
 	(*fs)["Values"] >> param->values;
@@ -105,5 +106,5 @@ void Serializer<Parameters::EnumParameter, void>::DeSerialize(::cv::FileNode* fs
 		param->enumerations.push_back((std::string)(*itr));
 	}
 	(*fs)["Current value"] >> param->currentSelection;
-}
+}*/
 #endif // OPENCV_FOUND
