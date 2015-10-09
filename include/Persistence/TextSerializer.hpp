@@ -8,6 +8,7 @@
 #include <Parameter_def.hpp>
 #include <Types.hpp>
 #include <TypedParameter.hpp>
+
 template<typename T> 
 using is_vector = std::is_same<T, std::vector< typename T::value_type, typename T::allocator_type > >;
 
@@ -189,7 +190,7 @@ namespace Parameters
             {
                 static Parameters::Parameter::Ptr create(const std::string& name)
                 {
-                    return Parameters::Parameter::Ptr(new Parameters::TypedParameter<T>(name));
+                    return Parameters::Parameter::Ptr(new typename ::Parameters::TypedParameter<T>(name));
                 }
             };
             template<typename T> class PersistencePolicy

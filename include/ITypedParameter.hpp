@@ -21,7 +21,7 @@ namespace Parameters
 		}
 		bool Update(Parameter::Ptr other)
 		{
-			auto typedParameter = std::dynamic_pointer_cast<TypedParameter<T>>(other);
+            auto typedParameter = std::dynamic_pointer_cast<ITypedParameter<T>>(other);
 			if (typedParameter)
 			{
 				*Data() = *typedParameter->Data();
