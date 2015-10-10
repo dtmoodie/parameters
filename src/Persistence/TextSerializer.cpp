@@ -26,7 +26,7 @@ InterpreterRegistry::InterpreterSet& InterpreterRegistry::GetInterpretingFunctio
     if (registry().find(type) == registry().end())
     {
         LOG_TRIVIAL(warning) << type.name() << " not registered to the registry";
-        throw std::exception("Datatype not registered to the registry", 0);
+        throw std::invalid_argument("Datatype not registered to the registry");
     }
     return registry()[type];
 }
