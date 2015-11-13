@@ -31,16 +31,16 @@ SET(UI_LIB_DIR_DEB_)
 SET(MOC "")
 IF(Parameters_UI)
 	
-	LIST(APPEND definitions_ "-DPARAMETERS_USE_UI")
-	
+	#LIST(APPEND definitions_ "-DPARAMETERS_USE_UI")
+	ADD_DEFINITIONS("-DPARAMETERS_USE_UI")
 	IF(Parameters_UI_qt)
 		
 		FIND_PACKAGE(Qt5 COMPONENTS Gui Widgets Core)
         IF(Qt5_FOUND)
 
 			SET(USING_UI_ "QT")
-            LIST(APPEND definitions_ "-DQt5_FOUND")
-            
+            #LIST(APPEND definitions_ "-DQt5_FOUND")
+            ADD_DEFINITIONS("-DQt5_FOUND")
 			QT5_WRAP_CPP(MOC ${hdr})
 			SOURCE_GROUP("MOC"  FILES ${MOC})
 			INCLUDE_DIRECTORIES(${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS})
@@ -97,13 +97,17 @@ IF(Parameters_UI)
 				GET_FILENAME_COMPONENT(qt_core_deb ${qt_core_deb} NAME)
 			ENDIF()
 			
-			LIST(APPEND UI_LIBS "optimized;${qt_gui_rel}")
-			LIST(APPEND UI_LIBS "optimized;${qt_widgets_rel}")
-			LIST(APPEND UI_LIBS "optimized;${qt_core_rel}")
+			LIST(APPEND UI_LIBS Qt5::Gui)
+			LIST(APPEND UI_LIBS Qt5::Widgets)
+			LIST(APPEND UI_LIBS Qt5::Core)
 			
-			LIST(APPEND UI_LIBS "debug;${qt_gui_deb}")
-			LIST(APPEND UI_LIBS "debug;${qt_widgets_deb}")
-			LIST(APPEND UI_LIBS "debug;${qt_core_deb}")
+			#LIST(APPEND UI_LIBS "optimized;${qt_gui_rel}")
+			#LIST(APPEND UI_LIBS "optimized;${qt_widgets_rel}")
+			#LIST(APPEND UI_LIBS "optimized;${qt_core_rel}")
+			
+			#LIST(APPEND UI_LIBS "debug;${qt_gui_deb}")
+			#LIST(APPEND UI_LIBS "debug;${qt_widgets_deb}")
+			#LIST(APPEND UI_LIBS "debug;${qt_core_deb}")
 			
 		ELSE(Qt5_FOUND)
 
@@ -123,6 +127,7 @@ SET(PERSITENCE_LIBS)
 SET(PERSISTENCE_LIB_DIR_REL_)
 SET(PERSISTENCE_LIB_DIR_DEB_)
 IF(${Parameters_persistence})
+	SET(PERSISTENCE_LIBS "")
 	FIND_PACKAGE(OpenCV COMPONENTS core)
 	set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
 	IF(${OpenCV_FOUND})
@@ -148,8 +153,10 @@ IF(${Parameters_persistence})
 			GET_FILENAME_COMPONENT(cv_core_lib_deb ${cv_core_lib_deb} NAME)
 			GET_FILENAME_COMPONENT(cv_core_lib_rel ${cv_core_lib_rel} NAME)
 		ENDIF()
-		LIST(APPEND PERSITENCE_LIBS "debug;${cv_core_lib_deb}")
-		LIST(APPEND PERSITENCE_LIBS "optimized;${cv_core_lib_rel}")
+		LIST(APPEND PERSISTENCE_LIBS opencv_core)
+		
+		#LIST(APPEND PERSISTENCE_LIBS "debug;${cv_core_lib_deb}")
+		#LIST(APPEND PERSISTENCE_LIBS "optimized;${cv_core_lib_rel}")
 	ENDIF()
 ENDIF()
 
@@ -173,7 +180,7 @@ FOREACH(lib ${Boost_LIBRARIES})
 ENDFOREACH()
 
 
-SET(Parameters_LIBRARIES "${PERSITENCE_LIBS};${UI_LIBS};${boost_libs_}")
+SET(Parameters_LIBRARIES "${PERSISTENCE_LIBS};${UI_LIBS};${boost_libs_}")
 SET(Parameters_LIB_DIRS_RELEASE "${UI_LIB_DIR_REL_};${PERSISTENCE_LIB_DIR_REL_}")
 SET(Parameters_LIB_DIRS_DEBUG "${UI_LIB_DIR_DEB_};${PERSISTENCE_LIB_DIR_DEB_}")
 
@@ -229,7 +236,6 @@ IF(${Qt5_FOUND})
 		Qt5::Gui
 		Qt5::Widgets
 		opencv_core
-		#${Boost_LIBRARIES}
 		libParameter
 	)
 
@@ -248,7 +254,8 @@ LIST(REMOVE_DUPLICATES Parameters_LIB_DIRS_DEBUG)
 
 
 SET(Parameters_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include;${UI_INCLUDES_}" CACHE STRING "" FORCE)
-SET(Parameters_LIBRARIES ${Parameters_LIBRARIES}  CACHE STRING "" FORCE)
+#SET(Parameters_LIBRARIES ${Parameters_LIBRARIES}  CACHE STRING "" FORCE)
+SET(Parameters_LIBRARIES libParameter CACHE STRING "" FORCE)
 SET(Parameters_LIB_DIRS_RELEASE "${Parameters_LIB_DIRS_RELEASE};${CMAKE_CURRENT_BINARY_DIR}"  CACHE STRING "" FORCE)
 SET(Parameters_LIB_DIRS_DEBUG "${Parameters_LIB_DIRS_DEBUG};${CMAKE_CURRENT_BINARY_DIR}"  CACHE STRING "" FORCE)
 SET(Parameters_DEFS "${definitions_}" CACHE STRING "" FORCE)
