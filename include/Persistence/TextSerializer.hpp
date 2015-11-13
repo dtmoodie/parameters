@@ -6,8 +6,10 @@
 
 #include <LokiTypeInfo.h>
 #include <Parameter_def.hpp>
+#include "TypedParameter.hpp"
 #include <Types.hpp>
-#include <TypedParameter.hpp>
+
+
 template<typename T> 
 using is_vector = std::is_same<T, std::vector< typename T::value_type, typename T::allocator_type > >;
 
@@ -21,6 +23,7 @@ namespace cv
 namespace Parameters
 {
 	class Parameter;
+    template<typename T> class TypedParameter;
     namespace Persistence
     {
         namespace Text
@@ -185,13 +188,16 @@ namespace Parameters
                     }
                 }
             };
+
             template<typename T> struct ParameterFactory
             {
                 static Parameters::Parameter::Ptr create(const std::string& name)
                 {
-                    return Parameters::Parameter::Ptr(new Parameters::TypedParameter<T>(name));
+                    //return Parameters::Parameter::Ptr(new Parameters::TypedParameter<T>(name));
+                    return Parameters::Parameter::Ptr(new TypedParameter<T>(name));
                 }
             };
+
             template<typename T> class PersistencePolicy
             {
             public:

@@ -41,8 +41,8 @@ namespace Parameters
 		int getValue()
 		{
 			if (currentSelection >= values.size())
-			{
-				throw std::exception("currentSelection >= values.size()");
+            {
+                throw std::range_error("currentSelection >= values.size()");
 			}
 			return values[currentSelection];
 		}
