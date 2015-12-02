@@ -8,7 +8,7 @@ namespace Parameters
 {
 	namespace Persistence
 	{
-		template<typename T> class PersistencePolicy : public cv::PersistencePolicy<T>, public Text::PersistencePolicy<T>
+		template<typename T> class PersistencePolicy : public Parameters::Persistence::cv::PersistencePolicy<T>, public Parameters::Persistence::Text::PersistencePolicy<T>
 		{
 		public:
 			

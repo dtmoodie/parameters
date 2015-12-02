@@ -116,3 +116,34 @@ QWidget* DefaultProxy::GetParameterWidget(QWidget* parent)
 	output->setLayout(layout);
 	return output;
 }
+IHandler::IHandler() : paramMtx(nullptr), proxy(new SignalProxy(this)) {}
+void IHandler::OnUiUpdate(QObject* sender) {}
+void IHandler::OnUiUpdate(QObject* sender, double val) {}
+void IHandler::OnUiUpdate(QObject* sender, int val) {}
+void IHandler::OnUiUpdate(QObject* sender, bool val) {}
+void IHandler::OnUiUpdate(QObject* sender, QString val) {}
+void IHandler::OnUiUpdate(QObject* sender, int row, int col) {}
+
+std::function<void(void)>& IHandler::GetUpdateSignal()
+{
+
+    return onUpdate;
+}
+std::vector<QWidget*> IHandler::GetUiWidgets(QWidget* parent)
+{
+
+    return std::vector<QWidget*>();
+}
+void IHandler::SetParamMtx(boost::recursive_mutex* mtx)
+{
+    paramMtx = mtx;
+}
+boost::recursive_mutex* IHandler::GetParamMtx()
+{
+    return paramMtx;
+}
+
+bool IHandler::UiUpdateRequired()
+{
+    return false;
+}
