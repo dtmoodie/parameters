@@ -1,5 +1,6 @@
 #pragma once
-
+#include <boost/log/trivial.hpp>
+#include <boost/log/attributes/named_scope.hpp>
 #ifdef Parameter_EXPORTS
 #undef Parameter_EXPORTS
 #endif
