@@ -26,25 +26,22 @@ namespace Parameters
 			data = data_;
 			Parameter::changed = true;
 			Parameter::UpdateSignal();
+			ITypedParameter<T>::TypedUpdateSignal(&data_);
 		}
 		virtual void UpdateData(const T& data_)
 		{
 			data = data_;
 			Parameter::changed = true;
 			Parameter::UpdateSignal();
+			ITypedParameter<T>::TypedUpdateSignal(&data_);
 		}
 		virtual void UpdateData(T* data_)
 		{
 			data = *data_;
 			Parameter::changed = true;
 			Parameter::UpdateSignal();
+			ITypedParameter<T>::TypedUpdateSignal(data_);
 		}
-		/*virtual void UpdateData(const T* data_)
-		{
-			data = *data_;
-			Parameter::changed = true;
-			Parameter::UpdateSignal();
-		}*/
 	};
 
 	template<typename T> class TypedParameterRef : public MetaTypedParameter < T >
@@ -64,18 +61,21 @@ namespace Parameters
 			data = data_;
 			Parameter::changed = true;
 			Parameter::UpdateSignal();
+			ITypedParameter<T>::TypedUpdateSignal(&data_);
 		}
 		virtual void UpdateData(T& data_)
 		{
 			data = data_;
 			Parameter::changed = true;
 			Parameter::UpdateSignal();
+			ITypedParameter<T>::TypedUpdateSignal(&data_);
 		}
 		virtual void UpdateData(T* data_)
 		{
 			data = *data_;
 			Parameter::changed = true;
 			Parameter::UpdateSignal();
+			ITypedParameter<T>::TypedUpdateSignal(data_);
 		}
 		/*virtual void UpdateData(const T* data_)
 		{
@@ -121,6 +121,7 @@ namespace Parameters
 			ptr = &data;
 			Parameter::changed = true;
 			Parameter::UpdateSignal();
+			ITypedParameter<T>::TypedUpdateSignal(&data);
 		}
 		virtual void UpdateData(const T& data)
 		{
@@ -128,12 +129,14 @@ namespace Parameters
 				*ptr = data;
 			Parameter::changed = true;
 			Parameter::UpdateSignal();
+			ITypedParameter<T>::TypedUpdateSignal(&data);
 		}
 		virtual void UpdateData(T* data_)
 		{
 			ptr = data_;
 			Parameter::changed = true;
 			Parameter::UpdateSignal();
+			ITypedParameter<T>::TypedUpdateSignal(data_);
 		}
 		/*virtual void UpdateData(const T* data_)
 		{

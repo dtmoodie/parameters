@@ -24,10 +24,13 @@ namespace Parameters
             auto typedParameter = std::dynamic_pointer_cast<ITypedParameter<T>>(other);
 			if (typedParameter)
 			{
-				*Data() = *typedParameter->Data();
+				auto ptr = typedParameter->Data();
+				*Data() = *ptr;
 				UpdateSignal();
+				TypedUpdateSignal(ptr);
 			}
 			return false;
 		}
+		boost::signals2::signal<void(const T*)> TypedUpdateSignal;
 	};
 }

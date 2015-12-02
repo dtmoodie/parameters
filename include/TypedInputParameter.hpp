@@ -90,10 +90,6 @@ namespace Parameters
 		{
 			return Loki::TypeInfo(typeid(T));
 		}
-		/*virtual void UpdateData(const T* data_)
-		{
-
-		}*/
 
 	};
 
@@ -155,7 +151,7 @@ namespace Parameters
 		virtual bool AcceptsType(const Loki::TypeInfo& type)
 		{
 			return Loki::TypeInfo(typeid(T)) == type;
-		}
+		} 
 		virtual T* Data()
 		{
 			return userVar;
@@ -262,9 +258,5 @@ namespace Parameters
 		{
 			return Loki::TypeInfo(typeid(T));
 		}
-		/*virtual void UpdateData(const T* data_)
-		{
-
-		}*/
 	};
 }
