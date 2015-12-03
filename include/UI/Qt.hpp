@@ -71,7 +71,7 @@ namespace Parameters{
 			class Parameter_EXPORTS SignalProxy : public QObject
 			{
 				Q_OBJECT
-					IHandler* handler;
+				IHandler* handler;
 				QTime lastCallTime;
 			public:
 				SignalProxy(IHandler* handler_);
@@ -104,38 +104,39 @@ namespace Parameters{
 			// *****************************************************************************
 			class Parameter_EXPORTS IHandler
 			{
-				
+            private:
+                boost::recursive_mutex* paramMtx;
 			protected:
 				SignalProxy* proxy;
 				std::function<void(void)> onUpdate;
 			public:
 				
-				IHandler() : write(true), paramMtx(nullptr), proxy(new SignalProxy(this)) {}
-                virtual void OnUiUpdate(QObject* sender) {}
-				virtual void OnUiUpdate(QObject* sender, double val) {}
-				virtual void OnUiUpdate(QObject* sender, int val) {}
-				virtual void OnUiUpdate(QObject* sender, bool val) {}
-				virtual void OnUiUpdate(QObject* sender, QString val) {}
-				virtual void OnUiUpdate(QObject* sender, int row, int col) {}
+                IHandler();
+                virtual void OnUiUpdate(QObject* sender);
+                virtual void OnUiUpdate(QObject* sender, double val);
+                virtual void OnUiUpdate(QObject* sender, int val);
+                virtual void OnUiUpdate(QObject* sender, bool val);
+                virtual void OnUiUpdate(QObject* sender, QString val);
+                virtual void OnUiUpdate(QObject* sender, int row, int col);
 				
-				std::function<void(void)>& GetUpdateSignal()
-				{
-					LOG_TRACE;
-					return onUpdate;
-				}
-				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
-				{
-					LOG_TRACE;
-					return std::vector<QWidget*>();
-				}
-				bool write;
-				boost::recursive_mutex* paramMtx;
+                virtual std::function<void(void)>& GetUpdateSignal();
+                virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent);
+                virtual void SetParamMtx(boost::recursive_mutex* mtx);
+                virtual boost::recursive_mutex* GetParamMtx();
+				
+                static bool UiUpdateRequired();
+
+
 			};
 
 			class UiUpdateHandler: public IHandler
 			{
 			public:
-				static const bool UiUpdateRequired = true;
+				//static const bool UiUpdateRequired = true;
+                static bool UiUpdateRequired() 
+                {
+                    return true;
+                }
 			};
 			// *****************************************************************************
 			//								Default Handler
@@ -146,8 +147,8 @@ namespace Parameters{
 			public:
 				Handler() :currentData(nullptr) 
 				{
-					LOG_TRACE;
-					std::cout << "Creating handler for default unspecialized parameter" << std::endl;
+					
+					BOOST_LOG_TRIVIAL(info) << "Creating handler for default unspecialized parameter";
 				}
 				virtual void UpdateUi(const T& data)
 				{}
@@ -159,11 +160,15 @@ namespace Parameters{
 				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
-					LOG_TRACE;
-					std::cout << "Creating widget for default unspecialized parameter" << std::endl;
+					
+                    BOOST_LOG_TRIVIAL(info) << "Creating widget for default unspecialized parameter";
 					return std::vector<QWidget*>();
 				}
-				static const bool UiUpdateRequired = false;
+                static bool UiUpdateRequired()
+                {
+                    return false;
+                }
+				//static const bool UiUpdateRequired = false;
 			};
 
 			// **********************************************************************************
@@ -185,7 +190,7 @@ namespace Parameters{
 					LOG_TRACE;
 					if (sender == chkBox)
 					{
-						boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+						boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
 						if (boolData)
 						{
 							*boolData = chkBox->isChecked();
@@ -197,7 +202,7 @@ namespace Parameters{
 				virtual void SetData(bool* data_)
 				{
 					LOG_TRACE;
-					boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+					boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
 					boolData = data_;
 					if (chkBox)
 						UpdateUi(*data_);
@@ -212,7 +217,11 @@ namespace Parameters{
 					output.push_back(chkBox);
 					return output;
 				}
-				static const bool UiUpdateRequired = true;
+                static bool UiUpdateRequired()
+                {
+                    return false;
+                }
+				//static const bool UiUpdateRequired = true;
 			};
 
 			// **********************************************************************************
@@ -233,7 +242,7 @@ namespace Parameters{
 				virtual void UpdateUi(const T& data)
 				{
 					LOG_TRACE;
-					boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+					boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
 					btn->setText(QString::fromStdString(data.string()));
 				}
 				virtual void OnUiUpdate(QObject* sender)
@@ -241,7 +250,7 @@ namespace Parameters{
 					LOG_TRACE;
 					if (sender == btn)
 					{
-						boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+						boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
 						QString filename;
 						if (std::is_same<T, Parameters::WriteDirectory>::value || std::is_same<T, Parameters::ReadDirectory>::value)
 						{
@@ -320,7 +329,7 @@ namespace Parameters{
 				virtual void UpdateUi(const ::cv::Matx<T, ROW, COL>& data)
 				{
 					LOG_TRACE;
-					boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+					boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
 					for (int i = 0; i < ROW; ++i)
 					{
 						for (int j = 0; j < COL; ++j)
@@ -334,7 +343,7 @@ namespace Parameters{
 					LOG_TRACE;
 					if (sender == table)
 					{
-						boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+						boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
 						if (matData)
 						{
 							if (typeid(T) == typeid(float))
@@ -396,7 +405,7 @@ namespace Parameters{
 				virtual void UpdateUi(const ::cv::Point_<T>& data)
 				{
 					LOG_TRACE;
-					boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+					boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
 					if (table)
 					{
 						first = new QTableWidgetItem();
@@ -411,7 +420,7 @@ namespace Parameters{
 				virtual void OnUiUpdate(QObject* sender, int row = -1, int col = -1)
 				{
 					LOG_TRACE;
-					boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+					boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
 					if (ptData == nullptr)
 						return;
 					if (typeid(T) == typeid(double))
@@ -479,7 +488,7 @@ namespace Parameters{
                 virtual void UpdateUi(const ::cv::Point3_<T>& data)
 				{
 					LOG_TRACE;
-                    boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+                    boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
                     first = new QTableWidgetItem();
                     second = new QTableWidgetItem();
                     third = new QTableWidgetItem();
@@ -493,7 +502,7 @@ namespace Parameters{
                 virtual void OnUiUpdate(QObject* sender, int row = -1, int col = -1)
 				{
 					LOG_TRACE;
-                    boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+                    boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
                     if (ptData == nullptr)
                         return;
                     if (typeid(T) == typeid(double))
@@ -549,7 +558,7 @@ namespace Parameters{
 				virtual void UpdateUi(const Parameters::EnumParameter& data)
 				{
 					LOG_TRACE;
-					boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+					boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
 					enumCombo->clear();
 					for (int i = 0; i < data.enumerations.size(); ++i)
 					{
@@ -559,7 +568,7 @@ namespace Parameters{
 				virtual void OnUiUpdate(QObject* sender, int idx)
 				{
 					LOG_TRACE;
-					boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+					boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
 					if (idx != -1 && sender == enumCombo && enumData)
 					{
 						enumData->currentSelection = idx;
@@ -599,7 +608,7 @@ namespace Parameters{
 				virtual void UpdateUi(const std::string& data)
 				{
 					LOG_TRACE;
-					boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+					boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
 					lineEdit->setText(QString::fromStdString(data));
 				}
 				virtual void OnUiUpdate(QObject* sender)
@@ -607,7 +616,7 @@ namespace Parameters{
 					LOG_TRACE;
 					if (sender == lineEdit && strData)
 					{	
-						boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+						boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
 						*strData = lineEdit->text().toStdString();
 						if (onUpdate)
 							onUpdate();
@@ -650,7 +659,7 @@ namespace Parameters{
 					LOG_TRACE;
 					if (sender == btn)
 					{
-						boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+						boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
 						// TODO processing thread callback
 						if (funcData)
 						{
@@ -703,7 +712,7 @@ namespace Parameters{
 				virtual void OnUiUpdate(QObject* sender, double val = 0)
 				{
 					LOG_TRACE;
-					boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+					boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
 					if (sender == box && floatData)
 						*floatData = box->value();
 					if (onUpdate)
@@ -712,7 +721,7 @@ namespace Parameters{
 				virtual void SetData(T* data_)
 				{
 					LOG_TRACE;
-					boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+					boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
 					floatData = data_;
 					if (box)
 						box->setValue(*floatData);
@@ -749,13 +758,13 @@ namespace Parameters{
 				virtual void UpdateUi(const T& data)
 				{
 					LOG_TRACE;
-					boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+					boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
 					box->setValue(data);
 				}
 				virtual void OnUiUpdate(QObject* sender, int val = -1)
 				{
 					LOG_TRACE;
-					boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+					boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
 					if (sender == box && intData)
                     {
 						if(val == -1)
@@ -822,7 +831,7 @@ namespace Parameters{
 				virtual void OnUiUpdate(QObject* sender)
 				{
 					LOG_TRACE;
-					boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+					boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
 					Handler<T1>::OnUiUpdate(sender);
 					Handler<T1>::OnUiUpdate(sender);
 				}
@@ -856,7 +865,7 @@ namespace Parameters{
 				virtual void OnUiUpdate(QObject* sender)
 				{
 					LOG_TRACE;
-					boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+					boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
 					Handler<T1>::OnUiUpdate(sender);
 					Handler<T2>::OnUiUpdate(sender);
 				}
@@ -891,7 +900,7 @@ namespace Parameters{
 					LOG_TRACE;
 					if (data.size())
 					{
-						boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+						boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
 						index->setMaximum(data.size() - 1);
 						Handler<T>::UpdateUi(data[index->value()]);
 					}
@@ -901,7 +910,7 @@ namespace Parameters{
 					LOG_TRACE;
 					if (sender == index && vectorData && vectorData->size() && idx < vectorData->size())
 					{
-						boost::recursive_mutex::scoped_lock lock(*IHandler::paramMtx);
+						boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
 						Handler<T>::SetData(&(*vectorData)[idx]);
 						Handler<T>::OnUiUpdate(sender);
 					}						
@@ -952,7 +961,7 @@ namespace Parameters{
 					auto dataPtr = parameter->Data();	
 					if (dataPtr)
 					{
-						if (Handler<T>::UiUpdateRequired)
+						if (Handler<T>::UiUpdateRequired())
 						{
 							UiCallbackService::Instance()->post(boost::bind(&Handler<T>::UpdateUi, &paramHandler, boost::ref(*dataPtr)));
 						}
@@ -967,7 +976,7 @@ namespace Parameters{
 					if (typedParam)
 					{
 						parameter = typedParam;
-						paramHandler.IHandler::paramMtx = &parameter->mtx;
+						paramHandler.SetParamMtx(&parameter->mtx);
 						paramHandler.SetData(parameter->Data());
 						paramHandler.IHandler::GetUpdateSignal() = std::bind(&ParameterProxy<T>::onUiUpdate, this);
 						parameter->RegisterNotifier(std::bind(&ParameterProxy<T>::onParamUpdate, this));
