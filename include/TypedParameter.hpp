@@ -21,26 +21,23 @@ namespace Parameters
 		{
 			return &data;
 		}
-		virtual void UpdateData(T& data_)
+		virtual void UpdateData(T& data_, cv::cuda::Stream* stream = nullptr)
 		{
 			data = data_;
 			Parameter::changed = true;
-			Parameter::UpdateSignal();
-			ITypedParameter<T>::TypedUpdateSignal(&data_);
+			Parameter::UpdateSignal(stream);
 		}
-		virtual void UpdateData(const T& data_)
+		virtual void UpdateData(const T& data_, cv::cuda::Stream* stream = nullptr)
 		{
 			data = data_;
 			Parameter::changed = true;
-			Parameter::UpdateSignal();
-			ITypedParameter<T>::TypedUpdateSignal(&data_);
+			ITypedParameter<T>::UpdateSignal(stream);
 		}
-		virtual void UpdateData(T* data_)
+		virtual void UpdateData(T* data_, cv::cuda::Stream* stream = nullptr)
 		{
 			data = *data_;
 			Parameter::changed = true;
-			Parameter::UpdateSignal();
-			ITypedParameter<T>::TypedUpdateSignal(data_);
+			Parameter::UpdateSignal(stream);
 		}
 	};
 
@@ -56,34 +53,24 @@ namespace Parameters
 		{
 			return &data;
 		}
-		virtual void UpdateData(const T& data_)
+		virtual void UpdateData(const T& data_, cv::cuda::Stream* stream = nullptr)
 		{
 			data = data_;
 			Parameter::changed = true;
-			Parameter::UpdateSignal();
-			ITypedParameter<T>::TypedUpdateSignal(&data_);
+			Parameter::UpdateSignal(stream);
 		}
-		virtual void UpdateData(T& data_)
+		virtual void UpdateData(T& data_, cv::cuda::Stream* stream = nullptr)
 		{
 			data = data_;
 			Parameter::changed = true;
-			Parameter::UpdateSignal();
-			ITypedParameter<T>::TypedUpdateSignal(&data_);
+			ITypedParameter<T>::TypedUpdateSignal(stream);
 		}
-		virtual void UpdateData(T* data_)
+		virtual void UpdateData(T* data_, cv::cuda::Stream* stream = nullptr)
 		{
 			data = *data_;
 			Parameter::changed = true;
-			Parameter::UpdateSignal();
-			ITypedParameter<T>::TypedUpdateSignal(data_);
+			Parameter::UpdateSignal(stream);
 		}
-		/*virtual void UpdateData(const T* data_)
-		{
-			data = *data_;
-			Parameter::changed = true;
-			Parameter::UpdateSignal();
-		}*/
-
 	};
 
 	template<typename T> class TypedParameterPtr : public MetaTypedParameter < T >
@@ -105,44 +92,29 @@ namespace Parameters
 			MetaTypedParameter<T>(name, type, tooltip), ownsData(ownsData_)
 		{}
 
-        /*TypedParameterPtr(const std::string& name,
-			const T* ptr_ = nullptr,
-			const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "", bool ownsData_ = false) :
-			ptr(ptr_),
-			MetaTypedParameter<T>(name, type, tooltip), ownsData(ownsData_)
-        {}*/
 
 		virtual T* Data()
 		{
 			return ptr;
 		}
-		virtual void UpdateData(T& data)
+		virtual void UpdateData(T& data, cv::cuda::Stream* stream = nullptr)
 		{
 			ptr = &data;
 			Parameter::changed = true;
-			Parameter::UpdateSignal();
-			ITypedParameter<T>::TypedUpdateSignal(&data);
+			Parameter::UpdateSignal(stream);
 		}
-		virtual void UpdateData(const T& data)
+		virtual void UpdateData(const T& data, cv::cuda::Stream* stream = nullptr)
 		{
 			if (ptr)
 				*ptr = data;
 			Parameter::changed = true;
-			Parameter::UpdateSignal();
-			ITypedParameter<T>::TypedUpdateSignal(&data);
+			Parameter::UpdateSignal(stream);
 		}
-		virtual void UpdateData(T* data_)
+		virtual void UpdateData(T* data_, cv::cuda::Stream* stream = nullptr)
 		{
 			ptr = data_;
 			Parameter::changed = true;
-			Parameter::UpdateSignal();
-			ITypedParameter<T>::TypedUpdateSignal(data_);
+			Parameter::UpdateSignal(stream);
 		}
-		/*virtual void UpdateData(const T* data_)
-		{
-			ptr = data_;
-			Parameter::changed = true;
-			Parameter::UpdateSignal();
-		}*/
 	};
 }

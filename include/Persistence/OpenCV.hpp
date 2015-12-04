@@ -240,7 +240,7 @@ namespace Parameters
 							{
 								serializer.DeSerialize(fs, typedParam->Data());
                                 typedParam->changed = true;
-								typedParam->UpdateSignal();
+								typedParam->UpdateSignal(nullptr);
 								LOG_TRIVIAL(info) << "Successfully read " << param->GetName();
 							}
 							else
@@ -257,7 +257,7 @@ namespace Parameters
 							{
 								serializer.DeSerialize(&myNode, typedParam->Data());
                                 typedParam->changed = true;
-								typedParam->UpdateSignal();
+								typedParam->UpdateSignal(nullptr);
 								LOG_TRIVIAL(info) << "Successfully read " << param->GetName();
 							}
 							else

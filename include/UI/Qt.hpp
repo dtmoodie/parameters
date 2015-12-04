@@ -953,7 +953,7 @@ namespace Parameters{
 					LOG_TRACE;
 					//TODO Notify parameter of update on the processing thread.
 					parameter->changed = true;
-					parameter->UpdateSignal();
+					parameter->UpdateSignal(nullptr);
 				}
 				void onParamUpdate()
 				{
@@ -965,7 +965,6 @@ namespace Parameters{
 						{
 							UiCallbackService::Instance()->post(boost::bind(&Handler<T>::UpdateUi, &paramHandler, boost::ref(*dataPtr)));
 						}
-							
 					}
 				}
 			public:
@@ -979,7 +978,8 @@ namespace Parameters{
 						paramHandler.SetParamMtx(&parameter->mtx);
 						paramHandler.SetData(parameter->Data());
 						paramHandler.IHandler::GetUpdateSignal() = std::bind(&ParameterProxy<T>::onUiUpdate, this);
-						parameter->RegisterNotifier(std::bind(&ParameterProxy<T>::onParamUpdate, this));
+
+						//parameter->RegisterNotifier(std::bind(&ParameterProxy<T>::onParamUpdate, this));
 					}
 				}
 				virtual bool CheckParameter(Parameter* param)

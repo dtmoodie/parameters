@@ -7,7 +7,13 @@
 #include <boost/signals2/connection.hpp>
 #include <boost/signals2/signal.hpp>
 #include <boost/thread/recursive_mutex.hpp>
-
+namespace cv
+{
+	namespace cuda
+	{
+		class Stream;
+	}
+}
 namespace Parameters
 {
 	class Parameter_EXPORTS Parameter
@@ -36,13 +42,13 @@ namespace Parameters
 		// Update with the values from another parameter
 		virtual bool Update(Parameter::Ptr other);
 
-		virtual boost::signals2::connection RegisterNotifier(const boost::function<void(void)>& f);
+		virtual boost::signals2::connection RegisterNotifier(const boost::function<void(cv::cuda::Stream*)>& f);
 
 		boost::recursive_mutex mtx;
 		ParameterType type;
 		bool changed;
 		unsigned short subscribers;
-		boost::signals2::signal<void(void)> UpdateSignal;
+		boost::signals2::signal<void(cv::cuda::Stream*)> UpdateSignal;
 
 	private:
 		std::string name;

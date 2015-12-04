@@ -10,7 +10,7 @@ namespace Parameters
 		boost::signals2::connection inputConnection;
 		virtual void onInputUpdate()
 		{
-			Parameter::UpdateSignal();
+			Parameter::UpdateSignal(nullptr);
 		}
 	public:
 		typedef std::shared_ptr<TypedInputParameter<T>> Ptr;
@@ -38,7 +38,7 @@ namespace Parameters
 			{
 				input.reset();
 				inputConnection.disconnect();
-				Parameter::UpdateSignal();
+				Parameter::UpdateSignal(nullptr);
 				return true;
 			}				
 			typename ITypedParameter<T>::Ptr castedParam = std::dynamic_pointer_cast<ITypedParameter<T>>(param);
@@ -47,7 +47,7 @@ namespace Parameters
 				input = castedParam;
 				inputConnection.disconnect();
 				inputConnection = castedParam->RegisterNotifier(boost::bind(&TypedInputParameter<T>::onInputUpdate, this));
-				Parameter::UpdateSignal();
+				Parameter::UpdateSignal(nullptr);
 				return true;
 			}
 			return false;
@@ -74,15 +74,15 @@ namespace Parameters
 				return input->Data();
 			return nullptr;
 		}
-		virtual void UpdateData(T& data_)
+		virtual void UpdateData(T& data_, cv::cuda::Stream* stream)
 		{
 
 		}
-		virtual void UpdateData(const T& data_)
+		virtual void UpdateData(const T& data_, cv::cuda::Stream* stream)
 		{
 
 		}
-		virtual void UpdateData(T* data_)
+		virtual void UpdateData(T* data_, cv::cuda::Stream* stream)
 		{
 
 		}
@@ -98,12 +98,13 @@ namespace Parameters
 		T* userVar; // Pointer to the user space variable of type T
 		typename ITypedParameter<T>::Ptr input;
 		boost::signals2::connection inputConnection;
+
 		virtual void onInputUpdate()
 		{
 			// The input variable has been updated, update user var
 			*userVar = *input->Data();
 			Parameter::changed = true;
-			Parameter::UpdateSignal();
+			Parameter::UpdateSignal(nullptr);
 		}
 	public:
 		typedef std::shared_ptr<TypedInputParameterCopy<T>> Ptr;
@@ -156,15 +157,15 @@ namespace Parameters
 		{
 			return userVar;
 		}
-		virtual void UpdateData(T& data_)
+		virtual void UpdateData(T& data_, cv::cuda::Stream* stream)
 		{
 			*userVar = data_;
 		}
-		virtual void UpdateData(const T& data_)
+		virtual void UpdateData(const T& data_, cv::cuda::Stream* stream)
 		{
 			*userVar = data_;
 		}
-		virtual void UpdateData(T* data_)
+		virtual void UpdateData(T* data_, cv::cuda::Stream* stream)
 		{
 			*userVar = *data_;
 		}
@@ -242,15 +243,15 @@ namespace Parameters
 				return input->Data();
 			return nullptr;
 		}
-		virtual void UpdateData(T& data_)
+		virtual void UpdateData(T& data_, cv::cuda::Stream* stream)
 		{
 
 		}
-		virtual void UpdateData(const T& data_)
+		virtual void UpdateData(const T& data_, cv::cuda::Stream* stream)
 		{
 
 		}
-		virtual void UpdateData(T* data_)
+		virtual void UpdateData(T* data_, cv::cuda::Stream* stream)
 		{
 
 		}

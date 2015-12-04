@@ -37,7 +37,7 @@ void Parameter::SetTreeName(const std::string& treeName_)
 {
 	treeRoot = treeName_;
 }
-boost::signals2::connection Parameter::RegisterNotifier(const boost::function<void(void)>& f)
+boost::signals2::connection Parameter::RegisterNotifier(const boost::function<void(cv::cuda::Stream*)>& f)
 {
 	return UpdateSignal.connect(f);
 }
