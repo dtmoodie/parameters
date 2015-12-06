@@ -28,12 +28,15 @@
 #include <memory>
 #include <boost/log/trivial.hpp>
 #include <boost/log/attributes/named_scope.hpp>
-namespace Parameters{
+namespace Parameters
+{
 	class Parameter;
 	template<typename T> class ITypedParameter;
 
-	namespace UI{
-		namespace qt{
+	namespace UI
+	{
+		namespace qt
+		{
 			class IHandler;
 			class IParameterProxy;
 			// *****************************************************************************
@@ -1037,9 +1040,11 @@ namespace Parameters{
 			public:
 				QtUiPolicy()
 				{
-					WidgetFactory::RegisterCreator(Loki::TypeInfo(typeid(T)), std::bind(&Factory<T>::Create, std::placeholders::_1));
+					(void)&factory;
+					//WidgetFactory::RegisterCreator(Loki::TypeInfo(typeid(T)), std::bind(&Factory<T>::Create, std::placeholders::_1));
 				}
 			};
+			template<typename T> Factory<T> QtUiPolicy<T>::factory = Factory<T>();
 
 		} /* namespace qt */
 	} /* namespace UI */

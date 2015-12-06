@@ -191,6 +191,14 @@ namespace Parameters
 
             template<typename T> struct ParameterFactory
             {
+				ParameterFactory()
+				{
+					InterpreterRegistry::RegisterFunction(Loki::TypeInfo(typeid(T)),
+						std::bind(SerializeWrapper<T>::Write, std::placeholders::_1, std::placeholders::_2),
+						std::bind(SerializeWrapper<T>::ssRead, std::placeholders::_1, std::placeholders::_2),
+						std::bind(SerializeWrapper<T>::Read, std::placeholders::_1, std::placeholders::_2),
+						std::bind(ParameterFactory<T>::create, std::placeholders::_1));
+				}
                 static Parameters::Parameter::Ptr create(const std::string& name)
                 {
                     //return Parameters::Parameter::Ptr(new Parameters::TypedParameter<T>(name));
@@ -200,16 +208,14 @@ namespace Parameters
 
             template<typename T> class PersistencePolicy
             {
+				static ParameterFactory<T> factory;
             public:
                 PersistencePolicy()
                 {
-                    InterpreterRegistry::RegisterFunction(Loki::TypeInfo(typeid(T)), 
-                        std::bind(SerializeWrapper<T>::Write, std::placeholders::_1, std::placeholders::_2), 
-                        std::bind(SerializeWrapper<T>::ssRead,  std::placeholders::_1, std::placeholders::_2),
-                        std::bind(SerializeWrapper<T>::Read, std::placeholders::_1, std::placeholders::_2),
-                        std::bind(ParameterFactory<T>::create, std::placeholders::_1));
+					(void)&factory;
                 }
             };
+			template<typename T> ParameterFactory<T> PersistencePolicy<T>::factory;
         }
     }
 }

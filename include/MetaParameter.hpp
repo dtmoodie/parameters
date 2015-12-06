@@ -3,6 +3,8 @@
 #include "ITypedParameter.hpp"
 #include "UI/UI.hpp"
 #include <Parameter.hpp>
+#include "Converters/DoubleConverter.hpp"
+
 namespace Parameters
 {
 	template<typename T, template<typename> class Policy1 = Persistence::PersistencePolicy, template<typename> class Policy2 = UI::UiPolicy>

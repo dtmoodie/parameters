@@ -269,16 +269,28 @@ namespace Parameters
 					}
 				}
 			};
-			template<typename T> class PersistencePolicy
+
+			template<typename T> class Constructor
 			{
-				//static const Registerer<T> registerer = Registerer<T>();
 			public:
-				PersistencePolicy()
+				Constructor()
 				{
 					InterpreterRegistry::RegisterFunction(Loki::TypeInfo(typeid(T)), std::bind(SerializeWrapper<T>::Write, std::placeholders::_1, std::placeholders::_2), std::bind(SerializeWrapper<T>::Read, std::placeholders::_1, std::placeholders::_2));
 				}
 			};
+
+			template<typename T> class PersistencePolicy
+			{
+				static Constructor<T> constructor;
+			public:
+				PersistencePolicy()
+				{
+					(void)&constructor;
+				}
+			};
+			template<typename T> Constructor<T> PersistencePolicy<T>::constructor;
 		}
+
 	}
 	
 }
