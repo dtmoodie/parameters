@@ -28,6 +28,13 @@
 #include <memory>
 #include <boost/log/trivial.hpp>
 #include <boost/log/attributes/named_scope.hpp>
+namespace cv
+{
+	namespace cuda
+	{
+		class Stream;
+	}
+}
 namespace Parameters
 {
 	class Parameter;
@@ -958,7 +965,7 @@ namespace Parameters
 					parameter->changed = true;
 					parameter->UpdateSignal(nullptr);
 				}
-				void onParamUpdate()
+				void onParamUpdate(cv::cuda::Stream* stream)
 				{
 					LOG_TRACE;
 					auto dataPtr = parameter->Data();	
@@ -982,7 +989,7 @@ namespace Parameters
 						paramHandler.SetData(parameter->Data());
 						paramHandler.IHandler::GetUpdateSignal() = std::bind(&ParameterProxy<T>::onUiUpdate, this);
 
-						//parameter->RegisterNotifier(std::bind(&ParameterProxy<T>::onParamUpdate, this));
+						parameter->RegisterNotifier(boost::bind(&ParameterProxy<T>::onParamUpdate, this, _1));
 					}
 				}
 				virtual bool CheckParameter(Parameter* param)
