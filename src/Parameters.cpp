@@ -9,21 +9,24 @@ const std::string& Parameter::GetName() const
 {
 	return name;
 }
-void Parameter::SetName(const std::string& name_)
+Parameter* Parameter::SetName(const std::string& name_)
 {
 	name = name_;
+    return this;
 }
 const std::string& Parameter::GetTooltip() const
 {
 	return tooltip;
 }
-void Parameter::SetTooltip(const std::string& tooltip_)
+Parameter* Parameter::SetTooltip(const std::string& tooltip_)
 {
 	tooltip = tooltip_;
+    return this;
 }
-void Parameter::SetTreeRoot(const std::string& treeRoot_)
+Parameter* Parameter::SetTreeRoot(const std::string& treeRoot_)
 {
 	treeRoot = treeRoot_;
+    return this;
 }
 const std::string& Parameter::GetTreeRoot() const
 {
@@ -33,9 +36,10 @@ const std::string Parameter::GetTreeName() const
 {
 	return treeRoot + ":" + name;
 }
-void Parameter::SetTreeName(const std::string& treeName_)
+Parameter* Parameter::SetTreeName(const std::string& treeName_)
 {
 	treeRoot = treeName_;
+    return this;
 }
 boost::signals2::connection Parameter::RegisterNotifier(const boost::function<void(cv::cuda::Stream*)>& f)
 {

@@ -67,10 +67,8 @@ namespace Parameters
 			protected:
 			public:
 				typedef std::shared_ptr<IParameterProxy> Ptr;
-				IParameterProxy()
-				{
-					
-				}
+                IParameterProxy();
+                virtual ~IParameterProxy();
 				
 				virtual QWidget* GetParameterWidget(QWidget* parent) = 0;
 				virtual bool CheckParameter(Parameter* param) = 0;
@@ -670,16 +668,15 @@ namespace Parameters
 					if (sender == btn)
 					{
 						boost::recursive_mutex::scoped_lock lock(*GetParamMtx());
-						// TODO processing thread callback
 						if (funcData)
 						{
-							ProcessingThreadCallbackService::post(*funcData);
-							//(*funcData)();
+							ProcessingThreadCallbackService::post(*funcData, 
+                                std::make_pair((void*)this, Loki::TypeInfo(typeid(Handler<boost::function<void(void)>, void>))));
 							if (onUpdate)
 							{
-								ProcessingThreadCallbackService::post(onUpdate);
+								ProcessingThreadCallbackService::post(onUpdate, 
+                                    std::make_pair((void*)this, Loki::TypeInfo(typeid(Handler<boost::function<void(void)>, void>))));
 							}
-								//onUpdate();
 						}
 					}
 				}
@@ -958,6 +955,10 @@ namespace Parameters
 				Handler<T> paramHandler;
 				std::shared_ptr<Parameters::ITypedParameter<T>> parameter;
 			public:
+                ~ParameterProxy()
+                {
+                    InvalidCallbacks::invalidate((void*)&paramHandler);
+                }
 				void onUiUpdate()
 				{
 					LOG_TRACE;
@@ -973,7 +974,9 @@ namespace Parameters
 					{
 						if (Handler<T>::UiUpdateRequired())
 						{
-							UiCallbackService::Instance()->post(boost::bind(&Handler<T>::UpdateUi, &paramHandler, boost::ref(*dataPtr)));
+							UiCallbackService::Instance()->post(
+                                boost::bind(&Handler<T>::UpdateUi, &paramHandler, boost::ref(*dataPtr)), 
+                                std::make_pair((void*)&paramHandler, Loki::TypeInfo(typeid(Handler<T>))));
 						}
 					}
 				}

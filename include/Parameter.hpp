@@ -31,10 +31,10 @@ namespace Parameters
 		typedef ::std::shared_ptr<Parameter> Ptr;
 		virtual Loki::TypeInfo GetTypeInfo() = 0;
 
-		virtual void SetName(const std::string& name_);
-		virtual void SetTooltip(const std::string& tooltip_);
-		virtual void SetTreeName(const std::string& treeName_);
-		virtual void SetTreeRoot(const std::string& treeRoot_);
+		virtual Parameter* SetName(const std::string& name_);
+		virtual Parameter* SetTooltip(const std::string& tooltip_);
+		virtual Parameter* SetTreeName(const std::string& treeName_);
+		virtual Parameter* SetTreeRoot(const std::string& treeRoot_);
 		virtual const ::std::string& GetName() const;
 		virtual const ::std::string& GetTooltip() const;
 		virtual const ::std::string GetTreeName() const;
