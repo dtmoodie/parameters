@@ -8,6 +8,7 @@
 
 namespace Parameters
 {
+    template<typename T> class ITypedParameter;
 	namespace Converters
 	{
 		namespace Double
@@ -69,7 +70,7 @@ namespace Parameters
 				virtual void Update(Parameter* param, cv::cuda::Stream* stream)
 				{
 					std::lock_guard<std::mutex> lock(mtx);
-					data = ToMat(*(static_cast<ITypedParameter<T>*>(param))->Data(), stream, 0);
+                    data = ToMat(*(static_cast<ITypedParameter<T>*>(param))->Data(), stream, 0);
 				}
 				virtual double GetValue(int row, int col, int channel, int index)
 				{
