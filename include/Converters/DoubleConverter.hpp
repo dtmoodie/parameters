@@ -34,7 +34,7 @@ namespace Parameters
 			{
 				cv::Mat output;
 				cv::_InputArray arr(data);
-				if (arr.kind() == cv::_InputArray::CUDA_GPU_MAT)
+				if (arr.kind() == cv::_InputArray::CUDA_GPU_MAT && !arr.empty())
 				{
 					if (stream)
 						arr.getGpuMat().download(output, *stream);
@@ -42,7 +42,10 @@ namespace Parameters
 						arr.getGpuMat().download(output);
 					return output;
 				}
-				arr.copyTo(output);
+				else
+				{
+					arr.copyTo(output);
+				}
 				return output;
 			}
 			template<typename T> cv::Mat ToMat(const cv::Point_<T>& data, cv::cuda::Stream* stream, int)
