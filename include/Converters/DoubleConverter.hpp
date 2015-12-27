@@ -16,6 +16,8 @@ namespace Parameters
 			class Parameter_EXPORTS IConverter
 			{
 			public:
+				cv::Rect roi;
+				cv::Size fullSize;
 				std::mutex mtx;
 				virtual void Update(Parameter* param, cv::cuda::Stream* stream) = 0;
 				virtual double GetValue(int row = 0,int col = 0,int channel = 0, int index= 0) = 0;
@@ -26,32 +28,34 @@ namespace Parameters
 				virtual Loki::TypeInfo GetTypeInfo() = 0;
 			};
 			
-			template<typename T> cv::Mat ToMat(const T& data, cv::cuda::Stream* stream, unsigned int)
+			template<typename T> cv::Mat ToMat(const T& data, cv::cuda::Stream* stream, cv::Rect roi, cv::Size& full_size, unsigned int)
 			{
 				return cv::Mat();
 			}
 			// Input output array converter
-			template<typename T> cv::Mat ToMat(const T& data, cv::cuda::Stream* stream, typename std::enable_if<std::is_constructible<cv::_InputArray, T>::value, int>::type)
+			template<typename T> cv::Mat ToMat(const T& data, cv::cuda::Stream* stream, cv::Rect roi, cv::Size& full_size, typename std::enable_if<std::is_constructible<cv::_InputArray, T>::value, int>::type)
 			{
 				cv::Mat output;
 				cv::_InputArray arr(data);
+				full_size = arr.size();
 				if (arr.kind() == cv::_InputArray::CUDA_GPU_MAT && !arr.empty())
 				{
 					if (stream)
-						arr.getGpuMat().download(output, *stream);
+						arr.getGpuMat()(roi).download(output, *stream);
 					else
-						arr.getGpuMat().download(output);
+						arr.getGpuMat()(roi).download(output);
 					return output;
 				}
 				else
 				{
-					arr.copyTo(output);
+					arr.getMat()(roi).copyTo(output);
 				}
 				return output;
 			}
-			template<typename T> cv::Mat ToMat(const cv::Point_<T>& data, cv::cuda::Stream* stream, int)
+			template<typename T> cv::Mat ToMat(const cv::Point_<T>& data, cv::cuda::Stream* stream, cv::Rect roi, cv::Size& full_size, int)
 			{
 				cv::Mat output(1, 2, CV_64F);
+				full_size = output.size();
 				output.at<double>(0) = data.x;
 				output.at<double>(1) = data.y;
 				return output;
@@ -70,14 +74,16 @@ namespace Parameters
 				virtual void Update(Parameter* param, cv::cuda::Stream* stream)
 				{
 					std::lock_guard<std::mutex> lock(mtx);
-                    data = ToMat(*(static_cast<ITypedParameter<T>*>(param))->Data(), stream, 0);
+                    data = ToMat(*(static_cast<ITypedParameter<T>*>(param))->Data(), stream, roi, fullSize, 0);
+					
 				}
 				virtual double GetValue(int row, int col, int channel, int index)
 				{
 					std::lock_guard<std::mutex> lock(mtx);
 					if(data.depth() != CV_64F)
 						data.convertTo(data, CV_64F);
-
+					row -= roi.y;
+					col -= roi.x;
 					if (row < data.rows && col < data.cols && channel < data.channels())
 					{
 						int channels = data.channels();
@@ -88,11 +94,11 @@ namespace Parameters
 				}
 				virtual int NumRows()
 				{
-					return data.rows;
+					return fullSize.height;
 				}
 				virtual int NumCols()
 				{
-					return data.cols;
+					return fullSize.width;
 				}
 				virtual int NumChan()
 				{
