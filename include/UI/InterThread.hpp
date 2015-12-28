@@ -4,6 +4,7 @@
 #include "Parameter_def.hpp"
 #include <boost/function.hpp>
 #include <queue>
+#include <list>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/mutex.hpp>
 #include "LokiTypeInfo.h"

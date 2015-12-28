@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef PARAMETERS_USE_UI
+#ifdef PARAMETERS_GENERATE_UI
 
 #include "Qt.hpp"
 namespace Parameters

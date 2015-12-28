@@ -1,5 +1,6 @@
 #pragma once
 
+#ifdef OPENCV_FOUND
 // Check if being built with OpenCV
 #include <map>
 #include <functional>
@@ -289,8 +290,26 @@ namespace Parameters
 				}
 			};
 			template<typename T> Constructor<T> PersistencePolicy<T>::constructor;
+		} // namespace cv
+	} // namespace Persistence
+} // namespace Parameters
+#else
+namespace Parameters
+{
+	namespace Persistence
+	{
+		namespace cv
+		{
+			template<typename T> class PersistencePolicy
+			{
+			public:
+				PersistencePolicy()
+				{
+					
+				}
+			};
 		}
-
 	}
-	
 }
+
+#endif

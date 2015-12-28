@@ -38,18 +38,21 @@ namespace Parameters
 				cv::Mat output;
 				cv::_InputArray arr(data);
 				full_size = arr.size();
-				if (arr.kind() == cv::_InputArray::CUDA_GPU_MAT && !arr.empty())
+				if (!arr.empty())
 				{
-					if (stream)
-						arr.getGpuMat()(roi).download(output, *stream);
+					if (arr.kind() == cv::_InputArray::CUDA_GPU_MAT)
+					{
+						if (stream)
+							arr.getGpuMat()(roi).download(output, *stream);
+						else
+							arr.getGpuMat()(roi).download(output);
+						return output;
+					}
 					else
-						arr.getGpuMat()(roi).download(output);
-					return output;
-				}
-				else
-				{
-					arr.getMat()(roi).copyTo(output);
-				}
+					{
+						arr.getMat()(roi).copyTo(output);
+					}
+				}				
 				return output;
 			}
 			template<typename T> cv::Mat ToMat(const cv::Point_<T>& data, cv::cuda::Stream* stream, cv::Rect roi, cv::Size& full_size, int)
