@@ -45,7 +45,10 @@ void UiCallbackService::post(boost::function<void ()> f, std::pair<void*, Loki::
         return;
     }
     io_queue.push(std::make_pair(source, f));
-    
+}
+size_t UiCallbackService::queue_size()
+{
+    return io_queue.size();
 }
 
 void UiCallbackService::setCallback(boost::function<void (boost::function<void ()>, std::pair<void*, Loki::TypeInfo>)> f)

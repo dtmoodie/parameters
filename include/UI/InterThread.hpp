@@ -100,10 +100,12 @@ namespace Parameters
             static UiCallbackService* Instance();
 
             void post(boost::function<void(void)> f, std::pair<void*, Loki::TypeInfo> sender = std::make_pair((void*)nullptr, Loki::TypeInfo(typeid(void*))));
-
+            size_t queue_size();
             static void setCallback(boost::function<void(boost::function<void(void)>, std::pair<void*, Loki::TypeInfo>)> f);
             // To be called from the UI thread
             static void run();
+
+
 		};
 		class Parameter_EXPORTS ProcessingThreadCallbackService
 		{

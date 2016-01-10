@@ -210,7 +210,7 @@ LINK_DIRECTORIES(${Parameters_LIB_DIRS_RELEASE})
 LINK_DIRECTORIES(${Parameters_LIB_DIRS_DEBUG})
 
 add_library(libParameter SHARED ${hdr} ${src} ${MOC})
-
+cotire(libParameter)
 TARGET_LINK_LIBRARIES(libParameter 
 	${Parameters_LIBRARIES}
 )
