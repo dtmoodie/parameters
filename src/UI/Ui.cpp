@@ -44,6 +44,8 @@ void UiCallbackService::post(boost::function<void ()> f, std::pair<void*, Loki::
         user_thread_callback_service(f, source);
         return;
     }
+	if (user_thread_callback_notifier)
+		user_thread_callback_notifier();
     io_queue.push(std::make_pair(source, f));
 }
 size_t UiCallbackService::queue_size()
@@ -54,6 +56,10 @@ size_t UiCallbackService::queue_size()
 void UiCallbackService::setCallback(boost::function<void (boost::function<void ()>, std::pair<void*, Loki::TypeInfo>)> f)
 {
     Instance()->user_thread_callback_service = f;
+}
+void UiCallbackService::setCallback(boost::function<void(void)>& f)
+{
+	Instance()->user_thread_callback_notifier = f;
 }
 
 void UiCallbackService::run()
@@ -80,6 +86,7 @@ void ProcessingThreadCallbackService::setCallback(boost::function<void(boost::fu
 {
 	Instance()->user_processing_thread_callback_function = f;
 }
+
 
 void ProcessingThreadCallbackService::run()
 {
