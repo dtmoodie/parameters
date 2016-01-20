@@ -41,7 +41,7 @@ namespace Parameters
 		}
 	};
 
-	template<typename T> class TypedParameterRef : public MetaTypedParameter < T >
+	/*template<typename T> class TypedParameterRef : public MetaTypedParameter < T >
 	{
 		T& data;
 	public:
@@ -71,7 +71,7 @@ namespace Parameters
 			Parameter::changed = true;
 			Parameter::UpdateSignal(stream);
 		}
-	};
+	};*/
 
 	template<typename T> class TypedParameterPtr : public MetaTypedParameter < T >
 	{
