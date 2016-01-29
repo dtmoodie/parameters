@@ -209,12 +209,12 @@ namespace Parameters
 				Handler() : chkBox(nullptr), boolData(nullptr) {}
 				virtual void UpdateUi(const bool& data)
 				{
-					LOG_TRACE;
+					
 					chkBox->setChecked(data);
 				}
 				virtual void OnUiUpdate(QObject* sender, int val)
 				{
-					LOG_TRACE;
+					
 					if (sender == chkBox)
 					{
                         boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
@@ -228,7 +228,7 @@ namespace Parameters
 				}
 				virtual void SetData(bool* data_)
 				{
-					LOG_TRACE;
+					
                     boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
 					boolData = data_;
 					if (chkBox)
@@ -236,7 +236,7 @@ namespace Parameters
 				}
 				virtual std::vector < QWidget*> GetUiWidgets(QWidget* parent_)
 				{
-					LOG_TRACE;
+					
 					std::vector<QWidget*> output;
 					if (chkBox == nullptr)
 						chkBox = new QCheckBox(parent_);
@@ -268,13 +268,13 @@ namespace Parameters
 				Handler(): btn(nullptr), parent(nullptr){}
 				virtual void UpdateUi(const T& data)
 				{
-					LOG_TRACE;
+					
                     boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
 					btn->setText(QString::fromStdString(data.string()));
 				}
 				virtual void OnUiUpdate(QObject* sender)
 				{
-					LOG_TRACE;
+					
 					if (sender == btn)
 					{
                         boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
@@ -299,14 +299,14 @@ namespace Parameters
 				}
 				virtual void SetData(T* data_)
 				{
-					LOG_TRACE;
+					
 					fileData = data_;
 					if (btn)
 						UpdateUi(*data_);
 				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent_)
 				{
-					LOG_TRACE;
+					
 					std::vector< QWidget* > output;
 					parent = parent_;
 					if (btn == nullptr)
@@ -329,7 +329,7 @@ namespace Parameters
 			public:
 				Handler() : table(nullptr), matData(nullptr), UiUpdateHandler()
 				{
-					LOG_TRACE;
+					
 					table = new QTableWidget();
 					table->horizontalHeader()->hide();
 					table->verticalHeader()->hide();
@@ -349,13 +349,13 @@ namespace Parameters
 				}
 				virtual void SetData(::cv::Matx<T, ROW, COL>* data)
 				{
-					LOG_TRACE;
+					
 					matData = data;
 					UpdateUi(*data);
 				}
 				virtual void UpdateUi(const ::cv::Matx<T, ROW, COL>& data)
 				{
-					LOG_TRACE;
+					
                     boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
 					for (int i = 0; i < ROW; ++i)
 					{
@@ -367,7 +367,7 @@ namespace Parameters
 				}
 				virtual void OnUiUpdate(QObject* sender, int row = -1, int col = -1)
 				{
-					LOG_TRACE;
+					
 					if (sender == table)
 					{
                         boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
@@ -392,7 +392,7 @@ namespace Parameters
 				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
-					LOG_TRACE;
+					
 					std::vector<QWidget*> output;
 					output.push_back(table);
 					return output;
@@ -417,7 +417,7 @@ namespace Parameters
 			public:
 				Handler():ptData(nullptr)
 				{
-					LOG_TRACE;
+					
 					table = new QTableWidget();
 					first = new QTableWidgetItem();
 					second = new QTableWidgetItem();
@@ -431,7 +431,7 @@ namespace Parameters
 				}
 				virtual void UpdateUi(const ::cv::Point_<T>& data)
 				{
-					LOG_TRACE;
+					
                     boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
 					if (table)
 					{
@@ -446,7 +446,7 @@ namespace Parameters
 				}
 				virtual void OnUiUpdate(QObject* sender, int row = -1, int col = -1)
 				{
-					LOG_TRACE;
+					
                     boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
 					if (ptData == nullptr)
 						return;
@@ -473,13 +473,13 @@ namespace Parameters
 				}
 				virtual void SetData(::cv::Point_<T>* data_)
 				{
-					LOG_TRACE;
+					
 					ptData = data_;
 					UpdateUi(*ptData);
 				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
-					LOG_TRACE;
+					
 					std::vector<QWidget*> output;
 					output.push_back(table);
 					return output;
@@ -498,7 +498,7 @@ namespace Parameters
             public:
                 Handler():ptData(nullptr)
 				{
-					LOG_TRACE;
+					
                     table = new QTableWidget();
                     first = new QTableWidgetItem();
                     second = new QTableWidgetItem();
@@ -514,7 +514,7 @@ namespace Parameters
                 }
                 virtual void UpdateUi(const ::cv::Point3_<T>& data)
 				{
-					LOG_TRACE;
+					
                     boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
                     first = new QTableWidgetItem();
                     second = new QTableWidgetItem();
@@ -528,7 +528,7 @@ namespace Parameters
                 }
                 virtual void OnUiUpdate(QObject* sender, int row = -1, int col = -1)
 				{
-					LOG_TRACE;
+					
                     boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
                     if (ptData == nullptr)
                         return;
@@ -559,13 +559,13 @@ namespace Parameters
                 }
                 virtual void SetData(::cv::Point3_<T>* data_)
 				{
-					LOG_TRACE;
+					
                     ptData = data_;
                     UpdateUi(*ptData);
                 }
                 virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
-					LOG_TRACE;
+					
                     std::vector<QWidget*> output;
                     output.push_back(table);
                     return output;
@@ -584,7 +584,7 @@ namespace Parameters
 				Handler() : enumCombo(nullptr){}
 				virtual void UpdateUi(const Parameters::EnumParameter& data)
 				{
-					LOG_TRACE;
+					
                     boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
 					enumCombo->clear();
 					for (int i = 0; i < data.enumerations.size(); ++i)
@@ -594,7 +594,7 @@ namespace Parameters
 				}
 				virtual void OnUiUpdate(QObject* sender, int idx)
 				{
-					LOG_TRACE;
+					
                     boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
 					if (idx != -1 && sender == enumCombo && enumData)
 					{
@@ -605,14 +605,14 @@ namespace Parameters
 				}
 				virtual void SetData(Parameters::EnumParameter* data_)
 				{
-					LOG_TRACE;
+					
 					enumData = data_;
 					if (enumCombo)
 						UpdateUi(*enumData);
 				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
-					LOG_TRACE;
+					
 					std::vector<QWidget*> output;
 					if (enumCombo == nullptr)
 						enumCombo = new QComboBox(parent);
@@ -634,13 +634,13 @@ namespace Parameters
 				Handler() : strData(nullptr), lineEdit(nullptr) {}
 				virtual void UpdateUi(const std::string& data)
 				{
-					LOG_TRACE;
+					
                     boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
 					lineEdit->setText(QString::fromStdString(data));
 				}
 				virtual void OnUiUpdate(QObject* sender)
 				{
-					LOG_TRACE;
+					
 					if (sender == lineEdit && strData)
 					{	
                         boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
@@ -651,14 +651,14 @@ namespace Parameters
 				}
 				virtual void SetData(std::string* data_)
 				{
-					LOG_TRACE;
+					
 					strData = data_;
 					if (lineEdit)
 						lineEdit->setText(QString::fromStdString(*strData));
 				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
-					LOG_TRACE;
+					
 					std::vector<QWidget*> output;
 					if (lineEdit == nullptr)
 						lineEdit = new QLineEdit(parent);
@@ -683,7 +683,7 @@ namespace Parameters
 				{}
 				virtual void OnUiUpdate(QObject* sender)
 				{
-					LOG_TRACE;
+					
 					if (sender == btn)
 					{
                         boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
@@ -701,12 +701,12 @@ namespace Parameters
 				}
 				virtual void SetData(boost::function<void(void)>* data_)
 				{
-					LOG_TRACE;
+					
 					funcData = data_;
 				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
-					LOG_TRACE;
+					
 					std::vector<QWidget*> output;
 					if (btn == nullptr)
 					{
@@ -732,12 +732,12 @@ namespace Parameters
 				Handler() : box(nullptr), floatData(nullptr) {}
 				virtual void UpdateUi(const T& data)
 				{
-					LOG_TRACE;
+					
 					box->setValue(data);
 				}
 				virtual void OnUiUpdate(QObject* sender, double val = 0)
 				{
-					LOG_TRACE;
+					
                     boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
 					if (sender == box && floatData)
 						*floatData = box->value();
@@ -746,7 +746,7 @@ namespace Parameters
 				}
 				virtual void SetData(T* data_)
 				{
-					LOG_TRACE;
+					
                     boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
 					floatData = data_;
 					if (box)
@@ -754,7 +754,7 @@ namespace Parameters
 				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
-					LOG_TRACE;
+					
 					std::vector<QWidget*> output;
 					if (box == nullptr)
 					{
@@ -783,13 +783,13 @@ namespace Parameters
 				Handler() : box(nullptr), intData(nullptr) {}
 				virtual void UpdateUi(const T& data)
 				{
-					LOG_TRACE;
+					
                     boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
 					box->setValue(data);
 				}
 				virtual void OnUiUpdate(QObject* sender, int val = -1)
 				{
-					LOG_TRACE;
+					
                     boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
 					if (sender == box && intData)
                     {
@@ -806,14 +806,14 @@ namespace Parameters
 				}
 				virtual void SetData(T* data_)
 				{
-					LOG_TRACE;
+					
 					intData = data_;
 					if (box)
 						box->setValue(*intData);
 				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
-					LOG_TRACE;
+					
 					std::vector<QWidget*> output;
 					if (box == nullptr)
 					{
@@ -851,26 +851,26 @@ namespace Parameters
 
 				virtual void UpdateUi(const std::pair<T1, T1>& data)
 				{
-					LOG_TRACE;
+					
 
 				}
 				virtual void OnUiUpdate(QObject* sender)
 				{
-					LOG_TRACE;
+					
                     boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
 					Handler<T1>::OnUiUpdate(sender);
 					Handler<T1>::OnUiUpdate(sender);
 				}
 				virtual void SetData(std::pair<T1, T1>* data_)
 				{
-					LOG_TRACE;
+					
 					pairData = data_;
 					Handler<T1>::SetData(&data_->first);
 					Handler<T1>::SetData(&data_->second);
 				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
-					LOG_TRACE;
+					
 					auto output = Handler<T1>::GetUiWidgets(parent);
 					auto out2 = Handler<T1>::GetUiWidgets(parent);
 					output.insert(output.end(), out2.begin(), out2.end());
@@ -886,25 +886,25 @@ namespace Parameters
 
 				virtual void UpdateUi(const std::pair<T1, T2>& data)
 				{
-					LOG_TRACE;
+					
 				}
 				virtual void OnUiUpdate(QObject* sender)
 				{
-					LOG_TRACE;
+					
                     boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
 					Handler<T1>::OnUiUpdate(sender);
 					Handler<T2>::OnUiUpdate(sender);
 				}
 				virtual void SetData(std::pair<T1, T2>* data_)
 				{
-					LOG_TRACE;
+					
 					pairData = data_;
 					Handler<T1>::SetData(&data_->first);
 					Handler<T2>::SetData(&data_->second);
 				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
-					LOG_TRACE;
+					
 					auto output = Handler<T1>::GetUiWidgets(parent);
 					auto out2 = Handler<T2>::GetUiWidgets(parent);
 					output.insert(output.end(), out2.begin(), out2.end());
@@ -923,7 +923,7 @@ namespace Parameters
 				Handler() : index(new QSpinBox()), vectorData(nullptr) {}
 				virtual void UpdateUi(const std::vector<T>& data)
 				{
-					LOG_TRACE;
+					
 					if (data.size())
 					{
                         boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
@@ -933,7 +933,7 @@ namespace Parameters
 				}
 				virtual void OnUiUpdate(QObject* sender, int idx = 0)
 				{
-					LOG_TRACE;
+					
 					if (sender == index && vectorData && vectorData->size() && idx < vectorData->size())
 					{
                         boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
@@ -943,7 +943,7 @@ namespace Parameters
 				}
 				virtual void SetData(std::vector<T>* data_)
 				{
-					LOG_TRACE;
+					
 					vectorData = data_;
 					if (vectorData)
 					{
@@ -956,7 +956,7 @@ namespace Parameters
 				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
-					LOG_TRACE;
+					
 					auto output = Handler<T>::GetUiWidgets(parent);
 					index->setParent(parent);
 					index->setMinimum(0);
@@ -980,14 +980,14 @@ namespace Parameters
                 }
 				void onUiUpdate()
 				{
-					LOG_TRACE;
+					
 					//TODO Notify parameter of update on the processing thread.
 					parameter->changed = true;
 					parameter->UpdateSignal(nullptr);
 				}
 				void onParamUpdate(cv::cuda::Stream* stream)
 				{
-					LOG_TRACE;
+					
 					auto dataPtr = parameter->Data();	
 					if (dataPtr)
 					{
@@ -1002,7 +1002,7 @@ namespace Parameters
 			public:
 				ParameterProxy(std::shared_ptr<Parameters::Parameter> param)
 				{
-					LOG_TRACE;
+					
 					auto typedParam = std::dynamic_pointer_cast<Parameters::ITypedParameter<T>>(param);
 					if (typedParam)
 					{
@@ -1016,12 +1016,12 @@ namespace Parameters
 				}
 				virtual bool CheckParameter(Parameter* param)
 				{
-					LOG_TRACE;
+					
 					return param == parameter.get();
 				}
 				QWidget* GetParameterWidget(QWidget* parent)
 				{
-					LOG_TRACE;
+					
 					QWidget* output = new QWidget(parent);
 					auto widgets = paramHandler.GetUiWidgets(output);
 					QGridLayout* layout = new QGridLayout(output);

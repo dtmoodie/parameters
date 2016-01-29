@@ -57,39 +57,21 @@ namespace Parameters
 			Parameter::changed = true;
 			Parameter::UpdateSignal(stream);
 		}
+        virtual Parameter::Ptr DeepCopy() const
+        {
+            return Parameter::Ptr(new TypedParameter<T>(GetName(), data));
+        }
+        virtual bool Update(const Parameter::Ptr other)
+        {
+            auto typed = dynamic_cast<ITypedParameter<T>*>(other.get());
+            if (typed)
+            {
+                data = *(typed->Data());
+                return true;
+            }
+            return false;
+        }
 	};
-
-	/*template<typename T> class TypedParameterRef : public MetaTypedParameter < T >
-	{
-		T& data;
-	public:
-		typedef std::shared_ptr<TypedParameterRef<T>> Ptr;
-		TypedParameterRef(const std::string& name, const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "") :
-			MetaTypedParameter<T>(name, type, tooltip){}
-		
-		virtual T* Data()
-		{
-			return &data;
-		}
-		virtual void UpdateData(const T& data_, cv::cuda::Stream* stream = nullptr)
-		{
-			data = data_;
-			Parameter::changed = true;
-			Parameter::UpdateSignal(stream);
-		}
-		virtual void UpdateData(T& data_, cv::cuda::Stream* stream = nullptr)
-		{
-			data = data_;
-			Parameter::changed = true;
-			ITypedParameter<T>::TypedUpdateSignal(stream);
-		}
-		virtual void UpdateData(T* data_, cv::cuda::Stream* stream = nullptr)
-		{
-			data = *data_;
-			Parameter::changed = true;
-			Parameter::UpdateSignal(stream);
-		}
-	};*/
 
 	template<typename T> class TypedParameterPtr : public MetaTypedParameter < T >
 	{
@@ -134,5 +116,19 @@ namespace Parameters
 			Parameter::changed = true;
 			Parameter::UpdateSignal(stream);
 		}
+        virtual bool Update(const Parameter::Ptr other)
+        {
+            auto typed = dynamic_cast<ITypedParameter<T>*>(other.get());
+            if(typed)
+            {
+                *ptr = *(typed->Data());
+                return true;
+            }
+            return false;
+        }
+        virtual Parameter::Ptr DeepCopy() const
+        {
+            return Parameter::Ptr(new TypedParameter<T>(GetName(), *ptr));
+        }
 	};
 }

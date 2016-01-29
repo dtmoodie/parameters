@@ -59,6 +59,7 @@ namespace Parameters
 		virtual const ::std::string& GetTreeRoot() const;
 		// Update with the values from another parameter
 		virtual bool Update(Parameter::Ptr other);
+        virtual Ptr DeepCopy() const = 0;
 
 		virtual boost::signals2::connection RegisterNotifier(const boost::function<void(cv::cuda::Stream*)>& f);
 

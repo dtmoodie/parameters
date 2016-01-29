@@ -108,7 +108,10 @@ namespace Parameters
 		{
 			return Loki::TypeInfo(typeid(T));
 		}
-
+        virtual Parameter::Ptr DeepCopy() const
+        {
+            return Parameter::Ptr();
+        }
 	};
 
 	template<typename T> class TypedInputParameterCopy : public MetaTypedParameter<T>, public InputParameter
@@ -191,7 +194,10 @@ namespace Parameters
 		{
 			return Loki::TypeInfo(typeid(T));
 		}
-
+        virtual Parameter::Ptr DeepCopy() const
+        {
+            return Parameter::Ptr();
+        }
 	};
 
 	// Meant to reference a pointer variable in user space, and to update that variable whenever 
@@ -277,5 +283,9 @@ namespace Parameters
 		{
 			return Loki::TypeInfo(typeid(T));
 		}
+        virtual Parameter::Ptr DeepCopy() const
+        {
+            return Parameter::Ptr();
+        }
 	};
 }

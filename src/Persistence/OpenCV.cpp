@@ -24,19 +24,20 @@ https://github.com/dtmoodie/parameters
 
 using namespace Parameters::Persistence::cv;
 
-std::map<Loki::TypeInfo, std::pair<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSerializerFunction >>& InterpreterRegistry::registry()
+std::map<Loki::TypeInfo, std::tuple<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSerializerFunction, InterpreterRegistry::FactoryFunction >>& InterpreterRegistry::registry()
 {
-	static std::map<Loki::TypeInfo, std::pair<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSerializerFunction >> instance;
+	static std::map<Loki::TypeInfo, std::tuple<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSerializerFunction, InterpreterRegistry::FactoryFunction >> instance;
 	return instance;
 }
 
-void InterpreterRegistry::RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, DeSerializerFunction deserializer)
+void InterpreterRegistry::RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, DeSerializerFunction deserializer, FactoryFunction creator)
 {
 	LOG_TRACE;
-	registry()[type] = std::make_pair(serializer, deserializer);
+    
+	registry()[type] = std::make_tuple(serializer, deserializer, creator);
 }
 
-std::pair<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSerializerFunction >& InterpreterRegistry::GetInterpretingFunction(Loki::TypeInfo type)
+std::tuple<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSerializerFunction, InterpreterRegistry::FactoryFunction >& InterpreterRegistry::GetInterpretingFunction(Loki::TypeInfo type)
 {
 	LOG_TRACE;
 	if (registry().find(type) == registry().end())
@@ -47,58 +48,71 @@ std::pair<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSerial
 		
 	return registry()[type];
 }
+std::tuple<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSerializerFunction, InterpreterRegistry::FactoryFunction > InterpreterRegistry::GetInterpretingFunction(std::string type_string)
+{
+    for(auto itr : registry())
+    {
+        if(itr.first.name() == type_string)
+        {
+            return itr.second;
+        }
+    }
+    std::tuple<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSerializerFunction, InterpreterRegistry::FactoryFunction >();
+}
 void Parameters::Persistence::cv::Serialize(::cv::FileStorage* fs, Parameters::Parameter* param)
 {
 	LOG_TRACE;
-	InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo()).first(fs, param);
+	std::get<0>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo()))(fs, param);
 }
 void Parameters::Persistence::cv::DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param)
 {
 	LOG_TRACE;
-	InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo()).second(fs, param);
+	std::get<1>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo()))(fs, param);
 }
 Parameters::Parameter* Parameters::Persistence::cv::DeSerialize(::cv::FileNode* fs)
 {
 	LOG_TRACE;
-	//TODO object factory based on serialized type
+    std::string type = (std::string)(*fs)["Type"];
+    return std::get<2>(InterpreterRegistry::GetInterpretingFunction(type))(fs);
 	return nullptr;
 }
 void Serializer<char, void>::Serialize(::cv::FileStorage* fs, char* param)
 {
 	LOG_TRACE;
-	(*fs) << "Data" << (signed char)*param;
+    
+	(*fs) << (signed char)*param;
 }
 
-/*void Serializer<char, void>::DeSerialize(::cv::FileNode* fs, char* param)
+void Serializer<char, void>::DeSerialize(::cv::FileNode& fs, char* param)
 {
 	LOG_TRACE;
 	signed char data;
-	(*fs)["Data"] >> data;
+	fs >> data;
 	*param = (char)data;
-}*/
+}
 
 void Serializer<std::string, void>::Serialize(::cv::FileStorage* fs, std::string* param)
 {
 	LOG_TRACE;
-	(*fs) << "Data" << *param;
+	(*fs) << *param;
 }
 
-/*void Serializer<std::string, void>::DeSerialize(::cv::FileNode* fs, std::string* param)
+void Serializer<std::string, void>::DeSerialize(::cv::FileNode& fs, std::string* param)
 {
 	LOG_TRACE;
-	*param = (std::string)(*fs)["Data"];
-}*/
+	*param = (std::string)(fs);
+}
 void Serializer<::cv::Mat, void>::Serialize(::cv::FileStorage* fs, ::cv::Mat* param)
 {
 	LOG_TRACE;
-	(*fs) << "Data" << *param;
+	(*fs) << *param;
 }
 
-/*void Serializer<::cv::Mat, void>::DeSerialize(::cv::FileNode* fs, ::cv::Mat* param)
+void Serializer<::cv::Mat, void>::DeSerialize(::cv::FileNode& fs, ::cv::Mat* param)
 {
 	LOG_TRACE;
-	(*fs)["Data"] >> *param;
-}*/
+	(fs) >> *param;
+}
 
 void Serializer<Parameters::EnumParameter, void>::Serialize(::cv::FileStorage* fs, Parameters::EnumParameter* param)
 {

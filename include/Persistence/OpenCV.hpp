@@ -50,11 +50,13 @@ namespace Parameters
 			public:
 				typedef std::function<void(::cv::FileStorage*, Parameters::Parameter*)> SerializerFunction;
 				typedef std::function<void(::cv::FileNode*, Parameters::Parameter*)> DeSerializerFunction;
-				static void RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, DeSerializerFunction deserializer);
-				static std::pair<SerializerFunction,	DeSerializerFunction >& GetInterpretingFunction(Loki::TypeInfo type);
+                typedef std::function<Parameter*(::cv::FileNode*)> FactoryFunction;
+				static void RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, DeSerializerFunction deserializer, FactoryFunction creator);
+				static std::tuple<SerializerFunction, DeSerializerFunction, FactoryFunction >& GetInterpretingFunction(Loki::TypeInfo type);
+                static std::tuple<SerializerFunction, DeSerializerFunction, FactoryFunction > GetInterpretingFunction(std::string type_string);
 			private:
 				// Mapping from Loki::typeinfo to file writing functors
-				static	std::map<Loki::TypeInfo, std::pair<SerializerFunction, DeSerializerFunction >>& registry();
+				static	std::map<Loki::TypeInfo, std::tuple<SerializerFunction, DeSerializerFunction, FactoryFunction>>& registry();
 			};
 			Parameter_EXPORTS void Serialize(::cv::FileStorage* fs, Parameters::Parameter* param);
 			Parameter_EXPORTS void DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param);
@@ -75,47 +77,33 @@ namespace Parameters
 			template<> struct Parameter_EXPORTS Serializer<char, void>
 			{
 				static void Serialize(::cv::FileStorage* fs, char* param);
-				template<typename U> static void DeSerialize(U fs, char* param)
-				{
-					LOG_TRACE;
-					signed char data;
-					(*fs)["Data"] >> data;
-					*param = (char)data;
-				}
+				static void DeSerialize(::cv::FileNode& fs, char* param);
 			};
 			template<> struct Parameter_EXPORTS Serializer < std::string, void >
 			{
 				static void Serialize(::cv::FileStorage* fs, std::string* param);
-				template<typename U> static void DeSerialize(U fs, std::string* param)
-				{
-					LOG_TRACE;
-					*param = (std::string)(*fs)["Data"];
-				}
+				static void DeSerialize(::cv::FileNode& fs, std::string* param);
 			};
 			template<> struct Parameter_EXPORTS Serializer<::cv::Mat, void>
 			{
 				static void Serialize(::cv::FileStorage* fs, ::cv::Mat* param);
-				template<typename U> static void DeSerialize(U fs, ::cv::Mat* param)
-				{
-					LOG_TRACE;
-					(*fs)["Data"] >> *param;
-				}
+				static void DeSerialize(::cv::FileNode&  fs, ::cv::Mat* param);
 			};
 			template<> struct Parameter_EXPORTS Serializer<Parameters::EnumParameter, void>
 			{
 				static void Serialize(::cv::FileStorage* fs, Parameters::EnumParameter* param);
-				template<typename U> static void DeSerialize(U fs, Parameters::EnumParameter* param)
+				static void DeSerialize(::cv::FileNode&  fs, Parameters::EnumParameter* param)
 				{
 					LOG_TRACE;
-					(*fs)["Values"] >> param->values;
+					(fs)["Values"] >> param->values;
 
-					auto end = (*fs)["Enumerations"].end();
+					auto end = (fs)["Enumerations"].end();
 					param->enumerations.clear();
-					for (auto itr = (*fs)["Enumerations"].begin(); itr != end; ++itr)
+					for (auto itr = (fs)["Enumerations"].begin(); itr != end; ++itr)
 					{
 						param->enumerations.push_back((std::string)(*itr));
 					}
-					(*fs)["Current value"] >> param->currentSelection;
+					(fs)["Current value"] >> param->currentSelection;
 				}
 			};
 			template<typename T> struct Serializer<T,typename  std::enable_if<std::is_unsigned<T>::value || std::is_same<T,long>::value || std::is_same<T, long long>::value, void>::type>
@@ -123,12 +111,12 @@ namespace Parameters
 				static void Serialize(::cv::FileStorage* fs, T* param)
 				{
 					LOG_TRACE;
-					(*fs) << "Data" << boost::lexical_cast<std::string>(*param);
+					(*fs) << boost::lexical_cast<std::string>(*param);
 				}
-				template<typename U> static void DeSerialize(U fs, T* param)
+				static void DeSerialize(::cv::FileNode& fs, T* param)
 				{
 					LOG_TRACE;
-					*param = boost::lexical_cast<T>((std::string)(*fs)["Data"]);
+					*param = boost::lexical_cast<T>((std::string)(fs));
 				}
 			}; 
 			template<typename T> struct Serializer<T, typename std::enable_if<
@@ -137,19 +125,20 @@ namespace Parameters
 				std::is_same<typename std::remove_cv<T>::type, boost::function<void(void)>		>::value, void>::type>
 			{
 				static void Serialize(::cv::FileStorage* fs, T* param){}
-				virtual void DeSerialize(::cv::FileNode* fs, T* param){}
+				virtual void DeSerialize(::cv::FileNode& fs, T* param){}
 			};
-			template<typename T> struct Serializer < T, typename std::enable_if<std::is_integral<T>::value && !std::is_unsigned<T>::value && !std::is_same<T, long>::value && !std::is_same<T, long long>::value, void>::type>
+			template<typename T> struct Serializer < T, typename std::enable_if<
+                std::is_floating_point<T>::value || std::is_integral<T>::value && !std::is_unsigned<T>::value && !std::is_same<T, long>::value && !std::is_same<T, long long>::value, void>::type>
 			{
 				static void Serialize(::cv::FileStorage* fs, T* param)
 				{
 					LOG_TRACE;
-					(*fs) << "Data" << *param;
+					(*fs) << *param;
 				}
-				template<typename U> static void DeSerialize(U fs, T* param)
+				static void DeSerialize(::cv::FileNode&  fs, T* param)
 				{
 					LOG_TRACE;
-					(*fs)["Data"] >> *param;
+					fs >> *param;
 				}
 			};
 			template<typename T, int M, int N> struct Serializer<::cv::Matx<T, M, N>, void>
@@ -159,7 +148,7 @@ namespace Parameters
 					LOG_TRACE;
 					(*fs) << "Rows" << M;
 					(*fs) << "Cols" << N;
-					(*fs) << "Data" << "[";
+					(*fs) << "Elements" << "[";
 					for (int i = 0; i < M; ++i)
 					{
 						(*fs) << "[:";
@@ -171,18 +160,18 @@ namespace Parameters
 					}
 					(*fs) << "]";
 				}
-				template<typename U> static void DeSerialize(U fs, ::cv::Matx<T, M, N>* param)
+				static void DeSerialize(::cv::FileNode& fs, ::cv::Matx<T, M, N>* param)
 				{
 					LOG_TRACE;
-					if ((int)(*fs)["Rows"] != M || (int)(*fs)["Cols"] != N)
+					if ((int)(fs)["Rows"] != M || (int)(fs)["Cols"] != N)
 						return;
-					auto rowItr = (*fs)["Data"].begin();
+					auto rowItr = (fs)["Elements"].begin();
 					for (int i = 0; i < M; ++i, ++rowItr)
 					{
 						auto colItr = (*rowItr).begin();
 						for (int j = 0; j < N; ++j, ++colItr)
 						{
-							(*param)(i, j) = (T)(*colItr);
+							(*param)(i, j) = (double)(*colItr);
 						}
 					}
 				}
@@ -191,29 +180,33 @@ namespace Parameters
 			template<typename T, int M> struct Serializer<::cv::Vec<T, M>, void> : public Serializer<::cv::Matx<T,M,1>>{};
 			template<typename T> struct Serializer<::cv::Scalar_<T>, void> : public Serializer<::cv::Vec<T, 4>>{};
 			// TODO, this doesn't work for types like std::vector<unsigned int> because opencv doesn't natively support it.  Instead needs to be modified to manually handle serialization
-			template<typename T> struct Serializer<std::vector<T>, typename std::enable_if<std::is_floating_point<T>::value || std::is_integral<T>::value, void>::type>: public Serializer<T>
+			template<typename T> struct Serializer<std::vector<T>, void>: public Serializer<T>
 			{
 				static void Serialize(::cv::FileStorage* fs, std::vector<T>* param)
 				{
 					LOG_TRACE;
-					//(*fs) << "Data" << *param;
-					(*fs) << "Data" << "[";
+                    (*fs) << "{";
+                    (*fs) << "Size" << boost::lexical_cast<std::string>(param->size());
+					(*fs) << "Elements" << "[";
 					for (auto itr = param->begin(); itr != param->end(); ++itr)
 					{
 						Serializer<T>::Serialize(fs, &(*itr));
 					}
 					(*fs) << "]";
+                    (*fs) << "}";
 					
 				}
-				template<typename U> static void DeSerialize(U fs, std::vector<T>* param)
+				static void DeSerialize(::cv::FileNode&  fs, std::vector<T>* param)
 				{
 					LOG_TRACE;
-					//(*fs)["Data"] >> *param;
-					
-					for (auto itr = (*fs)["Data"].begin(); itr != (*fs)["Data"].end(); ++itr)
+                    size_t size = boost::lexical_cast<size_t>((std::string)fs["Size"]);
+                    param->reserve(size);
+					auto element_node = fs["Elements"];
+
+					for (auto itr = element_node.begin(); itr != element_node.end(); ++itr)
 					{
 						param->push_back(T());
-						Serializer<T>::DeSerialize(itr, &(*param)[param->size() - 1]);
+						Serializer<T>::DeSerialize(*itr, &(*param)[param->size() - 1]);
 					}
 				}
 
@@ -238,6 +231,7 @@ namespace Parameters
 							LOG_TRIVIAL(warning) << "Invalid tree name for parameter: " << typedParam->GetTreeName() << " " << e.what();
 							return;
 						}						
+                        (*fs) << "Data";
 						serializer.Serialize(fs, typedParam->Data());
 						(*fs) << "Type" << typedParam->GetTypeInfo().name();
 						if (toolTip.size())
@@ -257,7 +251,7 @@ namespace Parameters
 							std::string type = (std::string)(*fs)["Type"];
 							if (type == param->GetTypeInfo().name())
 							{
-								serializer.DeSerialize(fs, typedParam->Data());
+								serializer.DeSerialize((*fs)["Data"], typedParam->Data());
                                 typedParam->changed = true;
 								typedParam->UpdateSignal(nullptr);
 								LOG_TRIVIAL(info) << "Successfully read " << param->GetName();
@@ -274,7 +268,7 @@ namespace Parameters
 							std::string type = (std::string)myNode["Type"];
 							if (type == param->GetTypeInfo().name())
 							{
-								serializer.DeSerialize(&myNode, typedParam->Data());
+								serializer.DeSerialize(myNode["Data"], typedParam->Data());
                                 typedParam->changed = true;
 								typedParam->UpdateSignal(nullptr);
 								LOG_TRIVIAL(info) << "Successfully read " << param->GetName();
@@ -287,14 +281,23 @@ namespace Parameters
 						}
 					}
 				}
-			};
+			    static Parameter* create(::cv::FileNode* fs)
+                {
+                    auto output = new TypedParameter<T>(fs->name(), T());
+                    Read(fs, output);
+                    return output;
+                }
+            };
 
 			template<typename T> class Constructor
 			{
 			public:
 				Constructor()
 				{
-					InterpreterRegistry::RegisterFunction(Loki::TypeInfo(typeid(T)), std::bind(SerializeWrapper<T>::Write, std::placeholders::_1, std::placeholders::_2), std::bind(SerializeWrapper<T>::Read, std::placeholders::_1, std::placeholders::_2));
+					InterpreterRegistry::RegisterFunction(Loki::TypeInfo(typeid(T)), 
+                        std::bind(SerializeWrapper<T>::Write, std::placeholders::_1, std::placeholders::_2), 
+                        std::bind(SerializeWrapper<T>::Read, std::placeholders::_1, std::placeholders::_2), 
+                        std::bind(SerializeWrapper<T>::create, std::placeholders::_1));
 				}
 			};
 

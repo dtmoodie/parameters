@@ -33,14 +33,14 @@ std::map<std::string, InterpreterRegistry::FactoryFunction>& InterpreterRegistry
 }
 void InterpreterRegistry::RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, SSDeSerializerFunction ssdeserializer, DeSerializerFunction deserializer, FactoryFunction factoryFunc)
 {
-    LOG_TRACE;
+    
     registry()[type] = std::make_tuple(serializer, ssdeserializer, deserializer);
     factory()[type.name()] = factoryFunc;
 }
 
 InterpreterRegistry::InterpreterSet& InterpreterRegistry::GetInterpretingFunction(Loki::TypeInfo type)
 {
-    LOG_TRACE;
+    
     if (registry().find(type) == registry().end())
     {
         LOG_TRIVIAL(warning) << type.name() << " not registered to the registry";
@@ -52,25 +52,25 @@ InterpreterRegistry::InterpreterSet& InterpreterRegistry::GetInterpretingFunctio
 
 void Parameters::Persistence::Text::Serialize(::std::stringstream* ss, Parameters::Parameter* param)
 {
-    LOG_TRACE;
+    
     std::get<0>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo())).operator()(ss, param);
     //InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo()).first(ss, param);
 }
 
 void Parameters::Persistence::Text::DeSerialize(::std::stringstream* ss, Parameters::Parameter* param)
 {
-    LOG_TRACE;
+    
     std::get<1>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo())).operator()(ss, param);
 }
 void Parameters::Persistence::Text::DeSerialize(::std::string* ss, Parameters::Parameter* param)
 {
-    LOG_TRACE;
+    
     std::get<2>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo())).operator()(ss, param);
 }
 
 std::shared_ptr<Parameters::Parameter> Parameters::Persistence::Text::DeSerialize(::std::stringstream* ss)
 {
-    LOG_TRACE;
+    
     //TODO object factory based on serialized type
     std::string type;
 	std::getline(*ss, type, ']');
@@ -91,7 +91,7 @@ std::shared_ptr<Parameters::Parameter> Parameters::Persistence::Text::DeSerializ
 
 void Serializer<Parameters::EnumParameter, void>::Serialize(::std::stringstream* ss, Parameters::EnumParameter* param)
 {
-    LOG_TRACE;
+    
     (*ss) << "Values:";
     for (int i = 0; i < param->enumerations.size(); ++i)
     {

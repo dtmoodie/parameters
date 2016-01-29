@@ -36,4 +36,3 @@ https://github.com/dtmoodie/parameters
 #else
 #define LOG_TRIVIAL(severity) BOOST_LOG_FUNCTION(); BOOST_LOG_TRIVIAL(severity)
 #endif
-#define LOG_TRACE  LOG_TRIVIAL(trace) << " "
