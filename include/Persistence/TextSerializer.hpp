@@ -141,7 +141,7 @@ namespace Parameters
             {
                 static void Serialize(std::stringstream* ss, std::vector<T>* param)
                 {
-                    LOG_TRACE;
+                    
                     (*ss) << "<" << param->size() << ">";
                     for (int i = 0; i < param->size(); ++i)
                     {

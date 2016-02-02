@@ -23,7 +23,8 @@ https://github.com/dtmoodie/parameters
 #include <map>
 #include <functional>
 #include <string>
-
+#include <vector>
+#include <set>
 #include <opencv2/core.hpp>
 
 #include <boost/lexical_cast.hpp>
@@ -94,7 +95,7 @@ namespace Parameters
 				static void Serialize(::cv::FileStorage* fs, Parameters::EnumParameter* param);
 				static void DeSerialize(::cv::FileNode&  fs, Parameters::EnumParameter* param)
 				{
-					LOG_TRACE;
+					
 					(fs)["Values"] >> param->values;
 
 					auto end = (fs)["Enumerations"].end();
@@ -110,12 +111,12 @@ namespace Parameters
 			{
 				static void Serialize(::cv::FileStorage* fs, T* param)
 				{
-					LOG_TRACE;
+					
 					(*fs) << boost::lexical_cast<std::string>(*param);
 				}
 				static void DeSerialize(::cv::FileNode& fs, T* param)
 				{
-					LOG_TRACE;
+					
 					*param = boost::lexical_cast<T>((std::string)(fs));
 				}
 			}; 
@@ -132,12 +133,12 @@ namespace Parameters
 			{
 				static void Serialize(::cv::FileStorage* fs, T* param)
 				{
-					LOG_TRACE;
+					
 					(*fs) << *param;
 				}
 				static void DeSerialize(::cv::FileNode&  fs, T* param)
 				{
-					LOG_TRACE;
+					
 					fs >> *param;
 				}
 			};
@@ -145,7 +146,7 @@ namespace Parameters
 			{
 				static void Serialize(::cv::FileStorage* fs, ::cv::Matx<T, M, N>* param)
 				{
-					LOG_TRACE;
+					
 					(*fs) << "Rows" << M;
 					(*fs) << "Cols" << N;
 					(*fs) << "Elements" << "[";
@@ -162,7 +163,7 @@ namespace Parameters
 				}
 				static void DeSerialize(::cv::FileNode& fs, ::cv::Matx<T, M, N>* param)
 				{
-					LOG_TRACE;
+					
 					if ((int)(fs)["Rows"] != M || (int)(fs)["Cols"] != N)
 						return;
 					auto rowItr = (fs)["Elements"].begin();
@@ -184,7 +185,7 @@ namespace Parameters
 			{
 				static void Serialize(::cv::FileStorage* fs, std::vector<T>* param)
 				{
-					LOG_TRACE;
+					
                     (*fs) << "{";
                     (*fs) << "Size" << boost::lexical_cast<std::string>(param->size());
 					(*fs) << "Elements" << "[";
@@ -198,7 +199,7 @@ namespace Parameters
 				}
 				static void DeSerialize(::cv::FileNode&  fs, std::vector<T>* param)
 				{
-					LOG_TRACE;
+					
                     size_t size = boost::lexical_cast<size_t>((std::string)fs["Size"]);
                     param->reserve(size);
 					auto element_node = fs["Elements"];
@@ -211,6 +212,39 @@ namespace Parameters
 				}
 
 			};
+            template<typename T> struct Serializer<std::set<T>, void> : public Serializer<T>
+            {
+                static void Serialize(::cv::FileStorage* fs, std::set<T>* param)
+                {
+
+                    (*fs) << "{";
+                    (*fs) << "Size" << boost::lexical_cast<std::string>(param->size());
+                    (*fs) << "Elements" << "[";
+                    for (auto itr = param->begin(); itr != param->end(); ++itr)
+                    {
+                        T data = *itr;
+                        Serializer<T>::Serialize(fs, &data);
+                    }
+                    (*fs) << "]";
+                    (*fs) << "}";
+
+                }
+                static void DeSerialize(::cv::FileNode&  fs, std::set<T>* param)
+                {
+
+                    size_t size = boost::lexical_cast<size_t>((std::string)fs["Size"]);
+                    auto element_node = fs["Elements"];
+
+                    for (auto itr = element_node.begin(); itr != element_node.end(); ++itr)
+                    {
+                        T temp;
+                        Serializer<T>::DeSerialize(*itr, &temp);
+                        param->insert(temp);
+                    }
+                }
+
+            };
+
 			template<typename T> struct SerializeWrapper
 			{
 				static void Write(::cv::FileStorage* fs, Parameter* param)

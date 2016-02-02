@@ -32,14 +32,14 @@ std::map<Loki::TypeInfo, std::tuple<InterpreterRegistry::SerializerFunction, Int
 
 void InterpreterRegistry::RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, DeSerializerFunction deserializer, FactoryFunction creator)
 {
-	LOG_TRACE;
+	
     
 	registry()[type] = std::make_tuple(serializer, deserializer, creator);
 }
 
 std::tuple<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSerializerFunction, InterpreterRegistry::FactoryFunction >& InterpreterRegistry::GetInterpretingFunction(Loki::TypeInfo type)
 {
-	LOG_TRACE;
+	
 	if (registry().find(type) == registry().end())
 	{
 		LOG_TRIVIAL(warning) << type.name() << " not registered to the registry";
@@ -57,35 +57,37 @@ std::tuple<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSeria
             return itr.second;
         }
     }
-    std::tuple<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSerializerFunction, InterpreterRegistry::FactoryFunction >();
+    LOG_TRIVIAL(warning) << type_string << " not registered to the registry";
+    ::cv::error(::cv::Error::StsAssert, "Datatype not registered to the registry", CV_Func, __FILE__, __LINE__);
 }
 void Parameters::Persistence::cv::Serialize(::cv::FileStorage* fs, Parameters::Parameter* param)
 {
-	LOG_TRACE;
+	
 	std::get<0>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo()))(fs, param);
 }
 void Parameters::Persistence::cv::DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param)
 {
-	LOG_TRACE;
+	
 	std::get<1>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo()))(fs, param);
 }
 Parameters::Parameter* Parameters::Persistence::cv::DeSerialize(::cv::FileNode* fs)
 {
-	LOG_TRACE;
+	
     std::string type = (std::string)(*fs)["Type"];
-    return std::get<2>(InterpreterRegistry::GetInterpretingFunction(type))(fs);
+    if(type.size())
+        return std::get<2>(InterpreterRegistry::GetInterpretingFunction(type))(fs);
 	return nullptr;
 }
 void Serializer<char, void>::Serialize(::cv::FileStorage* fs, char* param)
 {
-	LOG_TRACE;
+	
     
 	(*fs) << (signed char)*param;
 }
 
 void Serializer<char, void>::DeSerialize(::cv::FileNode& fs, char* param)
 {
-	LOG_TRACE;
+	
 	signed char data;
 	fs >> data;
 	*param = (char)data;
@@ -93,30 +95,30 @@ void Serializer<char, void>::DeSerialize(::cv::FileNode& fs, char* param)
 
 void Serializer<std::string, void>::Serialize(::cv::FileStorage* fs, std::string* param)
 {
-	LOG_TRACE;
+	
 	(*fs) << *param;
 }
 
 void Serializer<std::string, void>::DeSerialize(::cv::FileNode& fs, std::string* param)
 {
-	LOG_TRACE;
+	
 	*param = (std::string)(fs);
 }
 void Serializer<::cv::Mat, void>::Serialize(::cv::FileStorage* fs, ::cv::Mat* param)
 {
-	LOG_TRACE;
+	
 	(*fs) << *param;
 }
 
 void Serializer<::cv::Mat, void>::DeSerialize(::cv::FileNode& fs, ::cv::Mat* param)
 {
-	LOG_TRACE;
+	
 	(fs) >> *param;
 }
 
 void Serializer<Parameters::EnumParameter, void>::Serialize(::cv::FileStorage* fs, Parameters::EnumParameter* param)
 {
-	LOG_TRACE;
+	
 	(*fs) << "Values" << param->values;
 	(*fs) << "Enumerations" << "[:";
 	for (int i = 0; i < param->enumerations.size(); ++i)
@@ -128,7 +130,7 @@ void Serializer<Parameters::EnumParameter, void>::Serialize(::cv::FileStorage* f
 }
 /*void Serializer<Parameters::EnumParameter, void>::DeSerialize(::cv::FileNode* fs, Parameters::EnumParameter* param)
 {
-	LOG_TRACE;
+	
 	(*fs)["Values"] >> param->values;
 	
 	auto end = (*fs)["Enumerations"].end();
