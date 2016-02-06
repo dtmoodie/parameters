@@ -59,7 +59,7 @@ namespace Parameters
 		}
         virtual Parameter::Ptr DeepCopy() const
         {
-            return Parameter::Ptr(new TypedParameter<T>(GetName(), data));
+            return Parameter::Ptr(new TypedParameter<T>(Parameter::GetName(), data));
         }
         virtual bool Update(const Parameter::Ptr other)
         {
@@ -128,7 +128,7 @@ namespace Parameters
         }
         virtual Parameter::Ptr DeepCopy() const
         {
-            return Parameter::Ptr(new TypedParameter<T>(GetName(), *ptr));
+            return Parameter::Ptr(new TypedParameter<T>(Parameter::GetName(), *ptr));
         }
 	};
 }
