@@ -36,10 +36,13 @@ https://github.com/dtmoodie/parameters
 #include <Types.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/attributes/named_scope.hpp>
+#include "TypedParameter.hpp"
 
 namespace Parameters
 {
 	class Parameter;
+    template<typename T> class TypedParameter;
+
 	namespace Persistence
 	{
 		namespace cv
@@ -207,7 +210,8 @@ namespace Parameters
 					for (auto itr = element_node.begin(); itr != element_node.end(); ++itr)
 					{
 						param->push_back(T());
-						Serializer<T>::DeSerialize(*itr, &(*param)[param->size() - 1]);
+                        auto node = *itr;
+                        Serializer<T>::DeSerialize(node, &(*param)[param->size() - 1]);
 					}
 				}
 
@@ -238,7 +242,8 @@ namespace Parameters
                     for (auto itr = element_node.begin(); itr != element_node.end(); ++itr)
                     {
                         T temp;
-                        Serializer<T>::DeSerialize(*itr, &temp);
+                        auto node = *itr;
+                        Serializer<T>::DeSerialize(node, &temp);
                         param->insert(temp);
                     }
                 }
@@ -285,7 +290,8 @@ namespace Parameters
 							std::string type = (std::string)(*fs)["Type"];
 							if (type == param->GetTypeInfo().name())
 							{
-								serializer.DeSerialize((*fs)["Data"], typedParam->Data());
+                                auto node = (*fs)["Data"];
+                                serializer.DeSerialize(node, typedParam->Data());
                                 typedParam->changed = true;
 								typedParam->UpdateSignal(nullptr);
 								LOG_TRIVIAL(info) << "Successfully read " << param->GetName();
@@ -302,7 +308,8 @@ namespace Parameters
 							std::string type = (std::string)myNode["Type"];
 							if (type == param->GetTypeInfo().name())
 							{
-								serializer.DeSerialize(myNode["Data"], typedParam->Data());
+                                auto node = myNode["Data"];
+                                serializer.DeSerialize(node, typedParam->Data());
                                 typedParam->changed = true;
 								typedParam->UpdateSignal(nullptr);
 								LOG_TRIVIAL(info) << "Successfully read " << param->GetName();
