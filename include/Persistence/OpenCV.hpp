@@ -254,7 +254,7 @@ namespace Parameters
 			{
 				static void Write(::cv::FileStorage* fs, Parameter* param)
 				{
-					LOG_TRIVIAL(info) << "Writing parameter with name " << param->GetName();
+					LOG_TRIVIAL(debug) << "Writing parameter with name " << param->GetName();
 					ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
 					Serializer<T> serializer;
 					if (typedParam)
@@ -280,7 +280,7 @@ namespace Parameters
 				}
 				static void Read(::cv::FileNode* fs, Parameter* param)
 				{
-					LOG_TRIVIAL(info) << "Reading parameter with name " << param->GetName();
+					LOG_TRIVIAL(debug) << "Reading parameter with name " << param->GetName();
 					ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
 					Serializer<T> serializer;
 					if (typedParam)
@@ -294,7 +294,7 @@ namespace Parameters
                                 serializer.DeSerialize(node, typedParam->Data());
                                 typedParam->changed = true;
 								typedParam->UpdateSignal(nullptr);
-								LOG_TRIVIAL(info) << "Successfully read " << param->GetName();
+								LOG_TRIVIAL(debug) << "Successfully read " << param->GetName();
 							}
 							else
 							{
@@ -312,7 +312,7 @@ namespace Parameters
                                 serializer.DeSerialize(node, typedParam->Data());
                                 typedParam->changed = true;
 								typedParam->UpdateSignal(nullptr);
-								LOG_TRIVIAL(info) << "Successfully read " << param->GetName();
+								LOG_TRIVIAL(debug) << "Successfully read " << param->GetName();
 							}
 							else
 							{
