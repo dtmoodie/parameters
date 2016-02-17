@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 https://github.com/dtmoodie/parameters
 */
 #ifdef OPENCV_FOUND
-#include "Parameters.hpp"
+#include "parameters/Parameters.hpp"
 #include <opencv2/core/base.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/attributes/named_scope.hpp>
@@ -42,7 +42,7 @@ std::tuple<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSeria
 	
 	if (registry().find(type) == registry().end())
 	{
-		LOG_TRIVIAL(warning) << type.name() << " not registered to the registry";
+		LOG_TRIVIAL(debug) << type.name() << " not registered to the registry";
 		::cv::error(::cv::Error::StsAssert, "Datatype not registered to the registry", CV_Func, __FILE__, __LINE__);
 	}
 		
@@ -57,7 +57,7 @@ std::tuple<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSeria
             return itr.second;
         }
     }
-    LOG_TRIVIAL(warning) << type_string << " not registered to the registry";
+    LOG_TRIVIAL(debug) << type_string << " not registered to the registry";
     ::cv::error(::cv::Error::StsAssert, "Datatype not registered to the registry", CV_Func, __FILE__, __LINE__);
 }
 void Parameters::Persistence::cv::Serialize(::cv::FileStorage* fs, Parameters::Parameter* param)

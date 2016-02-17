@@ -20,7 +20,7 @@ https://github.com/dtmoodie/parameters
 #include "Persistence/Persistence.hpp"
 #include "ITypedParameter.hpp"
 #include "UI/UI.hpp"
-#include <Parameter.hpp>
+#include <parameters/Parameter.hpp>
 #include "Converters/ConverterPolicy.hpp"
 
 namespace Parameters

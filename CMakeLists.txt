@@ -1,17 +1,22 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 CMAKE_POLICY(SET CMP0020 NEW)
 PROJECT(Parameters)
-IF(NOT WIN32)
-	SET(Boost_REQUIRED_COMPONENTS  filesystem system thread chrono date_time log log_setup)
-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fpermissive")
+set(link_libs "")
+
+SET(Boost_REQUIRED_COMPONENTS  filesystem system thread chrono date_time log log_setup)
+IF(NOT WIN32)	    
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fpermissive")
 ENDIF(NOT WIN32)
 FIND_PACKAGE(Boost REQUIRED COMPONENTS ${Boost_REQUIRED_COMPONENTS})
 IF(Boost_FOUND)
-	IF(NOT WIN32)
-		ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB) 
-	ENDIF(NOT WIN32)
-	INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+    IF(NOT WIN32)
+        ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB) 
+    ENDIF(NOT WIN32)
+    INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 ENDIF()
+
+find_package(Signals)
+  include_directories(${Signals_INCLUDE_DIRS})
 
 
 FILE(GLOB_RECURSE hdr "include/*.hpp" "include/*.h")
@@ -172,6 +177,7 @@ FOREACH(lib ${Boost_LIBRARIES})
 			SET(boost_lib_ "optimized")
 		ELSE()
 			GET_FILENAME_COMPONENT(lib "${lib}" NAME)
+			message(${lib})
 			LIST(APPEND boost_libs_ "${boost_lib_};${lib}")
 		ENDIF()
 	ENDIF()
@@ -198,7 +204,7 @@ ENDIF()
 
 message(STATUS
 "============== libParameter =============
-	Boost libs: ${Boost_LIBRARIES}
+	Boost libs: ${boost_libs_}
 	UI: ${USING_UI_}
 	qt_gui: ${qt_gui_}
 	qt_widgets: ${qt_widgets_}
@@ -210,8 +216,10 @@ LINK_DIRECTORIES(${Parameters_LIB_DIRS_RELEASE})
 LINK_DIRECTORIES(${Parameters_LIB_DIRS_DEBUG})
 
 add_library(libParameter SHARED ${hdr} ${src} ${MOC})
+add_dependencies(libParameter signals)
 TARGET_LINK_LIBRARIES(libParameter 
 	${Parameters_LIBRARIES}
+	signals
 )
 LIST(APPEND Parameters_LIBRARIES libParameter)
 

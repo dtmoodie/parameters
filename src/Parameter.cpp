@@ -16,7 +16,7 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
 https://github.com/dtmoodie/parameters
 */
-#include "Parameters.hpp"
+#include "parameters/Parameter.hpp"
 
 using namespace Parameters;
 Parameter::Parameter(const std::string& name_, const ParameterType& type_, const std::string& tooltip_):
@@ -59,7 +59,7 @@ Parameter* Parameter::SetTreeName(const std::string& treeName_)
 	treeRoot = treeName_;
     return this;
 }
-boost::signals2::connection Parameter::RegisterNotifier(const boost::function<void(cv::cuda::Stream*)>& f)
+std::shared_ptr<Signals::connection> Parameter::RegisterNotifier(std::function<void(cv::cuda::Stream*)> f)
 {
 	return UpdateSignal.connect(f);
 }

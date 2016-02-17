@@ -19,7 +19,6 @@ https://github.com/dtmoodie/parameters
 #pragma once
 #include "Parameter_def.hpp"
 #include <string>
-#include <boost/function.hpp>
 #include "Parameter.hpp"
 #include "LokiTypeInfo.h"
 

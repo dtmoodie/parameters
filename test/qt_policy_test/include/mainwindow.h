@@ -2,8 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "Parameters.hpp"
-#include "UI/Qt.hpp"
+#include "parameters/Parameters.hpp"
+#include "parameters/UI/Qt.hpp"
 
 namespace Ui {
 class MainWindow;

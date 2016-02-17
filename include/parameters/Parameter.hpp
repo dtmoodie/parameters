@@ -20,11 +20,9 @@ https://github.com/dtmoodie/parameters
 
 #include "Parameter_def.hpp"
 #include <string>
-#include <LokiTypeInfo.h>
-#include <boost/function.hpp>
-#include <boost/signals2/connection.hpp>
-#include <boost/signals2/signal.hpp>
-#include <boost/thread/recursive_mutex.hpp>
+#include <parameters/LokiTypeInfo.h>
+#include <mutex>
+#include <signals/signal.h>
 namespace cv
 {
 	namespace cuda
@@ -61,13 +59,15 @@ namespace Parameters
 		virtual bool Update(Parameter::Ptr other);
         virtual Ptr DeepCopy() const = 0;
 
-		virtual boost::signals2::connection RegisterNotifier(const boost::function<void(cv::cuda::Stream*)>& f);
+		virtual std::shared_ptr<Signals::connection> RegisterNotifier(std::function<void(cv::cuda::Stream*)> f);
 
-		boost::recursive_mutex mtx;
+		std::recursive_mutex mtx;
 		ParameterType type;
 		bool changed;
 		unsigned short subscribers;
-		boost::signals2::signal<void(cv::cuda::Stream*)> UpdateSignal;
+		
+
+		Signals::typed_signal_base<void(cv::cuda::Stream*)> UpdateSignal;
 
 	private:
 		std::string name;

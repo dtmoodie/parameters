@@ -16,7 +16,7 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
 https://github.com/dtmoodie/parameters
 */
-#include "Converters/DoubleConverter.hpp"
+#include "parameters/Converters/DoubleConverter.hpp"
 
 
 using namespace Parameters;

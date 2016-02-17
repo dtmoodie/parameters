@@ -17,8 +17,8 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 https://github.com/dtmoodie/parameters
 */
 #ifdef Qt5_FOUND
-#include "UI/Qt.hpp"
-#include "Parameters.hpp"
+#include "parameters/UI/Qt.hpp"
+#include "parameters/Parameter.hpp"
 #include <boost/log/trivial.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 
@@ -93,7 +93,7 @@ std::map<Loki::TypeInfo, WidgetFactory::HandlerCreator>& WidgetFactory::registry
 
 void WidgetFactory::RegisterCreator(Loki::TypeInfo type, HandlerCreator f)
 {
-	LOG_TRIVIAL(info) << "Registering type " << type.name();
+	LOG_TRIVIAL(trace) << "Registering type " << type.name();
 	WidgetFactory::registry()[type] = f;
 }
 
@@ -105,10 +105,10 @@ std::shared_ptr<IParameterProxy> WidgetFactory::Createhandler(std::shared_ptr<Pa
     if (itr == registry().end())
 	{
         
-		LOG_TRIVIAL(warning) << "No Widget Factory registered for type " << typeName << " unable to make widget for parameter: " << treeName;
+		LOG_TRIVIAL(debug) << "No Widget Factory registered for type " << typeName << " unable to make widget for parameter: " << treeName;
 		return std::shared_ptr<IParameterProxy>(new DefaultProxy(param));
 	}
-	LOG_TRIVIAL(info) << "Creating handler for " << typeName << " " << treeName;
+	LOG_TRIVIAL(trace) << "Creating handler for " << typeName << " " << treeName;
 	return itr->second(param);
 }
 
@@ -153,11 +153,11 @@ std::vector<QWidget*> IHandler::GetUiWidgets(QWidget* parent)
 
     return std::vector<QWidget*>();
 }
-void IHandler::SetParamMtx(boost::recursive_mutex* mtx)
+void IHandler::SetParamMtx(std::recursive_mutex* mtx)
 {
     paramMtx = mtx;
 }
-boost::recursive_mutex* IHandler::GetParamMtx()
+std::recursive_mutex* IHandler::GetParamMtx()
 {
     return paramMtx;
 }

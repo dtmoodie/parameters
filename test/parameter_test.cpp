@@ -1,6 +1,6 @@
 
-#include "Parameters.hpp"
-#include "UI/Qt.hpp"
+#include "parameters/Parameters.hpp"
+#include "parameters/UI/Qt.hpp"
 #include <string>
 #include <iostream>
 /*

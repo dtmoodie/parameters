@@ -20,8 +20,8 @@ https://github.com/dtmoodie/parameters
 
 #include <opencv2/core.hpp>
 #include <opencv2/core/cuda.hpp>
-#include "Parameter.hpp"
-#include "Parameter_def.hpp"
+#include "parameters/Parameter.hpp"
+#include "parameters/Parameter_def.hpp"
 #include <type_traits>
 #include <mutex>
 

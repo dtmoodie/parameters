@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 https://github.com/dtmoodie/parameters
 */
 #pragma once
-#include <ITypedParameter.hpp>
+#include "ITypedParameter.hpp"
 #include "InputParameter.hpp"
 
 namespace Parameters
@@ -25,10 +25,11 @@ namespace Parameters
 	template<typename T> class TypedInputParameter : public ITypedParameter<T>, public InputParameter
 	{
 		typename ITypedParameter<T>::Ptr input;
-		boost::signals2::connection inputConnection;
+		std::shared_ptr<Signals::connection> inputConnection;
 		virtual void onInputUpdate()
 		{
 			Parameter::UpdateSignal(nullptr);
+			changed = true;
 		}
 	public:
 		typedef std::shared_ptr<TypedInputParameter<T>> Ptr;
@@ -42,7 +43,7 @@ namespace Parameters
 		}
         ~TypedInputParameter()
         {
-            inputConnection.disconnect();
+            //inputConnection.disconnect();
         }
 
 		virtual bool SetInput(const std::string& name_)
@@ -55,7 +56,7 @@ namespace Parameters
 			if (param == nullptr)
 			{
 				input.reset();
-				inputConnection.disconnect();
+				inputConnection.reset();
 				Parameter::UpdateSignal(nullptr);
 				return true;
 			}				
@@ -63,7 +64,7 @@ namespace Parameters
 			if (castedParam)
 			{
 				input = castedParam;
-				inputConnection.disconnect();
+				
 				inputConnection = castedParam->RegisterNotifier(boost::bind(&TypedInputParameter<T>::onInputUpdate, this));
 				Parameter::UpdateSignal(nullptr);
                 changed = true;
@@ -119,7 +120,7 @@ namespace Parameters
 	{
 		T* userVar; // Pointer to the user space variable of type T
 		typename ITypedParameter<T>::Ptr input;
-		boost::signals2::connection inputConnection;
+		std::shared_ptr<Signals::connection> inputConnection;
 
 		virtual void onInputUpdate()
 		{
@@ -139,7 +140,7 @@ namespace Parameters
 			MetaTypedParameter<T>(name, type, tooltip), userVar(userVar_) {}
         ~TypedInputParameterCopy()
         {
-            inputConnection.disconnect();
+            //inputConnection.disconnect();
         }
 		virtual bool SetInput(const std::string& name_)
 		{
@@ -152,7 +153,7 @@ namespace Parameters
 			if (castedParam)
 			{
 				input = castedParam;
-				inputConnection.disconnect();
+				//inputConnection.disconnect();
 				inputConnection = castedParam->RegisterNotifier(boost::bind(&TypedInputParameterCopy<T>::onInputUpdate, this));
 				*userVar = *input->Data();
 				return true;
@@ -209,7 +210,7 @@ namespace Parameters
 	{
 		T** userVar; // Pointer to the user space pointer variable of type T
 		typename ITypedParameter<T>::Ptr input;
-		boost::signals2::connection inputConnection;
+		std::shared_ptr<Signals::connection> inputConnection;
 		virtual void onInputUpdate()
 		{
 			// The input variable has been updated, update user var

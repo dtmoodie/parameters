@@ -16,8 +16,8 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
 https://github.com/dtmoodie/parameters
 */
-#include "Parameters.hpp"
-#include "Persistence/TextSerializer.hpp"
+#include "parameters/Parameters.hpp"
+#include "parameters/Persistence/TextSerializer.hpp"
 
 using namespace Parameters::Persistence::Text;
 
@@ -43,7 +43,7 @@ InterpreterRegistry::InterpreterSet& InterpreterRegistry::GetInterpretingFunctio
     
     if (registry().find(type) == registry().end())
     {
-        LOG_TRIVIAL(warning) << type.name() << " not registered to the registry";
+        LOG_TRIVIAL(debug) << type.name() << " not registered to the registry";
         throw std::invalid_argument("Datatype not registered to the registry");
     }
     return registry()[type];

@@ -22,10 +22,10 @@ https://github.com/dtmoodie/parameters
 #include <functional>
 #include <string>
 
-#include <LokiTypeInfo.h>
-#include <Parameter_def.hpp>
-#include "TypedParameter.hpp"
-#include <Types.hpp>
+#include <parameters/LokiTypeInfo.h>
+#include <parameters/Parameter_def.hpp>
+#include "parameters/TypedParameter.hpp"
+#include <parameters/Types.hpp>
 
 
 template<typename T> 
@@ -176,7 +176,7 @@ namespace Parameters
             {
                 static void Write(::std::stringstream* ss, Parameter* param)
                 {
-                    LOG_TRIVIAL(info) << "Writing parameter with name " << param->GetName();
+                    LOG_TRIVIAL(trace) << "Writing parameter with name " << param->GetName();
                     ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
                     
                     if (typedParam)
@@ -189,7 +189,7 @@ namespace Parameters
                 }
                 static void ssRead(::std::stringstream* ss, Parameter* param)
                 {
-                    LOG_TRIVIAL(info) << "Reading parameter with name " << param->GetName();
+					LOG_TRIVIAL(trace) << "Reading parameter with name " << param->GetName();
                     ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
                     if (typedParam)
                     {
@@ -198,7 +198,7 @@ namespace Parameters
                 }
                 static void Read(::std::string* ss, Parameter* param)
                 {
-                    LOG_TRIVIAL(info) << "Reading parameter with name " << param->GetName();
+					LOG_TRIVIAL(trace) << "Reading parameter with name " << param->GetName();
                     ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
                     if (typedParam)
                     {
