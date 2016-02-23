@@ -57,14 +57,10 @@ namespace Parameters
             }
             void push(Data const& data)
             {
-				std::lock_guard<std::mutex> lock(the_mutex);
+				std::unique_lock<std::mutex> lock(the_mutex);
                 bool const was_empty = the_queue.empty();
                 the_queue.push(data);
-
-				
-                //lock.unlock(); // unlock the mutex
-				the_mutex.unlock();
-
+                lock.unlock(); // unlock the mutex
                 if (was_empty)
                 {
                     the_condition_variable.notify_one();

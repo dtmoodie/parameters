@@ -61,10 +61,14 @@ namespace Parameters
 				return true;
 			}				
 			typename ITypedParameter<T>::Ptr castedParam = std::dynamic_pointer_cast<ITypedParameter<T>>(param);
+            if(input)
+            {
+                input->subscribers--;
+            }
 			if (castedParam)
 			{
 				input = castedParam;
-				
+				input->subscribers++;
 				inputConnection = castedParam->RegisterNotifier(boost::bind(&TypedInputParameter<T>::onInputUpdate, this));
 				Parameter::UpdateSignal(nullptr);
                 changed = true;

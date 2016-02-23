@@ -61,10 +61,13 @@ namespace Parameters
 				{
 					if (arr.kind() == cv::_InputArray::CUDA_GPU_MAT)
 					{
+                        auto tmp_roi = roi;
+                        tmp_roi.width = std::min(tmp_roi.x + tmp_roi.width, arr.size().width);
+                        tmp_roi.height = std::min(tmp_roi.y + tmp_roi.height, arr.size().height);
 						if (stream)
-							arr.getGpuMat()(roi).download(output, *stream);
+							arr.getGpuMat()(tmp_roi).download(output, *stream);
 						else
-							arr.getGpuMat()(roi).download(output);
+							arr.getGpuMat()(tmp_roi).download(output);
 						return output;
 					}
 					else

@@ -36,3 +36,13 @@ https://github.com/dtmoodie/parameters
 #else
 #define LOG_TRIVIAL(severity) BOOST_LOG_FUNCTION(); BOOST_LOG_TRIVIAL(severity)
 #endif
+
+#ifdef _MSC_VER
+#ifndef libParameter_EXPORTS
+#ifdef _DEBUG
+#pragma comment(lib, "libParameterd.lib")
+#else
+#pragma comment(lib, "libParameter.lib")
+#endif
+#endif
+#endif
