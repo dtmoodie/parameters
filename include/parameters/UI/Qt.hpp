@@ -678,8 +678,10 @@ namespace Parameters
 				QPushButton* btn;
 			public:
 				Handler() : funcData(nullptr), btn(nullptr) {}
-				virtual void UpdateUi(const std::function<void(void)>& data)
-				{}
+				void UpdateUi(std::function<void(void)>& data)
+				{
+                    funcData = &data;
+                }
 				virtual void OnUiUpdate(QObject* sender)
 				{
 					
@@ -688,19 +690,20 @@ namespace Parameters
 						std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
 						if (funcData)
 						{
-							ProcessingThreadCallbackService::post(*funcData, 
-                                std::make_pair((void*)this, Loki::TypeInfo(typeid(Handler<std::function<void(void)>, void>))));
+							//ProcessingThreadCallbackService::post(*funcData, 
+                                //std::make_pair((void*)this, Loki::TypeInfo(typeid(Handler<std::function<void(void)>, void>))));
+                            (*funcData)();
 							if (onUpdate)
 							{
-								ProcessingThreadCallbackService::post(onUpdate, 
-                                    std::make_pair((void*)this, Loki::TypeInfo(typeid(Handler<std::function<void(void)>, void>))));
+								//ProcessingThreadCallbackService::post(onUpdate, 
+                                  //  std::make_pair((void*)this, Loki::TypeInfo(typeid(Handler<std::function<void(void)>, void>))));
+                                onUpdate();
 							}
 						}
 					}
 				}
 				virtual void SetData(std::function<void(void)>* data_)
 				{
-					
 					funcData = data_;
 				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
@@ -1010,8 +1013,8 @@ namespace Parameters
 						paramHandler.SetParamMtx(&parameter->mtx);
 						paramHandler.SetData(parameter->Data());
 						paramHandler.IHandler::GetUpdateSignal() = std::bind(&ParameterProxy<T>::onUiUpdate, this);
-
-						connection = parameter->RegisterNotifier(std::bind(&ParameterProxy<T>::onParamUpdate, this, std::placeholders::_1));
+                        connection = parameter->UpdateSignal.connect(std::bind(&ParameterProxy<T>::onParamUpdate, this, std::placeholders::_1),      Signals::GUI, true);
+						/*connection = parameter->RegisterNotifier(std::bind(&ParameterProxy<T>::onParamUpdate, this, std::placeholders::_1));*/
 					}
 				}
 				virtual bool CheckParameter(Parameter* param)
