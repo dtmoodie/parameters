@@ -153,11 +153,13 @@ namespace Parameters
 
 		virtual bool SetInput(const Parameter::Ptr param)
 		{
+            if(input)
+                input->subscribers--;
 			typename ITypedParameter<T>::Ptr castedParam = std::dynamic_pointer_cast<ITypedParameter<T>>(param);
 			if (castedParam)
 			{
 				input = castedParam;
-				//inputConnection.disconnect();
+				param->subscribers++;
 				inputConnection = castedParam->RegisterNotifier(boost::bind(&TypedInputParameterCopy<T>::onInputUpdate, this));
 				*userVar = *input->Data();
 				return true;
