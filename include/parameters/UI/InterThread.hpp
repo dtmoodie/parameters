@@ -40,7 +40,7 @@ namespace Parameters
         public:
             void wait_for_data()
             {
-                std::lock_guard<std::mutex> lock(the_mutex);
+                std::unique_lock<std::mutex> lock(the_mutex);
                 while (the_queue.empty())
                 {
                     the_condition_variable.wait(lock);
@@ -48,7 +48,7 @@ namespace Parameters
             }
             void wait_push(Data const& data)
             {
-				std::lock_guard<std::mutex> lock(the_mutex);
+                std::unique_lock<std::mutex> lock(the_mutex);
                 while (!the_queue.empty()) // Wait till the consumer pulls data from the queue
                 {
                     the_condition_variable.wait(lock);
@@ -68,7 +68,7 @@ namespace Parameters
             }
             void wait_and_pop(Data& popped_value)
             {
-				std::lock_guard<std::mutex>  lock(the_mutex);
+                std::unique_lock<std::mutex>  lock(the_mutex);
                 while (the_queue.empty())
                 {
                     the_condition_variable.wait(lock);
@@ -94,7 +94,7 @@ namespace Parameters
             }
             void clear()
             {
-				std::mutex::scoped_lock lock(the_mutex);
+                std::unique_lock<std::mutex> lock(the_mutex);
                 the_queue = std::queue<Data>();
             }
         };

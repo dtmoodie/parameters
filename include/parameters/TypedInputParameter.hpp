@@ -29,7 +29,7 @@ namespace Parameters
 		virtual void onInputUpdate()
 		{
 			Parameter::UpdateSignal(nullptr);
-			changed = true;
+            Parameter::changed = true;
 		}
 	public:
 		typedef std::shared_ptr<TypedInputParameter<T>> Ptr;
@@ -71,7 +71,7 @@ namespace Parameters
 				input->subscribers++;
 				inputConnection = castedParam->RegisterNotifier(boost::bind(&TypedInputParameter<T>::onInputUpdate, this));
 				Parameter::UpdateSignal(nullptr);
-                changed = true;
+                Parameter::changed = true;
 				return true;
 			}
 			return false;
@@ -233,7 +233,7 @@ namespace Parameters
 			MetaTypedParameter<T>(name, type, tooltip), userVar(userVar_){}
         ~TypedInputParameterPtr()
         {
-            inputConnection.disconnect();
+            inputConnection.reset();
         }
 		virtual bool SetInput(const std::string& name_)
 		{
@@ -246,7 +246,7 @@ namespace Parameters
 			if (castedParam)
 			{
 				input = castedParam;
-				inputConnection.disconnect();
+                inputConnection.reset();
 				inputConnection = castedParam->RegisterNotifier(boost::bind(&TypedInputParameterPtr<T>::onInputUpdate, this));
 				*userVar = input->Data();
 				return true;
