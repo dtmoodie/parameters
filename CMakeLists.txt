@@ -215,17 +215,17 @@ message(STATUS
 LINK_DIRECTORIES(${Parameters_LIB_DIRS_RELEASE})
 LINK_DIRECTORIES(${Parameters_LIB_DIRS_DEBUG})
 
-add_library(libParameter SHARED ${hdr} ${src} ${MOC})
-add_dependencies(libParameter signals)
-TARGET_LINK_LIBRARIES(libParameter 
+add_library(parameters SHARED ${hdr} ${src} ${MOC})
+add_dependencies(parameters signals)
+TARGET_LINK_LIBRARIES(parameters 
 	${Parameters_LIBRARIES}
 	signals
 )
-LIST(APPEND Parameters_LIBRARIES libParameter)
+LIST(APPEND Parameters_LIBRARIES parameters)
 
 add_executable(test_parameter "test/parameter_test.cpp")
-TARGET_LINK_LIBRARIES(test_parameter libParameter ${Parameters_LIBRARIES})
-ADD_DEPENDENCIES(test_parameter libParameter)
+TARGET_LINK_LIBRARIES(test_parameter parameters ${Parameters_LIBRARIES})
+ADD_DEPENDENCIES(test_parameter parameters)
 
 IF(${Qt5_FOUND})
 	FILE(GLOB qt_src "test/qt_policy_test/src/*.cpp")
@@ -241,7 +241,7 @@ IF(${Qt5_FOUND})
 		Qt5::Gui
 		Qt5::Widgets
 		opencv_core
-		libParameter
+		parameters
 	)
 
 	TARGET_LINK_LIBRARIES(test_parameter 
@@ -250,9 +250,9 @@ IF(${Qt5_FOUND})
 		Qt5::Widgets
 		opencv_core
 		${Boost_LIBRARIES}
-		libParameter
+		parameters
 	)
-add_dependencies(test_param_qt libParameter)
+add_dependencies(test_param_qt parameters)
 ENDIF()
 LIST(REMOVE_DUPLICATES Parameters_LIB_DIRS_RELEASE)
 LIST(REMOVE_DUPLICATES Parameters_LIB_DIRS_DEBUG)
@@ -260,18 +260,18 @@ LIST(REMOVE_DUPLICATES Parameters_LIB_DIRS_DEBUG)
 
 SET(Parameters_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include;${UI_INCLUDES_}" CACHE STRING "" FORCE)
 #SET(Parameters_LIBRARIES ${Parameters_LIBRARIES}  CACHE STRING "" FORCE)
-SET(Parameters_LIBRARIES libParameter CACHE STRING "" FORCE)
+SET(Parameters_LIBRARIES parameters CACHE STRING "" FORCE)
 SET(Parameters_LIB_DIRS_RELEASE "${Parameters_LIB_DIRS_RELEASE};${CMAKE_CURRENT_BINARY_DIR}"  CACHE STRING "" FORCE)
 SET(Parameters_LIB_DIRS_DEBUG "${Parameters_LIB_DIRS_DEBUG};${CMAKE_CURRENT_BINARY_DIR}"  CACHE STRING "" FORCE)
 SET(Parameters_DEFS "${definitions_}" CACHE STRING "" FORCE)
 
-install(TARGETS libParameter
+install(TARGETS parameters
 		RUNTIME DESTINATION bin
 		LIBRARY DESTINATION lib
 		ARCHIVE DESTINATION lib)
 
 install(DIRECTORY include/
-		DESTINATION include
+        DESTINATION include
         FILES_MATCHING PATTERN "*.h")
 
 install(DIRECTORY include/
