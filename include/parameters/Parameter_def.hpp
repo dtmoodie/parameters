@@ -22,7 +22,7 @@ https://github.com/dtmoodie/parameters
 #ifdef Parameter_EXPORTS
 #undef Parameter_EXPORTS
 #endif
-#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && defined libParameter_EXPORTS
+#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && defined parameters_EXPORTS
 #  define Parameter_EXPORTS __declspec(dllexport)
 #elif defined __GNUC__ && __GNUC__ >= 4
 #  define Parameter_EXPORTS __attribute__ ((visibility ("default")))
@@ -38,11 +38,11 @@ https://github.com/dtmoodie/parameters
 #endif
 
 #ifdef _MSC_VER
-#ifndef libParameter_EXPORTS
-#ifdef _DEBUG
-#pragma comment(lib, "libParameterd.lib")
-#else
-#pragma comment(lib, "libParameter.lib")
-#endif
-#endif
+  #ifndef parameters_EXPORTS
+     #ifdef _DEBUG
+        #pragma comment(lib, "parametersd.lib")
+     #else
+        #pragma comment(lib, "parameters.lib")
+     #endif
+  #endif
 #endif
