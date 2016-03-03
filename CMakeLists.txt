@@ -226,6 +226,7 @@ LIST(APPEND Parameters_LIBRARIES parameters)
 add_executable(test_parameter "test/parameter_test.cpp")
 TARGET_LINK_LIBRARIES(test_parameter parameters ${Parameters_LIBRARIES})
 ADD_DEPENDENCIES(test_parameter parameters)
+set_target_properties(test_parameter PROPERTIES FOLDER Tests)
 
 IF(${Qt5_FOUND})
 	FILE(GLOB qt_src "test/qt_policy_test/src/*.cpp")
@@ -235,7 +236,7 @@ IF(${Qt5_FOUND})
 	QT5_WRAP_UI(UIS ${forms})
 	INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/test/qt_policy_test/include")
 	add_executable(test_param_qt ${MOC_qt} ${UIS} ${qt_src} ${qt_hdr})
-	
+	set_target_properties(test_param_qt PROPERTIES FOLDER Tests)
 	TARGET_LINK_LIBRARIES(test_param_qt 
 		Qt5::Core
 		Qt5::Gui
