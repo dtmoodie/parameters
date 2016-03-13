@@ -64,7 +64,6 @@ void Parameters::Persistence::Text::DeSerialize(::std::stringstream* ss, Paramet
 }
 void Parameters::Persistence::Text::DeSerialize(::std::string* ss, Parameters::Parameter* param)
 {
-    
     std::get<2>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo())).operator()(ss, param);
 }
 
@@ -99,25 +98,66 @@ void Serializer<Parameters::EnumParameter, void>::Serialize(::std::stringstream*
     }
 }
 
-void Serializer<Parameters::EnumParameter, void>::DeSerialize(::std::stringstream* ss, Parameters::EnumParameter* param)
+bool Serializer<Parameters::EnumParameter, void>::DeSerialize(::std::stringstream* ss, Parameters::EnumParameter* param)
 {
-
+    std::string value;
+    (*ss) >> value;
+    int index = -1000;
+    try
+    {   
+        index = boost::lexical_cast<int>(value);
+        for(int i = 0; i < param->values.size(); ++i)
+        {
+            if(param->values[i] == index)
+            {
+                param->currentSelection = i;
+                return true;
+            }
+        }
+    }catch(...){}
+    for(int i = 0; i < param->enumerations.size(); ++i)
+    {
+        if(param->enumerations[i] == value)
+        {
+            param->currentSelection = i;
+            return true;
+        }
+    }
+    return false;
 }
 
-void Serializer<Parameters::EnumParameter, void>::DeSerialize(::std::string* ss, Parameters::EnumParameter* param)
+bool Serializer<Parameters::EnumParameter, void>::DeSerialize(::std::string* ss, Parameters::EnumParameter* param)
 {
-
+    int index = -1000;
+    try
+    {   
+        index = boost::lexical_cast<int>(*ss);
+        if(index > 0 && index < param->enumerations.size())
+        {
+            param->currentSelection = index;
+            return true;
+        }
+    }catch(...){}
+    for(int i = 0; i < param->enumerations.size(); ++i)
+    {
+        if(param->enumerations[i] == *ss)
+        {
+            param->currentSelection = i;
+            return true;
+        }
+    }
+    return false;
 }
 
 void Parameters::Persistence::Text::Serializer<::cv::cuda::GpuMat, void>::Serialize(::std::stringstream* ss, ::cv::cuda::GpuMat* param)
 {
 
 }
-void Parameters::Persistence::Text::Serializer<::cv::cuda::GpuMat, void>::DeSerialize(::std::stringstream* ss, ::cv::cuda::GpuMat* param)
+bool Parameters::Persistence::Text::Serializer<::cv::cuda::GpuMat, void>::DeSerialize(::std::stringstream* ss, ::cv::cuda::GpuMat* param)
 {
-
+    return false;
 }
-void Parameters::Persistence::Text::Serializer<::cv::cuda::GpuMat, void>::DeSerialize(::std::string* ss, ::cv::cuda::GpuMat* param)
+bool Parameters::Persistence::Text::Serializer<::cv::cuda::GpuMat, void>::DeSerialize(::std::string* ss, ::cv::cuda::GpuMat* param)
 {
-
+    return false;
 }

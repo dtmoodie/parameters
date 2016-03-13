@@ -78,11 +78,13 @@ namespace Parameters
                 static void Serialize(::std::stringstream* ss, T* param)
                 {
                 }
-                static void DeSerialize(::std::stringstream* ss, T* param)
+                static bool DeSerialize(::std::stringstream* ss, T* param)
                 {
+                    return false;
                 }
-                static void DeSerialize(::std::string* ss, T* param)
+                static bool DeSerialize(::std::string* ss, T* param)
                 {
+                    return false;
                 }
             };
             template<typename T> struct Serializer<T, typename std::enable_if<
@@ -96,16 +98,21 @@ namespace Parameters
                 {
                     (*ss) << *param;
                 }
-                static void DeSerialize(::std::stringstream* ss, T* param)
+                static bool DeSerialize(::std::stringstream* ss, T* param)
                 {
                     std::string line;
 					std::getline(*ss, line);
                     *param = boost::lexical_cast<T>(line);
+                    return true;
                 }
-				static void DeSerialize(::std::string* str, T* param)
+				static bool DeSerialize(::std::string* str, T* param)
 				{
-					*param = boost::lexical_cast<T>(*str);
-					return;
+                    try
+                    {
+                        *param = boost::lexical_cast<T>(*str);
+                        return true;
+                    }catch(...){}
+					return false;
 				}
             };
 
@@ -118,24 +125,26 @@ namespace Parameters
                 static void Serialize(::std::stringstream* ss, T* param)
                 {
                 }
-                static void DeSerialize(::std::stringstream* ss, T* param)
+                static bool DeSerialize(::std::stringstream* ss, T* param)
                 {
+                    return false;
                 }
-                static void DeSerialize(::std::string* ss, T* param)
+                static bool DeSerialize(::std::string* ss, T* param)
                 {
+                    return false;
                 }
             };
             template<> struct Parameter_EXPORTS Serializer<EnumParameter, void>
             {
                 static void Serialize(::std::stringstream* ss, EnumParameter* param);
-                static void DeSerialize(::std::stringstream* ss, EnumParameter* param);
-                static void DeSerialize(::std::string* ss, EnumParameter* param);
+                static bool DeSerialize(::std::stringstream* ss, EnumParameter* param);
+                static bool DeSerialize(::std::string* ss, EnumParameter* param);
             };
             template<> struct Parameter_EXPORTS Serializer<::cv::cuda::GpuMat, void>
             {
                 static void Serialize(::std::stringstream* ss, ::cv::cuda::GpuMat* param);
-                static void DeSerialize(::std::stringstream* ss, ::cv::cuda::GpuMat* param);
-                static void DeSerialize(::std::string* ss, ::cv::cuda::GpuMat* param);
+                static bool DeSerialize(::std::stringstream* ss, ::cv::cuda::GpuMat* param);
+                static bool DeSerialize(::std::string* ss, ::cv::cuda::GpuMat* param);
             };
             template<typename T> struct Serializer<std::vector<T>, void>: public Serializer<T>
             {
@@ -150,7 +159,7 @@ namespace Parameters
                         Serializer<T>::Serialize(ss, &(*param)[i]);
                     }
                 }
-                static void DeSerialize(::std::stringstream* ss, std::vector<T>* param)
+                static bool DeSerialize(::std::stringstream* ss, std::vector<T>* param)
                 {
 					std::string len;
 					std::getline(*ss, len, '>');
@@ -164,10 +173,11 @@ namespace Parameters
 					}
 					std::getline(*ss, len);
 					Serializer<T>::DeSerialize(&len, &(*param)[i]);
+                    return true;
                 }
-                static void DeSerialize(::std::string* ss, std::vector<T>* param)
+                static bool DeSerialize(::std::string* ss, std::vector<T>* param)
                 {
-					
+					return true;
                 }
             };
 
@@ -193,7 +203,11 @@ namespace Parameters
                     ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
                     if (typedParam)
                     {
-						Serializer<T>::DeSerialize(ss, typedParam->Data());
+						if(Serializer<T>::DeSerialize(ss, typedParam->Data()))
+                        {
+                            typedParam->changed = true;
+                            typedParam->UpdateSignal(nullptr);
+                        }
                     }
                 }
                 static void Read(::std::string* ss, Parameter* param)
@@ -202,7 +216,11 @@ namespace Parameters
                     ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
                     if (typedParam)
                     {
-						Serializer<T>::DeSerialize(ss, typedParam->Data());
+						if(Serializer<T>::DeSerialize(ss, typedParam->Data()))
+                        {
+                            typedParam->changed = true;
+                            typedParam->UpdateSignal(nullptr);
+                        }
                     }
                 }
             };

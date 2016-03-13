@@ -64,6 +64,14 @@ namespace Parameters
 			}
 			return values[currentSelection];
 		}
+        std::string getEnum()
+        {
+            if (currentSelection >= values.size())
+            {
+                throw std::range_error("currentSelection >= values.size()");
+			}
+			return enumerations[currentSelection];
+        }
 
 		::std::vector<::std::string> enumerations;
 		::std::vector<int>         values;

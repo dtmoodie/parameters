@@ -494,6 +494,7 @@ namespace Parameters
                 QTableWidgetItem* second;
                 QTableWidgetItem* third;
                 ::cv::Point3_<T>* ptData;
+                bool _updating;
             public:
                 Handler():ptData(nullptr)
 				{
@@ -513,7 +514,6 @@ namespace Parameters
                 }
                 virtual void UpdateUi(const ::cv::Point3_<T>& data)
 				{
-					
 					std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
                     first = new QTableWidgetItem();
                     second = new QTableWidgetItem();
@@ -579,24 +579,30 @@ namespace Parameters
 			{
 				QComboBox* enumCombo;
 				Parameters::EnumParameter* enumData;
+                bool _updating;
 			public:
-				Handler() : enumCombo(nullptr){}
+				Handler() : enumCombo(nullptr), _updating(false){}
 				virtual void UpdateUi(const Parameters::EnumParameter& data)
 				{
-					
 					std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+                    _updating = true;
 					enumCombo->clear();
 					for (int i = 0; i < data.enumerations.size(); ++i)
 					{
 						enumCombo->addItem(QString::fromStdString(data.enumerations[i]));
 					}
+                    enumCombo->setCurrentIndex(data.currentSelection);
+                    _updating = false;
 				}
 				virtual void OnUiUpdate(QObject* sender, int idx)
 				{
-					
+					if(_updating)
+                        return;
 					std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
 					if (idx != -1 && sender == enumCombo && enumData)
 					{
+                        if(enumData->currentSelection == idx)
+                            return;
 						enumData->currentSelection = idx;
 						if (onUpdate)
 							onUpdate();
@@ -604,7 +610,6 @@ namespace Parameters
 				}
 				virtual void SetData(Parameters::EnumParameter* data_)
 				{
-					
 					enumData = data_;
 					if (enumCombo)
 						UpdateUi(*enumData);
