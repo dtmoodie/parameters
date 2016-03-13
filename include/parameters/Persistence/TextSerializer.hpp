@@ -87,6 +87,29 @@ namespace Parameters
                     return false;
                 }
             };
+			template<typename T> struct Serializer<T, typename std::enable_if<
+				std::is_same<T, Parameters::ReadDirectory>::value ||
+				std::is_same<T, Parameters::ReadFile>::value ||
+				std::is_same<T, Parameters::WriteDirectory>::value ||
+				std::is_same<T, Parameters::WriteFile>::value>::type>
+			{
+				static void Serialize(::std::stringstream* ss, T* param)
+				{
+					(*ss) << param->string();
+				}
+				static bool DeSerialize(::std::stringstream* ss, T* param)
+				{
+					std::string line;
+					std::getline(*ss, line);
+					*param = T(line);
+                    return true;
+				}
+				static bool DeSerialize(::std::string* str, T* param)
+				{
+					*param = T(*str);
+					return true;
+				}
+			};
             template<typename T> struct Serializer<T, typename std::enable_if<
                 std::is_floating_point<T>::value || 
                 std::is_integral<T>::value ||
@@ -208,7 +231,10 @@ namespace Parameters
                             typedParam->changed = true;
                             typedParam->UpdateSignal(nullptr);
                         }
+						param->changed = true;
+						param->UpdateSignal(nullptr);
                     }
+					
                 }
                 static void Read(::std::string* ss, Parameter* param)
                 {
@@ -221,6 +247,8 @@ namespace Parameters
                             typedParam->changed = true;
                             typedParam->UpdateSignal(nullptr);
                         }
+						param->changed = true;
+						param->UpdateSignal(nullptr);
                     }
                 }
             };
