@@ -27,6 +27,7 @@ https://github.com/dtmoodie/parameters
 #include "parameters/TypedParameter.hpp"
 #include <parameters/Types.hpp>
 
+#include <boost/lexical_cast.hpp>
 
 template<typename T> 
 using is_vector = std::is_same<T, std::vector< typename T::value_type, typename T::allocator_type > >;
