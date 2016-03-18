@@ -36,7 +36,7 @@ namespace Parameters
 
 		TypedInputParameter(const std::string& name, 
 			const std::string& tooltip = "", 
-			const boost::function<bool(Parameter*)>& qualifier_ = boost::function<bool(Parameter*)>()) :
+			const std::function<bool(Parameter*)>& qualifier_ = std::function<bool(Parameter*)>()) :
 			ITypedParameter<T>(name, Parameter::ParameterType::Input, tooltip)
 		{ 
 				qualifier = qualifier_; 
@@ -69,7 +69,7 @@ namespace Parameters
 			{
 				input = castedParam;
 				input->subscribers++;
-				inputConnection = castedParam->RegisterNotifier(boost::bind(&TypedInputParameter<T>::onInputUpdate, this));
+				inputConnection = castedParam->RegisterNotifier(std::bind(&TypedInputParameter<T>::onInputUpdate, this));
 				Parameter::UpdateSignal(nullptr);
                 Parameter::changed = true;
 				return true;
@@ -160,7 +160,7 @@ namespace Parameters
 			{
 				input = castedParam;
 				param->subscribers++;
-				inputConnection = castedParam->RegisterNotifier(boost::bind(&TypedInputParameterCopy<T>::onInputUpdate, this));
+				inputConnection = castedParam->RegisterNotifier(std::bind(&TypedInputParameterCopy<T>::onInputUpdate, this));
 				*userVar = *input->Data();
 				return true;
 			}
@@ -247,7 +247,7 @@ namespace Parameters
 			{
 				input = castedParam;
                 inputConnection.reset();
-				inputConnection = castedParam->RegisterNotifier(boost::bind(&TypedInputParameterPtr<T>::onInputUpdate, this));
+				inputConnection = castedParam->RegisterNotifier(std::bind(&TypedInputParameterPtr<T>::onInputUpdate, this));
 				*userVar = input->Data();
 				return true;
 			}
