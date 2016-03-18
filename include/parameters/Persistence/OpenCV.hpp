@@ -132,7 +132,7 @@ namespace Parameters
 				virtual void DeSerialize(::cv::FileNode& fs, T* param){}
 			};
 			template<typename T> struct Serializer < T, typename std::enable_if<
-                std::is_floating_point<T>::value || std::is_integral<T>::value && !std::is_unsigned<T>::value && !std::is_same<T, long>::value && !std::is_same<T, long long>::value, void>::type>
+                std::is_floating_point<T>::value || (std::is_integral<T>::value && !std::is_unsigned<T>::value && !std::is_same<T, long>::value && !std::is_same<T, long long>::value), void>::type>
 			{
 				static void Serialize(::cv::FileStorage* fs, T* param)
 				{
@@ -235,8 +235,6 @@ namespace Parameters
                 }
                 static void DeSerialize(::cv::FileNode&  fs, std::set<T>* param)
                 {
-
-                    size_t size = boost::lexical_cast<size_t>((std::string)fs["Size"]);
                     auto element_node = fs["Elements"];
 
                     for (auto itr = element_node.begin(); itr != element_node.end(); ++itr)

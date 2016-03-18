@@ -22,6 +22,11 @@ https://github.com/dtmoodie/parameters
 using namespace Parameters;
 using namespace Parameters::Converters;
 using namespace Parameters::Converters::Double;
+IConverter::~IConverter()
+{
+
+}
+
 Factory& Factory::Instance()
 {
 	static Factory inst;

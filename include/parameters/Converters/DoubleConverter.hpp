@@ -35,6 +35,7 @@ namespace Parameters
 			class Parameter_EXPORTS IConverter
 			{
 			public:
+                virtual ~IConverter();
 				cv::Rect roi;
 				cv::Size fullSize;
 				std::mutex mtx;
