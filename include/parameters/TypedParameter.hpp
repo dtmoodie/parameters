@@ -35,24 +35,28 @@ namespace Parameters
 			const std::string& tooltip = "") :
 			MetaTypedParameter<T>(name, type, tooltip), data(init) 
 		{}
-		virtual T* Data()
+		virtual T* Data(long long time_index = -1)
 		{
+			LOGIF_NEQ(time_index, _current_time_index, trace);
 			return &data;
 		}
-		virtual void UpdateData(T& data_, cv::cuda::Stream* stream = nullptr)
+		virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
+			_current_time_index = time_index;
 			data = data_;
 			Parameter::changed = true;
 			Parameter::UpdateSignal(stream);
 		}
-		virtual void UpdateData(const T& data_, cv::cuda::Stream* stream = nullptr)
+		virtual void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
+			_current_time_index = time_index;
 			data = data_;
 			Parameter::changed = true;
 			ITypedParameter<T>::UpdateSignal(stream);
 		}
-		virtual void UpdateData(T* data_, cv::cuda::Stream* stream = nullptr)
+		virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
+			_current_time_index = time_index;
 			data = *data_;
 			Parameter::changed = true;
 			Parameter::UpdateSignal(stream);
@@ -61,12 +65,14 @@ namespace Parameters
         {
             return Parameter::Ptr(new TypedParameter<T>(Parameter::GetName(), data));
         }
-        virtual bool Update(const Parameter::Ptr other)
+		virtual bool Update(Parameter::Ptr other, cv::cuda::Stream* stream = nullptr)
         {
             auto typed = dynamic_cast<ITypedParameter<T>*>(other.get());
             if (typed)
             {
                 data = *(typed->Data());
+				Parameter::changed = true;
+				Parameter::UpdateSignal(stream);
                 return true;
             }
             return false;
@@ -93,35 +99,41 @@ namespace Parameters
 		{}
 
 
-		virtual T* Data()
+		virtual T* Data(long long time_index)
 		{
+			LOGIF_NEQ(time_index, _current_time_index, trace);
 			return ptr;
 		}
-		virtual void UpdateData(T& data, cv::cuda::Stream* stream = nullptr)
+		virtual void UpdateData(T& data, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
 			ptr = &data;
 			Parameter::changed = true;
 			Parameter::UpdateSignal(stream);
 		}
-		virtual void UpdateData(const T& data, cv::cuda::Stream* stream = nullptr)
+		virtual void UpdateData(const T& data, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
 			if (ptr)
 				*ptr = data;
+			_current_time_index = time_index;
 			Parameter::changed = true;
 			Parameter::UpdateSignal(stream);
 		}
-		virtual void UpdateData(T* data_, cv::cuda::Stream* stream = nullptr)
+		virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
 			ptr = data_;
+			_current_time_index = time_index;
 			Parameter::changed = true;
 			Parameter::UpdateSignal(stream);
 		}
-        virtual bool Update(const Parameter::Ptr other)
+		virtual bool Update(Parameter::Ptr other, cv::cuda::Stream* stream = nullptr)
         {
             auto typed = dynamic_cast<ITypedParameter<T>*>(other.get());
             if(typed)
             {
                 *ptr = *(typed->Data());
+				_current_time_index = other->GetTimeIndex();
+				Parameter::changed = true;
+				Parameter::UpdateSignal(stream);
                 return true;
             }
             return false;

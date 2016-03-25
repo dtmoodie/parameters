@@ -67,3 +67,11 @@ bool Parameter::Update(const Parameter::Ptr other)
 {
 	return false;
 }
+long long Parameter::GetTimeIndex() const
+{
+	return _current_time_index;
+}
+void Parameter::SetTimeIndex(long long index)
+{
+	_current_time_index = index;
+}

@@ -30,20 +30,23 @@ namespace Parameters
 {
 	template<typename T> class ITypedParameter : public Parameter
 	{
+		
 	public:
 		typedef std::shared_ptr<ITypedParameter<T>> Ptr;
-
-		virtual T* Data() = 0;
-		virtual void UpdateData(T& data_, cv::cuda::Stream* stream = nullptr) = 0;
-		virtual void UpdateData(const T& data_, cv::cuda::Stream* stream = nullptr) = 0;
-		virtual void UpdateData(T* data_, cv::cuda::Stream* stream = nullptr) = 0;
+		
 		ITypedParameter(const std::string& name, const ParameterType& type = Parameter::Control, const std::string& tooltip = "") :
-			Parameter(name, type, tooltip){}
+			Parameter(name, type, tooltip) {}
+
+		virtual T* Data(long long time_index = -1) = 0;
+		virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr) = 0;
+		virtual void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr) = 0;
+		virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr) = 0;
+		
 		virtual Loki::TypeInfo GetTypeInfo()
 		{
 			return Loki::TypeInfo(typeid(T));
 		}
-		bool Update(Parameter::Ptr other, cv::cuda::Stream* stream = nullptr)
+		virtual bool Update(Parameter::Ptr other, cv::cuda::Stream* stream = nullptr)
 		{
             auto typedParameter = std::dynamic_pointer_cast<ITypedParameter<T>>(other);
 			if (typedParameter)
@@ -54,6 +57,5 @@ namespace Parameters
 			}
 			return false;
 		}
-		
 	};
 }

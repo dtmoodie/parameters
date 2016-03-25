@@ -21,13 +21,14 @@ https://github.com/dtmoodie/parameters
 #include "ITypedParameter.hpp"
 #include "UI/UI.hpp"
 #include <parameters/Parameter.hpp>
+#include <parameters/BufferProxy.hpp>
 #include "Converters/ConverterPolicy.hpp"
 
 namespace Parameters
 {
-	template<typename T, template<typename> class Policy1 = Persistence::PersistencePolicy, template<typename> class Policy2 = UI::UiPolicy, template<typename> class Policy3 = Converters::ConverterPolicy>
+	template<typename T, template<typename> class Policy1 = Persistence::PersistencePolicy, template<typename> class Policy2 = UI::UiPolicy, template<typename> class Policy3 = Converters::ConverterPolicy, template<typename> class Policy4 = Buffer::ParameterBufferPolicy>
 	class MetaTypedParameter :
-		public ITypedParameter<T>, public Policy1<T>, public Policy2 < T >, public Policy3<T>
+		public ITypedParameter<T>, public Policy1<T>, public Policy2 < T >, public Policy3<T>, public Policy4<T>
 	{
 	public:
 		MetaTypedParameter(const std::string& name, const Parameter::ParameterType& type = Parameter::Control, const std::string& tooltip = "") :

@@ -34,6 +34,7 @@ namespace Parameters
 {
 	class Parameter_EXPORTS Parameter
 	{
+		
 	public:
 		enum ParameterType
 		{
@@ -55,6 +56,8 @@ namespace Parameters
 		virtual const ::std::string& GetTooltip() const;
 		virtual const ::std::string GetTreeName() const;
 		virtual const ::std::string& GetTreeRoot() const;
+		virtual long long GetTimeIndex() const;
+		virtual void SetTimeIndex(long long index = -1);
 		// Update with the values from another parameter
 		virtual bool Update(Parameter::Ptr other);
         virtual Ptr DeepCopy() const = 0;
@@ -69,10 +72,10 @@ namespace Parameters
 
 		Signals::typed_signal_base<void(cv::cuda::Stream*)> UpdateSignal;
 
-	private:
+	protected:
 		std::string name;
 		std::string tooltip;
 		std::string treeRoot;
-
+		long long _current_time_index;
 	};
 }

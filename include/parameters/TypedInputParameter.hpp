@@ -92,21 +92,21 @@ namespace Parameters
 		{
 			return Loki::TypeInfo(typeid(T)) == type;
 		}
-		virtual T* Data()
+		virtual T* Data(long long time_step = -1)
 		{
 			if (input)
-				return input->Data();
+				return input->Data(time_step);
 			return nullptr;
 		}
-		virtual void UpdateData(T& data_, cv::cuda::Stream* stream)
+		virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
 
 		}
-		virtual void UpdateData(const T& data_, cv::cuda::Stream* stream)
+		virtual void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
 
 		}
-		virtual void UpdateData(T* data_, cv::cuda::Stream* stream)
+		virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
 
 		}
@@ -182,19 +182,19 @@ namespace Parameters
 		{
 			return Loki::TypeInfo(typeid(T)) == type;
 		} 
-		virtual T* Data()
+		virtual T* Data(long long time_step = -1)
 		{
 			return userVar;
 		}
-		virtual void UpdateData(T& data_, cv::cuda::Stream* stream)
+		virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
 			*userVar = data_;
 		}
-		virtual void UpdateData(const T& data_, cv::cuda::Stream* stream)
+		virtual void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
 			*userVar = data_;
 		}
-		virtual void UpdateData(T* data_, cv::cuda::Stream* stream)
+		virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
 			*userVar = *data_;
 		}
@@ -275,15 +275,15 @@ namespace Parameters
 				return input->Data();
 			return nullptr;
 		}
-		virtual void UpdateData(T& data_, cv::cuda::Stream* stream)
+		virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
 
 		}
-		virtual void UpdateData(const T& data_, cv::cuda::Stream* stream)
+		virtual void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
 
 		}
-		virtual void UpdateData(T* data_, cv::cuda::Stream* stream)
+		virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
 
 		}
