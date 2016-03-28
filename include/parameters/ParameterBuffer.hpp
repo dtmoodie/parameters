@@ -25,7 +25,13 @@ namespace Parameters
 {
 	namespace Buffer
 	{
-		template<typename T> class ParameterBuffer : public ITypedParameter<T>
+		class IParameterBuffer
+		{
+			virtual void SetSize(int size) = 0;
+			virtual int GetSize() = 0;
+			virtual void GetTimestampRange(long long& start, long long& end) = 0;
+		};
+		template<typename T> class ParameterBuffer : public ITypedParameter<T>, IParameterBuffer
 		{
 			boost::circular_buffer<std::pair<long long, T>> _data_buffer;
 		public:
@@ -90,6 +96,22 @@ namespace Parameters
 					}
 				}
 				return false;
+			}
+			virtual void SetSize(int size)
+			{
+				_data_buffer.set_capacity(size);
+			}
+			virtual int GetSize()
+			{
+				return _data_buffer.capacity();
+			}
+			virtual void GetTimestampRange(long long& start, long long& end)
+			{
+				if (_data_buffer.size())
+				{
+					start = _data_buffer.back().first;
+					end = _data_buffer.front().first;
+				}
 			}
 		};
 

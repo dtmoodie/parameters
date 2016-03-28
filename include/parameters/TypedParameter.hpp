@@ -37,7 +37,8 @@ namespace Parameters
 		{}
 		virtual T* Data(long long time_index = -1)
 		{
-			LOGIF_NEQ(time_index, _current_time_index, trace);
+			if(time_index != -1)
+				LOGIF_NEQ(time_index, _current_time_index, trace);
 			return &data;
 		}
 		virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)

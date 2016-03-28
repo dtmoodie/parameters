@@ -1,6 +1,7 @@
 
 #include "parameters/Parameters.hpp"
 #include "parameters/UI/Qt.hpp"
+#include "parameters/BufferProxy.hpp"
 #include <string>
 #include <iostream>
 /*
@@ -69,15 +70,37 @@ int main()
 */
 int main()
 {
-    Parameters::TypedParameter<int> param("test");
-	Parameters::TypedParameter<std::vector<int>> vecParam("test");
-	vecParam.Data()->push_back(10);
-	vecParam.Data()->push_back(15);
-    std::stringstream test;
-    Parameters::Persistence::Text::Serialize(&test, &param);
-	Parameters::Persistence::Text::Serialize(&test, &vecParam);
-    std::cout << test.str() << std::endl;
-	auto param1 = Parameters::Persistence::Text::DeSerialize(&test);
-	auto param2 = Parameters::Persistence::Text::DeSerialize(&test);
+	{
+		Parameters::TypedParameter<int> param("test");
+		Parameters::TypedParameter<std::vector<int>> vecParam("test");
+		vecParam.Data()->push_back(10);
+		vecParam.Data()->push_back(15);
+		std::stringstream test;
+		Parameters::Persistence::Text::Serialize(&test, &param);
+		Parameters::Persistence::Text::Serialize(&test, &vecParam);
+		std::cout << test.str() << std::endl;
+		auto param1 = Parameters::Persistence::Text::DeSerialize(&test);
+		auto param2 = Parameters::Persistence::Text::DeSerialize(&test);
+	}
+	{
+		std::shared_ptr<Parameters::TypedParameter<int>> param(new Parameters::TypedParameter<int>("test"));
+		std::shared_ptr<Parameters::TypedInputParameter<int>> input_param(new Parameters::TypedInputParameter<int>("test input"));
+		auto proxy = Parameters::Buffer::ParameterProxyBufferFactory::Instance()->CreateProxy(param);
+		if (proxy)
+		{
+			input_param->SetInput(proxy);
+			param->UpdateData(0, 0, nullptr);
+			for (int i = 1; i < 100; ++i)
+			{
+				param->UpdateData(pow(i,2), i, nullptr);
+				auto data = input_param->Data(i - 1);
+				if (data)
+					std::cout << "Value at time index " << i - 1 << " is " << *data << " expected value is " << pow(i - 1,2) << "\n";
+				else
+					std::cout << "Unable to get value at time index " << i - 1 << "\n";
+			}
+		}
+	}
+    
     return 0;
 }

@@ -7,9 +7,9 @@ ParameterProxyBufferFactory* ParameterProxyBufferFactory::Instance()
 	static ParameterProxyBufferFactory inst;
 	return &inst;
 }
-void ParameterProxyBufferFactory::RegisterFunction(Loki::TypeInfo, const create_buffer& func)
+void ParameterProxyBufferFactory::RegisterFunction(Loki::TypeInfo type, const create_buffer& func)
 {
-
+	_registered_buffer_factories[type] = func;
 }
 std::shared_ptr<Parameter>  ParameterProxyBufferFactory::CreateProxy(std::shared_ptr<Parameter> param)
 {

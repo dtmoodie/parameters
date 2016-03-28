@@ -20,7 +20,7 @@ https://github.com/dtmoodie/parameters
 
 using namespace Parameters;
 Parameter::Parameter(const std::string& name_, const ParameterType& type_, const std::string& tooltip_):
-name(name_), type(type_), tooltip(tooltip_), changed(false), subscribers(0)
+name(name_), type(type_), tooltip(tooltip_), changed(false), subscribers(0), _current_time_index(-1)
 {
 }
 const std::string& Parameter::GetName() const
