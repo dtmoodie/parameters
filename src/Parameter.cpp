@@ -63,7 +63,7 @@ std::shared_ptr<Signals::connection> Parameter::RegisterNotifier(std::function<v
 {
 	return UpdateSignal.connect(f);
 }
-bool Parameter::Update(const Parameter::Ptr other)
+bool Parameter::Update(const Parameter::Ptr other, cv::cuda::Stream* stream)
 {
 	return false;
 }

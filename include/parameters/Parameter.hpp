@@ -59,7 +59,7 @@ namespace Parameters
 		virtual long long GetTimeIndex() const;
 		virtual void SetTimeIndex(long long index = -1);
 		// Update with the values from another parameter
-		virtual bool Update(Parameter::Ptr other);
+		virtual bool Update(Parameter::Ptr other, cv::cuda::Stream* stream = nullptr);
         virtual Ptr DeepCopy() const = 0;
 
 		virtual std::shared_ptr<Signals::connection> RegisterNotifier(std::function<void(cv::cuda::Stream*)> f);
