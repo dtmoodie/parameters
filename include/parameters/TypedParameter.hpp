@@ -22,6 +22,7 @@ namespace Parameters
 {
 	template<typename T> class TypedParameter : public MetaTypedParameter < T >
 	{
+	protected:
 		T data;
 	public:
 		typedef std::shared_ptr<TypedParameter<T>> Ptr;
@@ -82,6 +83,7 @@ namespace Parameters
 
 	template<typename T> class TypedParameterPtr : public MetaTypedParameter < T >
 	{
+	protected:
 		T* ptr;
 		bool ownsData;
 	public:
