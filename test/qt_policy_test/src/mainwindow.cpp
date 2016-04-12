@@ -8,7 +8,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 	{
-		auto param = new Parameters::TypedParameter<std::vector<float>>("vector float");
+		auto param = new Parameters::RangedParameter<std::vector<float>>(0.0, 20.0,"vector float");
 		param->Data()->push_back(15.0);
 		param->Data()->push_back(14.0);
 		param->Data()->push_back(13.0);

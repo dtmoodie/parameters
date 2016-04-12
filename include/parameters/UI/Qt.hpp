@@ -740,12 +740,10 @@ namespace Parameters
 				Handler() : box(nullptr), floatData(nullptr) {}
 				virtual void UpdateUi(const T& data)
 				{
-					
 					box->setValue(data);
 				}
 				virtual void OnUiUpdate(QObject* sender, double val = 0)
 				{
-					
 					std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
 					if (sender == box && floatData)
 						*floatData = box->value();
@@ -760,9 +758,13 @@ namespace Parameters
 					if (box)
 						box->setValue(*floatData);
 				}
+                void SetMinMax(T min, T max)
+                {
+                    box->setMinimum(min);
+                    box->setMaximum(max);
+                }
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
-				{
-					
+				{	
 					std::vector<QWidget*> output;
 					if (box == nullptr)
 					{
@@ -789,16 +791,14 @@ namespace Parameters
 				QSpinBox* box;
 			public:
 				typedef T min_max_type;
-				Handler() : box(nullptr), intData(nullptr) {}
+				Handler() : box(nullptr), intData(nullptr){}
 				virtual void UpdateUi(const T& data)
 				{
-					
 					std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
 					box->setValue(data);
 				}
 				virtual void OnUiUpdate(QObject* sender, int val = -1)
 				{
-					
 					std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
 					if (sender == box && intData)
                     {
@@ -820,6 +820,11 @@ namespace Parameters
 					if (box)
 						box->setValue(*intData);
 				}
+                void SetMinMax(T min_, T max_)
+                {
+                    box->setMinimum(min_);
+                    box->setMaximum(max_);
+                }
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
 					
@@ -983,27 +988,31 @@ namespace Parameters
 				typedef char one;
 				typedef long two;
 
-				template <typename C> static one test(typeof(C::min_max_type));
+				template <typename C> static one test(decltype(&C::SetMinMax));
 				template <typename C> static two test(...);
 
 			public:
 				enum { value = sizeof(test<T>(0)) == sizeof(char) };
 			};
 
-			template<typename T> void SetMinMax(Handler<T>& handler, Parameters::Parameter* param, std::enable_if<has_minmax<Handler<T>>::value>::type* = 0)
-			{
-				auto rangedParam = dynamic_cast<ITypedRangedParameter<T>*>(param);
-				if (rangedParam)
-				{
-					Handler<T>::min_max_type min, max;
-					rangedParam->GetMinMax(min, max);
-					handler.SetMinMax(min, max);
-				}
-			}
-			template<typename T> void SetMinMax(Handler<T>& handler, Parameters::Parameter* param, std::enable_if<!has_minmax<Handler<T>>::value>::type* = 0)
-			{
 
-			}
+
+            template<typename T> void SetMinMax(typename std::enable_if<has_minmax<Handler<T>>::value, Handler<T>>::type& handler, Parameters::ITypedParameter<T>* param)
+            {
+                auto rangedParam = dynamic_cast<ITypedRangedParameter<T>*>(param);
+                if (rangedParam)
+                {
+                    Handler<T>::min_max_type min, max;
+                    rangedParam->GetRange(min, max);
+                    handler.SetMinMax(min, max);
+                }
+            }
+            
+            template<typename T> void SetMinMax(typename std::enable_if<!has_minmax<Handler<T>>::value, Handler<T>>::type& handler, Parameters::ITypedParameter<T>* param)
+            {
+                
+            }
+			
 			template<typename T> class ParameterProxy : public IParameterProxy
 			{
 				Handler<T> paramHandler;
@@ -1039,7 +1048,6 @@ namespace Parameters
 					auto typedParam = std::dynamic_pointer_cast<Parameters::ITypedParameter<T>>(param);
 					if (typedParam)
 					{
-						SetMinMax<T>(paramHandler, param.get());
 						parameter = typedParam;
 						paramHandler.SetParamMtx(&parameter->mtx);
 						paramHandler.SetData(parameter->Data());
@@ -1049,14 +1057,13 @@ namespace Parameters
 				}
 				virtual bool CheckParameter(Parameter* param)
 				{
-					
 					return param == parameter.get();
 				}
 				QWidget* GetParameterWidget(QWidget* parent)
 				{
-					
 					QWidget* output = new QWidget(parent);
 					auto widgets = paramHandler.GetUiWidgets(output);
+                    SetMinMax<T>(paramHandler, parameter.get());
 					QGridLayout* layout = new QGridLayout(output);
 					if (parameter->GetTypeInfo() == Loki::TypeInfo(typeid(std::function<void(void)>)))
 					{
