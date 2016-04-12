@@ -1,16 +1,18 @@
 #pragma once
 
-#include "TypedParameter.hpp"
 #include "IRangedParameter.hpp"
+#include "TypedParameter.hpp"
 
 namespace Parameters
 {
+	template<typename T> class TypedParameterPtr;
+	template<typename T> class TypedParameter;
 	template<typename T> void rail(T& value, const T& min, const T& max)
 	{
 		value = std::min(max, value);
 		value = std::max(min, value);
 	}
-	template<typename T> class ITypedRangedParameter: public virtual ITypedParameter<T>
+	template<typename T> class ITypedRangedParameter: public virtual ITypedParameter<T>, public virtual IRangedParameter
 	{
 	protected:
 		T min_value;

@@ -57,7 +57,7 @@ namespace Parameters
 {
 	class Parameter;
 	template<typename T> class ITypedParameter;
-
+	template<typename T> class ITypedRangedParameter;
 	namespace UI
 	{
 		namespace qt
@@ -736,6 +736,7 @@ namespace Parameters
 				T* floatData;
 				QDoubleSpinBox* box;
 			public:
+				typedef T min_max_type;
 				Handler() : box(nullptr), floatData(nullptr) {}
 				virtual void UpdateUi(const T& data)
 				{
@@ -787,6 +788,7 @@ namespace Parameters
 				T* intData;
 				QSpinBox* box;
 			public:
+				typedef T min_max_type;
 				Handler() : box(nullptr), intData(nullptr) {}
 				virtual void UpdateUi(const T& data)
 				{
@@ -930,7 +932,6 @@ namespace Parameters
 				Handler() : index(new QSpinBox()), vectorData(nullptr) {}
 				virtual void UpdateUi(const std::vector<T>& data)
 				{
-					
 					if (data.size())
 					{
                         std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
@@ -950,7 +951,6 @@ namespace Parameters
 				}
 				virtual void SetData(std::vector<T>* data_)
 				{
-					
 					vectorData = data_;
 					if (vectorData)
 					{
@@ -976,6 +976,34 @@ namespace Parameters
 			// **********************************************************************************
 			// *************************** ParameterProxy ***************************************
 			// **********************************************************************************
+
+			template <typename T>
+			class has_minmax
+			{
+				typedef char one;
+				typedef long two;
+
+				template <typename C> static one test(typeof(C::min_max_type));
+				template <typename C> static two test(...);
+
+			public:
+				enum { value = sizeof(test<T>(0)) == sizeof(char) };
+			};
+
+			template<typename T> void SetMinMax(Handler<T>& handler, Parameters::Parameter* param, std::enable_if<has_minmax<Handler<T>>::value>::type* = 0)
+			{
+				auto rangedParam = dynamic_cast<ITypedRangedParameter<T>*>(param);
+				if (rangedParam)
+				{
+					Handler<T>::min_max_type min, max;
+					rangedParam->GetMinMax(min, max);
+					handler.SetMinMax(min, max);
+				}
+			}
+			template<typename T> void SetMinMax(Handler<T>& handler, Parameters::Parameter* param, std::enable_if<!has_minmax<Handler<T>>::value>::type* = 0)
+			{
+
+			}
 			template<typename T> class ParameterProxy : public IParameterProxy
 			{
 				Handler<T> paramHandler;
@@ -988,14 +1016,12 @@ namespace Parameters
                 }
 				void onUiUpdate()
 				{
-					
 					//TODO Notify parameter of update on the processing thread.
 					parameter->changed = true;
 					parameter->UpdateSignal(nullptr);
 				}
 				void onParamUpdate(cv::cuda::Stream* stream)
 				{
-					
 					auto dataPtr = parameter->Data();	
 					if (dataPtr)
 					{
@@ -1010,16 +1036,15 @@ namespace Parameters
 			public:
 				ParameterProxy(std::shared_ptr<Parameters::Parameter> param)
 				{
-					
 					auto typedParam = std::dynamic_pointer_cast<Parameters::ITypedParameter<T>>(param);
 					if (typedParam)
 					{
+						SetMinMax<T>(paramHandler, param.get());
 						parameter = typedParam;
 						paramHandler.SetParamMtx(&parameter->mtx);
 						paramHandler.SetData(parameter->Data());
 						paramHandler.IHandler::GetUpdateSignal() = std::bind(&ParameterProxy<T>::onUiUpdate, this);
-                        connection = parameter->UpdateSignal.connect(std::bind(&ParameterProxy<T>::onParamUpdate, this, std::placeholders::_1),      Signals::GUI, true);
-						/*connection = parameter->RegisterNotifier(std::bind(&ParameterProxy<T>::onParamUpdate, this, std::placeholders::_1));*/
+                        connection = parameter->UpdateSignal.connect(std::bind(&ParameterProxy<T>::onParamUpdate, this, std::placeholders::_1), Signals::GUI, true);
 					}
 				}
 				virtual bool CheckParameter(Parameter* param)
