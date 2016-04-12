@@ -116,10 +116,12 @@ namespace Parameters
 		virtual void UpdateData(const T& data, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
 			if (ptr)
+			{
 				*ptr = data;
-			_current_time_index = time_index;
-			Parameter::changed = true;
-			Parameter::UpdateSignal(stream);
+				_current_time_index = time_index;
+				Parameter::changed = true;
+				Parameter::UpdateSignal(stream);
+			}				
 		}
 		virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
