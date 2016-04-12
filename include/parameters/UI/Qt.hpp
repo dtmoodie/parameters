@@ -333,15 +333,25 @@ namespace Parameters
 					table->horizontalHeader()->hide();
 					table->verticalHeader()->hide();
 					items.reserve(ROW*COL);
-					table->setColumnCount(COL);
-					table->setRowCount(ROW);
+                    if(COL == 1)
+                    {
+                        table->setColumnCount(ROW);
+					    table->setRowCount(1);
+                    }else
+                    {
+                        table->setColumnCount(COL);
+					    table->setRowCount(ROW);
+                    }
 					for (int i = 0; i < ROW; ++i)
 					{
 						for (int j = 0; j < COL; ++j)
 						{
 							QTableWidgetItem* item = new QTableWidgetItem();
 							items.push_back(item);
-							table->setItem(i, j, item);
+                            if(COL == 1)
+							    table->setItem(0, i, item);
+                            else
+                                table->setItem(i, j, item);
 						}
 					}
 					proxy->connect(table, SIGNAL(cellChanged(int, int)), proxy, SLOT(on_update(int, int)));
@@ -356,7 +366,7 @@ namespace Parameters
 				{
 					
 					std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
-					for (int i = 0; i < ROW; ++i)
+                    for (int i = 0; i < ROW; ++i)
 					{
 						for (int j = 0; j < COL; ++j)
 						{

@@ -51,7 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
 		testRefScalar.push_back(cv::Scalar(4));
 		testRefScalar.push_back(cv::Scalar(5));
 		testRefScalar.push_back(cv::Scalar(6));
-		testRefScalar.push_back(cv::Scalar(7));
+		testRefScalar.push_back(cv::Scalar::all(7));
 		testRefScalar.push_back(cv::Scalar(8));
 		param->UpdateSignal(nullptr);
 		parameters.push_back(param);
