@@ -89,8 +89,7 @@ namespace Parameters
 						const Parameter::ParameterType& type = Parameter::ParameterType::Control,
 						const std::string& tooltip = "") : 
 			TypedParameter<T>(name, init, type, tooltip),
-			ITypedRangedParameter<T>(min_value_, max_value_),
-            ITypedParameter<T>(name, type, tooltip)
+			ITypedRangedParameter<T>(min_value_, max_value_)
 		{
 		
 		}
@@ -121,7 +120,7 @@ namespace Parameters
 		}
         virtual Parameter::Ptr DeepCopy() const
         {
-            return Parameter::Ptr(new RangedParameter<T>(ITypedRangedParameter<T>::min_value, ITypedRangedParameter<T>::max_value, Parameter::GetName(), min_value, max_value, data));
+            return Parameter::Ptr(new RangedParameter<T>(ITypedRangedParameter<T>::min_value, ITypedRangedParameter<T>::max_value, Parameter::GetName(), data));
         }
 		virtual bool Update(Parameter::Ptr other, cv::cuda::Stream* stream = nullptr)
         {
@@ -130,7 +129,7 @@ namespace Parameters
             {
 				if (CheckInRange(*(typed->Data())))
 				{
-					TypedParameter<T>::UpdateData(typed->Data(), other->GetTimeIndex(), stream)
+					TypedParameter<T>::UpdateData(typed->Data(), other->GetTimeIndex(), stream);
 				}
                 return true;
             }
@@ -208,8 +207,7 @@ namespace Parameters
 			const Parameter::ParameterType& type = Parameter::ParameterType::Control,
 			const std::string& tooltip = "") :
 			TypedParameterPtr<T>(name, init, type, tooltip),
-			ITypedRangedParameter<T>(min_value_, max_value_),
-            ITypedParameter<T>(name, type, tooltip)
+			ITypedRangedParameter<T>(min_value_, max_value_)
 		{
 
 		}
@@ -298,8 +296,7 @@ namespace Parameters
             const Parameter::ParameterType& type = Parameter::ParameterType::Control,
             const std::string& tooltip = "") :
             TypedParameterPtr<std::vector<T>>(name, init, type, tooltip),
-            ITypedRangedParameter<std::vector<T>>(min_value_, max_value_),
-            ITypedParameter<std::vector<T>>(name, type, tooltip)
+            ITypedRangedParameter<std::vector<T>>(min_value_, max_value_)
         {
 
         }
