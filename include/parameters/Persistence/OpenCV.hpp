@@ -48,7 +48,7 @@ namespace Parameters
 		namespace cv
 		{
 
-			class Parameter_EXPORTS InterpreterRegistry
+			class PARAMETER_EXPORTS InterpreterRegistry
 			{
 				
 			public:
@@ -62,9 +62,9 @@ namespace Parameters
 				// Mapping from Loki::typeinfo to file writing functors
 				static	std::map<Loki::TypeInfo, std::tuple<SerializerFunction, DeSerializerFunction, FactoryFunction>>& registry();
 			};
-			Parameter_EXPORTS void Serialize(::cv::FileStorage* fs, Parameters::Parameter* param);
-			Parameter_EXPORTS void DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param);
-			Parameter_EXPORTS Parameters::Parameter* DeSerialize(::cv::FileNode* fs);
+			PARAMETER_EXPORTS void Serialize(::cv::FileStorage* fs, Parameters::Parameter* param);
+			PARAMETER_EXPORTS void DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param);
+			PARAMETER_EXPORTS Parameters::Parameter* DeSerialize(::cv::FileNode* fs);
 
 			template<typename T, typename Enable = void> struct Serializer
 			{
@@ -78,22 +78,22 @@ namespace Parameters
 					LOG_TRIVIAL(debug) << "Default non specialized DeSerializer called for " << typeid(T).name();
 				}
 			};
-			template<> struct Parameter_EXPORTS Serializer<char, void>
+			template<> struct PARAMETER_EXPORTS Serializer<char, void>
 			{
 				static void Serialize(::cv::FileStorage* fs, char* param);
 				static void DeSerialize(::cv::FileNode& fs, char* param);
 			};
-			template<> struct Parameter_EXPORTS Serializer < std::string, void >
+			template<> struct PARAMETER_EXPORTS Serializer < std::string, void >
 			{
 				static void Serialize(::cv::FileStorage* fs, std::string* param);
 				static void DeSerialize(::cv::FileNode& fs, std::string* param);
 			};
-			template<> struct Parameter_EXPORTS Serializer<::cv::Mat, void>
+			template<> struct PARAMETER_EXPORTS Serializer<::cv::Mat, void>
 			{
 				static void Serialize(::cv::FileStorage* fs, ::cv::Mat* param);
 				static void DeSerialize(::cv::FileNode&  fs, ::cv::Mat* param);
 			};
-			template<> struct Parameter_EXPORTS Serializer<Parameters::EnumParameter, void>
+			template<> struct PARAMETER_EXPORTS Serializer<Parameters::EnumParameter, void>
 			{
 				static void Serialize(::cv::FileStorage* fs, Parameters::EnumParameter* param);
 				static void DeSerialize(::cv::FileNode&  fs, Parameters::EnumParameter* param)
@@ -291,7 +291,7 @@ namespace Parameters
                                 auto node = (*fs)["Data"];
                                 serializer.DeSerialize(node, typedParam->Data());
                                 typedParam->changed = true;
-								typedParam->UpdateSignal(nullptr);
+								typedParam->OnUpdate(nullptr);
 								LOG_TRIVIAL(trace) << "Successfully read " << param->GetName();
 							}
 							else
@@ -309,7 +309,7 @@ namespace Parameters
                                 auto node = myNode["Data"];
                                 serializer.DeSerialize(node, typedParam->Data());
                                 typedParam->changed = true;
-								typedParam->UpdateSignal(nullptr);
+								typedParam->OnUpdate(nullptr);
 								LOG_TRIVIAL(trace) << "Successfully read " << param->GetName();
 							}
 							else

@@ -32,7 +32,7 @@ namespace cv
 }
 namespace Parameters
 {
-	class Parameter_EXPORTS Parameter
+	class PARAMETER_EXPORTS Parameter
 	{
 		
 	public:
@@ -45,6 +45,7 @@ namespace Parameters
 			Control = 8
 		};
 		Parameter(const ::std::string& name, const ParameterType& type = ParameterType::Control, const ::std::string& tooltip = "");
+		virtual ~Parameter();
 		typedef ::std::shared_ptr<Parameter> Ptr;
 		virtual Loki::TypeInfo GetTypeInfo() = 0;
 
@@ -59,23 +60,27 @@ namespace Parameters
 		virtual long long GetTimeIndex() const;
 		virtual void SetTimeIndex(long long index = -1);
 		// Update with the values from another parameter
-		virtual bool Update(Parameter::Ptr other);
+		virtual bool Update(Parameter* other);
         virtual Ptr DeepCopy() const = 0;
 
 		virtual std::shared_ptr<Signals::connection> RegisterNotifier(std::function<void(cv::cuda::Stream*)> f);
+		virtual std::shared_ptr<Signals::connection> RegisterDeleteNotifier(std::function<void(Parameter*)> f);
 
-		std::recursive_mutex mtx;
+		virtual std::recursive_mutex& mtx();
+		
 		ParameterType type;
 		bool changed;
 		unsigned short subscribers;
-		
-
-		Signals::typed_signal_base<void(cv::cuda::Stream*)> UpdateSignal;
-
+		// Sets changed to true and emits update signal
+		void OnUpdate(cv::cuda::Stream* stream = nullptr);
+		Signals::typed_signal_base<void(cv::cuda::Stream*)> update_signal;
+		Signals::typed_signal_base<void(Parameter*)> delete_signal;
 	protected:
 		std::string name;
 		std::string tooltip;
 		std::string treeRoot;
 		long long _current_time_index;
+		std::recursive_mutex _mtx;
+		
 	};
 }

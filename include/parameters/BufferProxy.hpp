@@ -12,13 +12,14 @@ namespace Parameters
 	template<typename T> class ParameterBufferProxy;
 	namespace Buffer
 	{
-		class Parameter_EXPORTS ParameterProxyBufferFactory
+		class PARAMETER_EXPORTS ParameterProxyBufferFactory
 		{
 		public:
-			typedef std::function<std::shared_ptr<Parameter>(std::shared_ptr<Parameter>)> create_buffer;
+			typedef std::function<Parameter*(Parameter*)> create_buffer;
 			static ParameterProxyBufferFactory* Instance();
 			void RegisterFunction(Loki::TypeInfo, const create_buffer& func);
 			std::shared_ptr<Parameter>  CreateProxy(std::shared_ptr<Parameter> param);
+			Parameter*  CreateProxy(Parameter* param);
 		private:
 			std::map<Loki::TypeInfo, create_buffer> _registered_buffer_factories;
 		};
@@ -29,13 +30,13 @@ namespace Parameters
 			{
 				ParameterProxyBufferFactory::Instance()->RegisterFunction(Loki::TypeInfo(typeid(T)), std::bind(&BufferFactory<T>::create, std::placeholders::_1));
 			}
-			static std::shared_ptr<Parameter> create(Parameters::Parameter::Ptr input)
+			static Parameter* create(Parameter* input)
 			{
-				if (auto typed_param = std::dynamic_pointer_cast<ITypedParameter<T>>(input))
+				if (auto typed_param = dynamic_cast<ITypedParameter<T>*>(input))
 				{
-					return std::shared_ptr<ParameterBufferProxy<T>>(new ParameterBufferProxy<T>(typed_param));
+					return new ParameterBufferProxy<T>(typed_param);
 				}
-				return std::shared_ptr<Parameter>();
+				return nullptr;
 			}
 		};
 

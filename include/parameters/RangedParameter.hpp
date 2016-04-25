@@ -24,56 +24,90 @@ namespace Parameters
 	protected:
 		T min_value;
 		T max_value;	
+		bool range_initialized;
 	public:
 		ITypedRangedParameter(const T& min_value_, const T& max_value_):
 			min_value(min_value_),
-			max_value(max_value_)
+			max_value(max_value_),
+			range_initialized(true)
 		{			
+		}
+		ITypedRangedParameter():
+			range_initialized(false)
+		{
+
 		}
 		void SetRange(const T& min_value_, const T& max_value_)
 		{
 			min_value = min_value_;
 			max_value = max_value_;
+			range_initialized = true;
 		}
-		void GetRange(T& min_value_, T& max_value_) const
+		bool GetRange(T& min_value_, T& max_value_) const
 		{
-			min_value_ = min_value;
-			max_value_ = max_value;
+			if (range_initialized)
+			{
+				min_value_ = min_value;
+				max_value_ = max_value;
+				return true;
+			}
+			return false;
 		}
 		bool CheckInRange(const T& value) const
 		{
-			return value > min_value && value < max_value;
+			if (range_initialized)
+			{
+				return value > min_value && value < max_value;
+			}
+			return true;
 		}
 	};
     template<typename T> class ITypedRangedParameter<std::vector<T>>: public virtual IRangedParameter
     {
     protected:
         T min_value;
-        T max_value;	
+        T max_value;
+		bool range_initialized;
     public:
         ITypedRangedParameter(const T& min_value_, const T& max_value_):
             min_value(min_value_),
-            max_value(max_value_)
+            max_value(max_value_),
+			range_initialized(true)
         {			
         }
+		ITypedRangedParameter() :
+			range_initialized(false)
+		{
+
+		}
         void SetRange(const T& min_value_, const T& max_value_)
         {
             min_value = min_value_;
             max_value = max_value_;
+			range_initialized = true;
         }
-        void GetRange(T& min_value_, T& max_value_) const
+        bool GetRange(T& min_value_, T& max_value_) const
         {
-            min_value_ = min_value;
-            max_value_ = max_value;
+			if (range_initialized)
+			{
+				min_value_ = min_value;
+				max_value_ = max_value;
+				return true;
+			}
+			return false;
         }
         bool CheckInRange(const std::vector<T>& value) const
         {
-            for(auto& it : value)
-            {
-                if(it < min_value || it> max_value)
-                    return false;
-            }
-            return true;
+			if (range_initialized)
+			{
+				for (auto& it : value)
+				{
+					if (it < min_value || it> max_value)
+						return false;
+				}
+				return true;
+			}
+			return true;
         }
     };
 
@@ -211,6 +245,12 @@ namespace Parameters
 		{
 
 		}
+		RangedParameterPtr() :
+			TypedParameterPtr<T>(""),
+			ITypedRangedParameter<T>()
+		{
+
+		}
 		virtual T* Data(long long time_index = -1)
         {
             return TypedParameterPtr<T>::Data(time_index);
@@ -233,12 +273,12 @@ namespace Parameters
 		{
 			if (data_)
 			{
-				if (CheckInRange(*data_))
+				if (CheckInRange(*data_) || ptr == nullptr)
 				{
 					ptr = data_;
 					_current_time_index = time_index;
 					Parameter::changed = true;
-					Parameter::UpdateSignal(stream);
+					Parameter::OnUpdate(stream);
 				}
 			}
 			else
@@ -246,7 +286,7 @@ namespace Parameters
 				ptr = data_;
 				_current_time_index = time_index;
 				Parameter::changed = true;
-				Parameter::UpdateSignal(stream);
+				Parameter::OnUpdate(stream);
 			}
 
 			
@@ -263,7 +303,7 @@ namespace Parameters
 						*ptr = *(typed->Data());
 						_current_time_index = other->GetTimeIndex();
 						Parameter::changed = true;
-						Parameter::UpdateSignal(stream);
+						Parameter::OnUpdate(stream);
 						return true;
 					}					
 				}
@@ -300,6 +340,12 @@ namespace Parameters
         {
 
         }
+		RangedParameterPtr() :
+			TypedParameterPtr<std::vector<T>>(""),
+			ITypedRangedParameter<std::vector<T>>()
+		{
+
+		}
         virtual std::vector<T>* Data(long long time_index = -1)
         {
             return TypedParameterPtr<std::vector<T>>::Data(time_index);
@@ -308,14 +354,14 @@ namespace Parameters
         {
             if (CheckInRange(data))
             {
-                TypedParameterPtr<T>::UpdateData(data, time_index, stream);
+                TypedParameterPtr<std::vector<T>>::UpdateData(data, time_index, stream);
             }
         }
         virtual void UpdateData(const std::vector<T>& data, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
         {
             if (CheckInRange(data))
             {
-                TypedParameterPtr<T>::UpdateData(data, time_index, stream);
+                TypedParameterPtr<std::vector<T>>::UpdateData(data, time_index, stream);
             }
         }
         virtual void UpdateData(std::vector<T>* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
@@ -327,7 +373,7 @@ namespace Parameters
                     ptr = data_;
                     _current_time_index = time_index;
                     Parameter::changed = true;
-                    Parameter::UpdateSignal(stream);
+                    Parameter::OnUpdate(stream);
                 }
             }
             else
@@ -335,7 +381,7 @@ namespace Parameters
                 ptr = data_;
                 _current_time_index = time_index;
                 Parameter::changed = true;
-                Parameter::UpdateSignal(stream);
+                Parameter::OnUpdate(stream);
             }
 
 
@@ -352,7 +398,7 @@ namespace Parameters
                         *ptr = *(typed->Data());
                         _current_time_index = other->GetTimeIndex();
                         Parameter::changed = true;
-                        Parameter::UpdateSignal(stream);
+                        Parameter::OnUpdate(stream);
                         return true;
                     }					
                 }

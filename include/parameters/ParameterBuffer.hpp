@@ -27,11 +27,16 @@ namespace Parameters
 	{
 		class IParameterBuffer
 		{
+		public:
+			virtual ~IParameterBuffer()
+			{
+
+			}
 			virtual void SetSize(int size) = 0;
 			virtual int GetSize() = 0;
 			virtual void GetTimestampRange(long long& start, long long& end) = 0;
 		};
-		template<typename T> class ParameterBuffer : public ITypedParameter<T>, IParameterBuffer
+		template<typename T> class ParameterBuffer : public ITypedParameter<T>, public IParameterBuffer
 		{
 			boost::circular_buffer<std::pair<long long, T>> _data_buffer;
 		public:
@@ -44,7 +49,10 @@ namespace Parameters
 				_data_buffer.set_capacity(10);
 				_data_buffer.push_back(std::make_pair(time_index, init));
 			}
+			virtual ~ParameterBuffer()
+			{
 
+			}
 			virtual T* Data(long long time_index = -1)
 			{
 				if (time_index == -1 && _data_buffer.size())
@@ -59,23 +67,45 @@ namespace Parameters
 				}
 				return nullptr;
 			}
+			virtual bool GetData(T& value, long long time_index = -1)
+			{
+				std::lock_guard<std::recursive_mutex> lock(_mtx);
+				if (time_index == -1 && _data_buffer.size())
+				{
+					value = _data_buffer.back().second;
+					return true;
+				}
+				for (auto& itr : _data_buffer)
+				{
+					if (itr.first == time_index)
+					{
+						//return &itr.second;
+						value = itr.second;
+						return true;
+					}
+				}
+				return false;
+			}
 			virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 			{
+				std::lock_guard<std::recursive_mutex> lock(_mtx);
 				_data_buffer.push_back(std::pair<long long, T>(time_index, data_));
 				Parameter::changed = true;
-				Parameter::UpdateSignal(stream);
+				Parameter::OnUpdate(stream);
 			}
 			virtual void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 			{
+				std::lock_guard<std::recursive_mutex> lock(_mtx);
 				_data_buffer.push_back(std::pair<long long, T>(time_index, data_));
 				Parameter::changed = true;
-				Parameter::UpdateSignal(stream);
+				Parameter::OnUpdate(stream);
 			}
 			virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 			{
+				std::lock_guard<std::recursive_mutex> lock(_mtx);
 				_data_buffer.push_back(std::pair<long long, T>(time_index, *data_));
 				Parameter::changed = true;
-				Parameter::UpdateSignal(stream);
+				Parameter::OnUpdate(stream);
 			}
 
 			virtual Loki::TypeInfo GetTypeInfo()
@@ -90,25 +120,29 @@ namespace Parameters
 					auto ptr = typedParameter->Data();
 					if (ptr)
 					{
+						std::lock_guard<std::recursive_mutex> lock(_mtx);
 						_data_buffer.push_back(std::pair<long long, T>(typedParameter->GetTimeIndex(), *ptr));
 						Parameter::changed = true;
-						Parameter::UpdateSignal(stream);
+						Parameter::OnUpdate(stream);
 					}
 				}
 				return false;
 			}
 			virtual void SetSize(int size)
 			{
+				std::lock_guard<std::recursive_mutex> lock(_mtx);
 				_data_buffer.set_capacity(size);
 			}
 			virtual int GetSize()
 			{
+				std::lock_guard<std::recursive_mutex> lock(_mtx);
 				return _data_buffer.capacity();
 			}
 			virtual void GetTimestampRange(long long& start, long long& end)
 			{
 				if (_data_buffer.size())
 				{
+					std::lock_guard<std::recursive_mutex> lock(_mtx);
 					start = _data_buffer.back().first;
 					end = _data_buffer.front().first;
 				}
@@ -117,30 +151,55 @@ namespace Parameters
 
 		template<typename T> class ParameterBufferProxy : public ParameterBuffer<T>
 		{
-			std::shared_ptr<ITypedParameter<T>> _input_parameter;
-			Signals::connection::Ptr _input_connection;
+			ITypedParameter<T>* _input_parameter;
+			Signals::connection::Ptr _input_update_connection;
+			Signals::connection::Ptr _input_delete_connection;
 		public:
-			ParameterBufferProxy(std::shared_ptr<ITypedParameter<T>> input) :
-				ParameterBuffer<T>("proxy for " + input->GetName())
+			ParameterBufferProxy(ITypedParameter<T>* input = nullptr) :
+				ParameterBuffer<T>(std::string("proxy for ") + (input ? input->GetName() : std::string("NULL"))),
+				_input_parameter(input)
 			{
-				if (_input_parameter = input)
+				if (input)
 				{
-					_input_connection = _input_parameter->RegisterNotifier(std::bind(&ParameterBufferProxy::onInputUpdate, this, std::placeholders::_1));
+					_input_update_connection = _input_parameter->RegisterNotifier(std::bind(&ParameterBufferProxy::onInputUpdate, this, std::placeholders::_1));
+					_input_delete_connection = _input_parameter->RegisterDeleteNotifier(std::bind(&ParameterBufferProxy::onInputDelete, this));
+					_input_parameter->subscribers++;
 				}
 			}
-			void setInput(std::shared_ptr<Parameter> param)
+			~ParameterBufferProxy()
 			{
-				if (_input_parameter = std::dynamic_pointer_cast<ITypedParameter<T>>(param))
+				if (_input_parameter)
+					_input_parameter->subscribers--;
+				_input_parameter = nullptr;
+				_input_update_connection.reset();
+				_input_delete_connection.reset();
+			}
+			void setInput(Parameter* param)
+			{
+				if (_input_parameter = dynamic_cast<ITypedParameter<T>*>(param))
 				{
-					_input_connection = _input_parameter->RegisterNotifier(std::bind(&ParameterBufferProxy::onInputUpdate, this, std::placeholders::_1));
+					_input_update_connection = _input_parameter->RegisterNotifier(std::bind(&ParameterBufferProxy::onInputUpdate, this, std::placeholders::_1));
+					_input_delete_connection = _input_parameter->RegisterDeleteNotifier(std::bind(&ParameterBufferProxy::onInputDelete, this));
 				}
+			}
+			void onInputDelete()
+			{
+				std::lock_guard<std::recursive_mutex> lock(_mtx);
+				_input_update_connection.reset();
+				_input_delete_connection.reset();
+				_input_parameter = nullptr;
 			}
 			void onInputUpdate(cv::cuda::Stream* stream)
 			{
-				if (auto data = _input_parameter->Data())
+				std::lock_guard<std::recursive_mutex> lock(_mtx);
+				if (_input_parameter)
 				{
-					UpdateData(data, _input_parameter->GetTimeIndex(), stream);
-				}
+					auto time = _input_parameter->GetTimeIndex();
+					if (auto data = _input_parameter->Data(time))
+					{
+						UpdateData(data, time, stream);
+					}
+				}				
 			}
 			virtual Parameter::Ptr DeepCopy() const
 			{

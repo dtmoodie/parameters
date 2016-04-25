@@ -24,12 +24,17 @@ namespace Parameters
 {
 	template<typename T> class TypedInputParameter : public ITypedParameter<T>, public InputParameter
 	{
-		typename ITypedParameter<T>::Ptr input;
+		typename ITypedParameter<T>* input;
 		std::shared_ptr<Signals::connection> inputConnection;
+		std::shared_ptr<Signals::connection> deleteConnection;
 		virtual void onInputUpdate()
 		{
-			Parameter::UpdateSignal(nullptr);
-            Parameter::changed = true;
+			Parameter::OnUpdate(nullptr);
+		}
+		virtual void onInputDelete()
+		{
+			input = nullptr;
+			Parameter::OnUpdate(nullptr);
 		}
 	public:
 		typedef std::shared_ptr<TypedInputParameter<T>> Ptr;
@@ -44,6 +49,8 @@ namespace Parameters
         ~TypedInputParameter()
         {
             //inputConnection.disconnect();
+			if (input)
+				input->subscribers--;
         }
 
 		virtual bool SetInput(const std::string& name_)
@@ -51,16 +58,21 @@ namespace Parameters
 			return false;
 		}
 
-		virtual bool SetInput(const Parameter::Ptr param)
+		virtual bool SetInput(Parameter* param)
 		{
 			if (param == nullptr)
 			{
-				input.reset();
+				if (input)
+				{
+					input->subscribers--;
+				}
+				input = nullptr;
 				inputConnection.reset();
-				Parameter::UpdateSignal(nullptr);
+				deleteConnection.reset();
+				Parameter::OnUpdate(nullptr);
 				return true;
 			}				
-			typename ITypedParameter<T>::Ptr castedParam = std::dynamic_pointer_cast<ITypedParameter<T>>(param);
+			typename ITypedParameter<T>* castedParam = dynamic_cast<ITypedParameter<T>*>(param);
             if(input)
             {
                 input->subscribers--;
@@ -70,21 +82,22 @@ namespace Parameters
 				input = castedParam;
 				input->subscribers++;
 				inputConnection = castedParam->RegisterNotifier(std::bind(&TypedInputParameter<T>::onInputUpdate, this));
-				Parameter::UpdateSignal(nullptr);
+				deleteConnection = castedParam->RegisterDeleteNotifier(std::bind(&TypedInputParameter<T>::onInputDelete, this));
+				Parameter::OnUpdate(nullptr);
                 Parameter::changed = true;
 				return true;
 			}
 			return false;
 		}
-		std::shared_ptr<Parameter> GetInput()
+		Parameter* GetInput()
 		{
 			return input;
 		}
 
-		virtual bool AcceptsInput(const Parameter::Ptr param)
+		virtual bool AcceptsInput(Parameter* param)
 		{
 			if (qualifier)
-				return qualifier(param.get());
+				return qualifier(param);
 			return Loki::TypeInfo(typeid(T)) == param->GetTypeInfo();
 		}
 
@@ -96,6 +109,14 @@ namespace Parameters
 		{
 			if (input)
 				return input->Data(time_step);
+			return nullptr;
+		}
+		virtual bool GetData(T& value, long long time_step = -1)
+		{
+			if (input)
+			{
+				return input->GetData(value, time_step);
+			}
 			return nullptr;
 		}
 		virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
@@ -131,7 +152,7 @@ namespace Parameters
 			// The input variable has been updated, update user var
 			*userVar = *input->Data();
 			Parameter::changed = true;
-			Parameter::UpdateSignal(nullptr);
+			Parameter::OnUpdate(nullptr);
 		}
 	public:
 		typedef std::shared_ptr<TypedInputParameterCopy<T>> Ptr;
@@ -215,12 +236,22 @@ namespace Parameters
 	template<typename T> class TypedInputParameterPtr : public MetaTypedParameter<T>, public InputParameter
 	{
 		T** userVar; // Pointer to the user space pointer variable of type T
-		typename ITypedParameter<T>::Ptr input;
+		typename ITypedParameter<T>* input;
 		std::shared_ptr<Signals::connection> inputConnection;
+		std::shared_ptr<Signals::connection> deleteConnection;
 		virtual void onInputUpdate()
 		{
 			// The input variable has been updated, update user var
 			*userVar = input->Data();
+			Parameter::onUpdate(nullptr);
+		}
+		virtual void onInputDelete()
+		{
+			// The input variable has been updated, update user var
+			input = nullptr;
+			inputConnection.reset();
+			deleteConnection.reset();
+			Parameter::onUpdate(nullptr);
 		}
 	public:
 		typedef std::shared_ptr<TypedInputParameterPtr<T>> Ptr;
@@ -240,14 +271,25 @@ namespace Parameters
 			return false;
 		}
 
-		virtual bool SetInput(const Parameter::Ptr param)
+		virtual bool SetInput(Parameter* param)
 		{
+			if (param == nullptr)
+			{
+				if (input)
+					--input->subscribers;
+				input = nullptr;
+				inputConnection.reset();
+				deleteConnection.reset();
+				Parameter::OnUpdate(nullptr);
+				return true;
+			}
 			typename ITypedParameter<T>::Ptr castedParam = std::dynamic_pointer_cast<ITypedParameter<T>>(param);
 			if (castedParam)
 			{
 				input = castedParam;
                 inputConnection.reset();
 				inputConnection = castedParam->RegisterNotifier(std::bind(&TypedInputParameterPtr<T>::onInputUpdate, this));
+				deleteConnection = castedParam->RegisterDeleteNotifier(std::bind(&TypedInputParameterPtr<T>::onInputDelete, this));
 				*userVar = input->Data();
 				return true;
 			}

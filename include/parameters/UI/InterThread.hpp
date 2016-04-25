@@ -98,7 +98,7 @@ namespace Parameters
                 the_queue = std::queue<Data>();
             }
         };
-        class Parameter_EXPORTS InvalidCallbacks
+        class PARAMETER_EXPORTS InvalidCallbacks
         {
         public:
             static void invalidate(void* sender);
@@ -108,7 +108,7 @@ namespace Parameters
             static std::list<void*> invalid_senders;
 			static std::mutex mtx;
         };
-		class Parameter_EXPORTS UiCallbackService
+		class PARAMETER_EXPORTS UiCallbackService
 		{
 			std::function<void(std::function<void(void)>, std::pair<void*, Loki::TypeInfo>)> user_thread_callback_service;
 			std::function<void(void)> user_thread_callback_notifier;
@@ -125,7 +125,7 @@ namespace Parameters
 
 
 		};
-		class Parameter_EXPORTS ProcessingThreadCallbackService
+		class PARAMETER_EXPORTS ProcessingThreadCallbackService
 		{
 			concurrent_queue < std::pair<std::pair<void*, Loki::TypeInfo>, std::function<void(void)>>> io_queue;
 			std::function<void(std::function<void(void)>, std::pair<void*, Loki::TypeInfo>)> user_processing_thread_callback_function;

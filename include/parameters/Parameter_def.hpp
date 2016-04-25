@@ -19,15 +19,15 @@ https://github.com/dtmoodie/parameters
 #pragma once
 #include <boost/log/trivial.hpp>
 #include <boost/log/attributes/named_scope.hpp>
-#ifdef Parameter_EXPORTS
-#undef Parameter_EXPORTS
+#ifdef PARAMETER_EXPORTS
+#undef PARAMETER_EXPORTS
 #endif
 #if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && defined parameters_EXPORTS
-#  define Parameter_EXPORTS __declspec(dllexport)
+#  define PARAMETER_EXPORTS __declspec(dllexport)
 #elif defined __GNUC__ && __GNUC__ >= 4
-#  define Parameter_EXPORTS __attribute__ ((visibility ("default")))
+#  define PARAMETER_EXPORTS __attribute__ ((visibility ("default")))
 #else
-#  define Parameter_EXPORTS
+#  define PARAMETER_EXPORTS
 #endif
 
 // These are the logging calls that are extensively used

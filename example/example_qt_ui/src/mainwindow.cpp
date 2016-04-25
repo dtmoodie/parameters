@@ -39,7 +39,7 @@ MainWindow::MainWindow(QWidget *parent) :
 		testRefVec.push_back(cv::Point2f(8, 1));
 		testRefVec.push_back(cv::Point2f(9, 1));
 		testRefVec.push_back(cv::Point2f(10, 1));
-		param->UpdateSignal(nullptr);
+		param->OnUpdate(nullptr);
 		parameters.push_back(param);
 	}
 	{
@@ -53,7 +53,7 @@ MainWindow::MainWindow(QWidget *parent) :
 		testRefScalar.push_back(cv::Scalar(6));
 		testRefScalar.push_back(cv::Scalar::all(7));
 		testRefScalar.push_back(cv::Scalar(8));
-		param->UpdateSignal(nullptr);
+		param->OnUpdate(nullptr);
 		parameters.push_back(param);
 	}
 	{
@@ -75,7 +75,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	}
 	for (int i = 0; i < parameters.size(); ++i)
 	{
-		auto proxy = Parameters::UI::qt::WidgetFactory::Createhandler(parameters[i]);
+		auto proxy = Parameters::UI::qt::WidgetFactory::Createhandler(parameters[i].get());
 		ui->widgetLayout->addWidget(proxy->GetParameterWidget(this));
 		proxies.push_back(proxy);
 	}

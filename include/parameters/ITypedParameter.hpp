@@ -28,7 +28,7 @@ namespace cv
 }
 namespace Parameters
 {
-	template<typename T> class ITypedParameter : public Parameter
+	template<typename T> class PARAMETER_EXPORTS ITypedParameter : public Parameter
 	{
 		
 	public:
@@ -36,8 +36,13 @@ namespace Parameters
 		
 		ITypedParameter(const std::string& name, const ParameterType& type = Parameter::Control, const std::string& tooltip = "") :
 			Parameter(name, type, tooltip) {}
+		virtual ~ITypedParameter()
+		{
+
+		}
 
 		virtual T* Data(long long time_index = -1) = 0;
+		virtual bool GetData(T& value, long long time_index = -1) = 0;
 		virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr) = 0;
 		virtual void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr) = 0;
 		virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr) = 0;
@@ -53,7 +58,7 @@ namespace Parameters
 			{
 				auto ptr = typedParameter->Data();
 				*Data() = *ptr;
-				UpdateSignal(stream);
+				OnUpdate(stream);
 			}
 			return false;
 		}

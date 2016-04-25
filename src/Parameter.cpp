@@ -23,6 +23,10 @@ Parameter::Parameter(const std::string& name_, const ParameterType& type_, const
 name(name_), type(type_), tooltip(tooltip_), changed(false), subscribers(0), _current_time_index(-1)
 {
 }
+Parameter::~Parameter()
+{
+	delete_signal(this);
+}
 const std::string& Parameter::GetName() const
 {
 	return name;
@@ -61,9 +65,13 @@ Parameter* Parameter::SetTreeName(const std::string& treeName_)
 }
 std::shared_ptr<Signals::connection> Parameter::RegisterNotifier(std::function<void(cv::cuda::Stream*)> f)
 {
-	return UpdateSignal.connect(f);
+	return update_signal.connect(f);
 }
-bool Parameter::Update(const Parameter::Ptr other)
+std::shared_ptr<Signals::connection> Parameter::RegisterDeleteNotifier(std::function<void(Parameter*)> f)
+{
+	return delete_signal.connect(f);
+}
+bool Parameter::Update(Parameter* other)
 {
 	return false;
 }
@@ -74,4 +82,13 @@ long long Parameter::GetTimeIndex() const
 void Parameter::SetTimeIndex(long long index)
 {
 	_current_time_index = index;
+}
+void Parameter::OnUpdate(cv::cuda::Stream* stream)
+{
+	changed = true;
+	update_signal(stream);
+}
+std::recursive_mutex& Parameter::mtx()
+{
+	return _mtx;
 }

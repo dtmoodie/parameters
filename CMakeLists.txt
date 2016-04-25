@@ -223,20 +223,29 @@ TARGET_LINK_LIBRARIES(parameters
 )
 LIST(APPEND Parameters_LIBRARIES parameters)
 
-add_executable(test_parameter "test/parameter_test.cpp")
-TARGET_LINK_LIBRARIES(test_parameter parameters ${Parameters_LIBRARIES})
-ADD_DEPENDENCIES(test_parameter parameters)
-set_target_properties(test_parameter PROPERTIES FOLDER Tests)
+file(GLOB_RECURSE test_srcs "test/*.cpp")
+include(CTest)
+enable_testing()
+foreach(fn ${test_srcs})
+  get_filename_component(name ${fn} NAME_WE)
+  add_executable(${name} "${fn}")
+  TARGET_LINK_LIBRARIES(${name} parameters ${Parameters_LIBRARIES})
+  ADD_DEPENDENCIES(${name} parameters)
+  set_target_properties(${name} PROPERTIES FOLDER Tests/parameters)
+  add_test(${name} ${name})
+endforeach()
+
+
 
 IF(${Qt5_FOUND})
-	FILE(GLOB qt_src "test/qt_policy_test/src/*.cpp")
-	FILE(GLOB qt_hdr "test/qt_policy_test/include/*.h")
-	FILE(GLOB forms "test/qt_policy_test/ui/*.ui")
+	FILE(GLOB qt_src "example/example_qt_ui/src/*.cpp")
+	FILE(GLOB qt_hdr "example/example_qt_ui/include/*.h")
+	FILE(GLOB forms "example/example_qt_ui/ui/*.ui")
 	QT5_WRAP_CPP(MOC_qt ${qt_hdr})
 	QT5_WRAP_UI(UIS ${forms})
-	INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/test/qt_policy_test/include")
+	INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/example/example_qt_ui/include")
 	add_executable(test_param_qt ${MOC_qt} ${UIS} ${qt_src} ${qt_hdr})
-	set_target_properties(test_param_qt PROPERTIES FOLDER Tests)
+	set_target_properties(test_param_qt PROPERTIES FOLDER examples)
 	TARGET_LINK_LIBRARIES(test_param_qt 
 		Qt5::Core
 		Qt5::Gui
@@ -245,14 +254,7 @@ IF(${Qt5_FOUND})
 		parameters
 	)
 
-	TARGET_LINK_LIBRARIES(test_parameter 
-		Qt5::Core
-		Qt5::Gui
-		Qt5::Widgets
-		opencv_core
-		${Boost_LIBRARIES}
-		parameters
-	)
+
 add_dependencies(test_param_qt parameters)
 ENDIF()
 LIST(REMOVE_DUPLICATES Parameters_LIB_DIRS_RELEASE)

@@ -11,12 +11,16 @@ void ParameterProxyBufferFactory::RegisterFunction(Loki::TypeInfo type, const cr
 {
 	_registered_buffer_factories[type] = func;
 }
-std::shared_ptr<Parameter>  ParameterProxyBufferFactory::CreateProxy(std::shared_ptr<Parameter> param)
+Parameter*  ParameterProxyBufferFactory::CreateProxy(Parameter* param)
 {
 	auto factory_func = _registered_buffer_factories.find(param->GetTypeInfo());
 	if (factory_func != _registered_buffer_factories.end())
 	{
 		return factory_func->second(param);
 	}
-	return std::shared_ptr<Parameter>();
+	return nullptr;
+}
+std::shared_ptr<Parameter>  ParameterProxyBufferFactory::CreateProxy(std::shared_ptr<Parameter> param)
+{
+	return std::shared_ptr<Parameter>(CreateProxy(param.get()));
 }

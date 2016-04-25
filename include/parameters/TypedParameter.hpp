@@ -20,7 +20,7 @@ https://github.com/dtmoodie/parameters
 #include "MetaParameter.hpp"
 namespace Parameters
 {
-	template<typename T> class TypedParameter : public MetaTypedParameter < T >
+	template<typename T> class PARAMETER_EXPORTS TypedParameter : public MetaTypedParameter < T >
 	{
 	protected:
 		T data;
@@ -42,26 +42,36 @@ namespace Parameters
 				LOGIF_NEQ(time_index, _current_time_index, trace);
 			return &data;
 		}
+		virtual bool GetData(T& value, long long time_index = -1)
+		{
+			T* ptr = Data(time_index);
+			if (ptr)
+			{
+				value = *ptr;
+				return true;
+			}
+			return false;
+		}
 		virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
 			_current_time_index = time_index;
 			data = data_;
 			Parameter::changed = true;
-			Parameter::UpdateSignal(stream);
+			Parameter::OnUpdate(stream);
 		}
 		virtual void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
 			_current_time_index = time_index;
 			data = data_;
 			Parameter::changed = true;
-			ITypedParameter<T>::UpdateSignal(stream);
+			ITypedParameter<T>::OnUpdate(stream);
 		}
 		virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
 			_current_time_index = time_index;
 			data = *data_;
 			Parameter::changed = true;
-			Parameter::UpdateSignal(stream);
+			Parameter::OnUpdate(stream);
 		}
         virtual Parameter::Ptr DeepCopy() const
         {
@@ -74,7 +84,7 @@ namespace Parameters
             {
                 data = *(typed->Data());
 				Parameter::changed = true;
-				Parameter::UpdateSignal(stream);
+				Parameter::OnUpdate(stream);
                 return true;
             }
             return false;
@@ -96,22 +106,41 @@ namespace Parameters
 
 		TypedParameterPtr(const std::string& name, 
 			T* ptr_ = nullptr,
-			const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "", bool ownsData_ = false) :
+			const Parameter::ParameterType& type = Parameter::ParameterType::Control, 
+			const std::string& tooltip = "", bool ownsData_ = false) :
 			ptr(ptr_),
 			MetaTypedParameter<T>(name, type, tooltip), ownsData(ownsData_)
 		{}
+		TypedParameterPtr() :
+			MetaTypedParameter<T>("", Parameter::ParameterType::Control, ""), 
+			ptr(nullptr),
+			ownsData(false)
+		{
 
+		}
 
 		virtual T* Data(long long time_index)
 		{
 			LOGIF_NEQ(time_index, _current_time_index, trace);
 			return ptr;
 		}
+		virtual bool GetData(T& value, long long time_index = -1)
+		{
+			std::lock_guard<std::recursive_mutex> lock(_mtx);
+			LOGIF_NEQ(time_index, _current_time_index, trace);
+			if (ptr)
+			{
+				value = *ptr;
+				return true;
+			}
+			return false;
+		}
 		virtual void UpdateData(T& data, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
 			ptr = &data;
+			Parameter::_current_time_index = time_index;
 			Parameter::changed = true;
-			Parameter::UpdateSignal(stream);
+			Parameter::OnUpdate(stream);
 		}
 		virtual void UpdateData(const T& data, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
@@ -120,7 +149,7 @@ namespace Parameters
 				*ptr = data;
 				_current_time_index = time_index;
 				Parameter::changed = true;
-				Parameter::UpdateSignal(stream);
+				Parameter::OnUpdate(stream);
 			}				
 		}
 		virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
@@ -128,7 +157,7 @@ namespace Parameters
 			ptr = data_;
 			_current_time_index = time_index;
 			Parameter::changed = true;
-			Parameter::UpdateSignal(stream);
+			Parameter::OnUpdate(stream);
 		}
 		virtual bool Update(Parameter::Ptr other, cv::cuda::Stream* stream = nullptr)
         {
@@ -138,7 +167,7 @@ namespace Parameters
                 *ptr = *(typed->Data());
 				_current_time_index = other->GetTimeIndex();
 				Parameter::changed = true;
-				Parameter::UpdateSignal(stream);
+				Parameter::OnUpdate(stream);
                 return true;
             }
             return false;

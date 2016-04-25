@@ -67,12 +67,12 @@ namespace Parameters
 			// *****************************************************************************
 			//								WidgetFactory
 			// *****************************************************************************
-			class Parameter_EXPORTS WidgetFactory
+			class PARAMETER_EXPORTS WidgetFactory
 			{
 			public:
-				typedef std::function<std::shared_ptr<IParameterProxy>(std::shared_ptr<Parameters::Parameter>)> HandlerCreator;
+				typedef std::function<std::shared_ptr<IParameterProxy>(Parameter*)> HandlerCreator;
                 static void RegisterCreator(Loki::TypeInfo type, HandlerCreator f);
-				static std::shared_ptr<IParameterProxy> Createhandler(std::shared_ptr<Parameters::Parameter> param);
+				static std::shared_ptr<IParameterProxy> Createhandler(Parameters::Parameter* param);
 
 			private:
 				static std::map<Loki::TypeInfo, HandlerCreator>& registry();
@@ -80,7 +80,7 @@ namespace Parameters
 			// *****************************************************************************
 			//								IParameterProxy
 			// *****************************************************************************
-			class Parameter_EXPORTS IParameterProxy
+			class PARAMETER_EXPORTS IParameterProxy
 			{
 			protected:
 			public:
@@ -94,7 +94,7 @@ namespace Parameters
 			// *****************************************************************************
 			//								SignalProxy
 			// *****************************************************************************
-			class Parameter_EXPORTS SignalProxy : public QObject
+			class PARAMETER_EXPORTS SignalProxy : public QObject
 			{
 				Q_OBJECT
 				IHandler* handler;
@@ -113,22 +113,27 @@ namespace Parameters
 			// *****************************************************************************
 			//								DefaultProxy
 			// *****************************************************************************
-			class Parameter_EXPORTS DefaultProxy: public IParameterProxy
+			class PARAMETER_EXPORTS DefaultProxy: public IParameterProxy
 			{
-				std::shared_ptr<Parameters::Parameter> parameter;
+				Parameters::Parameter* parameter;
+				Signals::connection::Ptr delete_connection;
 				void onUiUpdate()
 				{			}
 				void onParamUpdate()
 				{				}
+				void onParamDelete()
+				{
+					parameter = nullptr;
+				}
 			public:
-				DefaultProxy(std::shared_ptr<Parameters::Parameter> param);
+				DefaultProxy(Parameters::Parameter* param);
 				virtual bool CheckParameter(Parameter* param);
 				QWidget* GetParameterWidget(QWidget* parent);
 			};
 			// *****************************************************************************
 			//								IHandler
 			// *****************************************************************************
-			class Parameter_EXPORTS IHandler
+			class PARAMETER_EXPORTS IHandler
 			{
             private:
                 std::recursive_mutex* paramMtx;
@@ -145,7 +150,7 @@ namespace Parameters
                 virtual void OnUiUpdate(QObject* sender, QString val);
                 virtual void OnUiUpdate(QObject* sender, int row, int col);
 				
-                virtual std::function<void(void)>& GetUpdateSignal();
+                virtual std::function<void(void)>& GetOnUpdate();
                 virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent);
                 virtual void SetParamMtx(std::recursive_mutex* mtx);
                 virtual std::recursive_mutex* GetParamMtx();
@@ -1026,8 +1031,9 @@ namespace Parameters
 			template<typename T> class ParameterProxy : public IParameterProxy
 			{
 				Handler<T> paramHandler;
-				std::shared_ptr<Parameters::ITypedParameter<T>> parameter;
+				Parameters::ITypedParameter<T>* parameter;
 				std::shared_ptr<Signals::connection> connection;
+				std::shared_ptr<Signals::connection> delete_connection;
 			public:
                 ~ParameterProxy()
                 {
@@ -1037,7 +1043,7 @@ namespace Parameters
 				{
 					//TODO Notify parameter of update on the processing thread.
 					parameter->changed = true;
-					parameter->UpdateSignal(nullptr);
+					parameter->OnUpdate(nullptr);
 				}
 				void onParamUpdate(cv::cuda::Stream* stream)
 				{
@@ -1052,28 +1058,33 @@ namespace Parameters
 						}
 					}
 				}
-			public:
-				ParameterProxy(std::shared_ptr<Parameters::Parameter> param)
+				void onParamDelete()
 				{
-					auto typedParam = std::dynamic_pointer_cast<Parameters::ITypedParameter<T>>(param);
+					parameter = nullptr;
+				}
+			public:
+				ParameterProxy(Parameters::Parameter* param)
+				{
+					auto typedParam = dynamic_cast<Parameters::ITypedParameter<T>*>(param);
 					if (typedParam)
 					{
 						parameter = typedParam;
-						paramHandler.SetParamMtx(&parameter->mtx);
+						paramHandler.SetParamMtx(&parameter->mtx());
 						paramHandler.SetData(parameter->Data());
-						paramHandler.IHandler::GetUpdateSignal() = std::bind(&ParameterProxy<T>::onUiUpdate, this);
-                        connection = parameter->UpdateSignal.connect(std::bind(&ParameterProxy<T>::onParamUpdate, this, std::placeholders::_1), Signals::GUI, true);
+						paramHandler.IHandler::GetOnUpdate() = std::bind(&ParameterProxy<T>::onUiUpdate, this);
+                        connection = parameter->update_signal.connect(std::bind(&ParameterProxy<T>::onParamUpdate, this, std::placeholders::_1), Signals::GUI, true);
+						delete_connection = parameter->delete_signal.connect(std::bind(&ParameterProxy<T>::onParamDelete, this));
 					}
 				}
 				virtual bool CheckParameter(Parameter* param)
 				{
-					return param == parameter.get();
+					return param == parameter;
 				}
 				QWidget* GetParameterWidget(QWidget* parent)
 				{
 					QWidget* output = new QWidget(parent);
 					auto widgets = paramHandler.GetUiWidgets(output);
-                    SetMinMax<T>(paramHandler, parameter.get());
+                    SetMinMax<T>(paramHandler, parameter);
 					QGridLayout* layout = new QGridLayout(output);
 					if (parameter->GetTypeInfo() == Loki::TypeInfo(typeid(std::function<void(void)>)))
 					{
@@ -1108,7 +1119,7 @@ namespace Parameters
 				{
 					WidgetFactory::RegisterCreator(Loki::TypeInfo(typeid(T)), std::bind(&Factory<T>::Create, std::placeholders::_1));
 				}
-				static std::shared_ptr<IParameterProxy> Create(std::shared_ptr<Parameters::Parameter> param)
+				static std::shared_ptr<IParameterProxy> Create(Parameters::Parameter* param)
 				{
 					return std::shared_ptr<IParameterProxy>(new ParameterProxy<T>(param));
 				}

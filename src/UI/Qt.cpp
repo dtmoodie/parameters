@@ -97,7 +97,7 @@ void WidgetFactory::RegisterCreator(Loki::TypeInfo type, HandlerCreator f)
 	WidgetFactory::registry()[type] = f;
 }
 
-std::shared_ptr<IParameterProxy> WidgetFactory::Createhandler(std::shared_ptr<Parameters::Parameter> param)
+std::shared_ptr<IParameterProxy> WidgetFactory::Createhandler(Parameters::Parameter* param)
 {
 	std::string typeName = param->GetTypeInfo().name();
 	std::string treeName = param->GetTreeName();
@@ -112,16 +112,15 @@ std::shared_ptr<IParameterProxy> WidgetFactory::Createhandler(std::shared_ptr<Pa
 	return itr->second(param);
 }
 
-DefaultProxy::DefaultProxy(std::shared_ptr<Parameters::Parameter> param)
+DefaultProxy::DefaultProxy(Parameters::Parameter* param)
 {
-	
 	parameter = param;
+	delete_connection = param->RegisterDeleteNotifier(std::bind(&DefaultProxy::onParamDelete, this));
 }
 
 bool DefaultProxy::CheckParameter(Parameters::Parameter* param)
-{
-	
-	return param == parameter.get();
+{	
+	return param == parameter;
 }
 QWidget* DefaultProxy::GetParameterWidget(QWidget* parent)
 {
@@ -143,7 +142,7 @@ void IHandler::OnUiUpdate(QObject* sender, bool val) {}
 void IHandler::OnUiUpdate(QObject* sender, QString val) {}
 void IHandler::OnUiUpdate(QObject* sender, int row, int col) {}
 
-std::function<void(void)>& IHandler::GetUpdateSignal()
+std::function<void(void)>& IHandler::GetOnUpdate()
 {
 
     return onUpdate;

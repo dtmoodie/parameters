@@ -47,7 +47,7 @@ namespace Parameters
     {
         namespace Text
         {
-            class Parameter_EXPORTS InterpreterRegistry
+            class PARAMETER_EXPORTS InterpreterRegistry
             {
             public:
                 typedef std::function<void(::std::stringstream*, Parameters::Parameter*)> SerializerFunction;
@@ -62,17 +62,17 @@ namespace Parameters
                 // Mapping from Loki::typeinfo to file writing functors
 				static std::map<Loki::TypeInfo, InterpreterSet>& registry();
 				static std::map<std::string, FactoryFunction>& factory();
-				friend Parameter_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::string* ss);
-				friend Parameter_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::stringstream* ss);
-				friend Parameter_EXPORTS void DeSerialize(::std::string* ss, Parameters::Parameter* param);
-				friend Parameter_EXPORTS void DeSerialize(::std::stringstream* ss, Parameters::Parameter* param);
-				friend Parameter_EXPORTS void Serialize(::std::stringstream* ss, Parameters::Parameter* param);
+				friend PARAMETER_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::string* ss);
+				friend PARAMETER_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::stringstream* ss);
+				friend PARAMETER_EXPORTS void DeSerialize(::std::string* ss, Parameters::Parameter* param);
+				friend PARAMETER_EXPORTS void DeSerialize(::std::stringstream* ss, Parameters::Parameter* param);
+				friend PARAMETER_EXPORTS void Serialize(::std::stringstream* ss, Parameters::Parameter* param);
             };
-            Parameter_EXPORTS void Serialize(::std::stringstream* ss, Parameters::Parameter* param);
-            Parameter_EXPORTS void DeSerialize(::std::stringstream* ss, Parameters::Parameter* param);
-            Parameter_EXPORTS void DeSerialize(::std::string* ss, Parameters::Parameter* param);
-			Parameter_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::stringstream* ss);
-			Parameter_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::string* ss);
+            PARAMETER_EXPORTS void Serialize(::std::stringstream* ss, Parameters::Parameter* param);
+            PARAMETER_EXPORTS void DeSerialize(::std::stringstream* ss, Parameters::Parameter* param);
+            PARAMETER_EXPORTS void DeSerialize(::std::string* ss, Parameters::Parameter* param);
+			PARAMETER_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::stringstream* ss);
+			PARAMETER_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::string* ss);
 
             template<typename T, typename Enable = void> struct Serializer
             {
@@ -158,13 +158,13 @@ namespace Parameters
                     return false;
                 }
             };
-            template<> struct Parameter_EXPORTS Serializer<EnumParameter, void>
+            template<> struct PARAMETER_EXPORTS Serializer<EnumParameter, void>
             {
                 static void Serialize(::std::stringstream* ss, EnumParameter* param);
                 static bool DeSerialize(::std::stringstream* ss, EnumParameter* param);
                 static bool DeSerialize(::std::string* ss, EnumParameter* param);
             };
-            template<> struct Parameter_EXPORTS Serializer<::cv::cuda::GpuMat, void>
+            template<> struct PARAMETER_EXPORTS Serializer<::cv::cuda::GpuMat, void>
             {
                 static void Serialize(::std::stringstream* ss, ::cv::cuda::GpuMat* param);
                 static bool DeSerialize(::std::stringstream* ss, ::cv::cuda::GpuMat* param);
@@ -230,10 +230,10 @@ namespace Parameters
 						if(Serializer<T>::DeSerialize(ss, typedParam->Data()))
                         {
                             typedParam->changed = true;
-                            typedParam->UpdateSignal(nullptr);
+                            typedParam->OnUpdate(nullptr);
                         }
 						param->changed = true;
-						param->UpdateSignal(nullptr);
+						param->OnUpdate(nullptr);
                     }
 					
                 }
@@ -246,10 +246,10 @@ namespace Parameters
 						if(Serializer<T>::DeSerialize(ss, typedParam->Data()))
                         {
                             typedParam->changed = true;
-                            typedParam->UpdateSignal(nullptr);
+                            typedParam->OnUpdate(nullptr);
                         }
 						param->changed = true;
-						param->UpdateSignal(nullptr);
+						param->OnUpdate(nullptr);
                     }
                 }
             };

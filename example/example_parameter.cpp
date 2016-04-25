@@ -85,7 +85,7 @@ int main()
 	{
 		std::shared_ptr<Parameters::TypedParameter<int>> param(new Parameters::TypedParameter<int>("test"));
 		std::shared_ptr<Parameters::TypedInputParameter<int>> input_param(new Parameters::TypedInputParameter<int>("test input"));
-		auto proxy = Parameters::Buffer::ParameterProxyBufferFactory::Instance()->CreateProxy(param);
+		auto proxy = Parameters::Buffer::ParameterProxyBufferFactory::Instance()->CreateProxy(param.get());
 		if (proxy)
 		{
 			input_param->SetInput(proxy);

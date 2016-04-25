@@ -32,7 +32,7 @@ namespace Parameters
 	{
 		namespace Double
 		{
-			class Parameter_EXPORTS IConverter
+			class PARAMETER_EXPORTS IConverter
 			{
 			public:
                 virtual ~IConverter();
@@ -140,7 +140,7 @@ namespace Parameters
 				}
 			};
 
-			class Parameter_EXPORTS Factory
+			class PARAMETER_EXPORTS Factory
 			{
 				
 			public:
