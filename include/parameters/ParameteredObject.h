@@ -2,7 +2,7 @@
 #include "Parameters/Parameter_def.hpp"
 
 #include <Signals/signaler.h>
-
+#include <signals/connection.h>
 #include <memory>
 #include <list>
 #include <vector>
@@ -17,7 +17,6 @@ namespace Parameters
 }
 namespace Signals
 {
-	class connection;
 	template<typename T> class default_combiner;
 	template<class T, template<class> class C> class typed_signal_base;
 	class signal_manager;

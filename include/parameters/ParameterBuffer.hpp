@@ -152,8 +152,8 @@ namespace Parameters
 		template<typename T> class ParameterBufferProxy : public ParameterBuffer<T>
 		{
 			ITypedParameter<T>* _input_parameter;
-			Signals::connection::Ptr _input_update_connection;
-			Signals::connection::Ptr _input_delete_connection;
+			std::shared_ptr<Signals::connection> _input_update_connection;
+			std::shared_ptr<Signals::connection> _input_delete_connection;
 		public:
 			ParameterBufferProxy(ITypedParameter<T>* input = nullptr) :
 				ParameterBuffer<T>(std::string("proxy for ") + (input ? input->GetName() : std::string("NULL"))),

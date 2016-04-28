@@ -116,7 +116,7 @@ namespace Parameters
 			class PARAMETER_EXPORTS DefaultProxy: public IParameterProxy
 			{
 				Parameters::Parameter* parameter;
-				Signals::connection::Ptr delete_connection;
+				std::shared_ptr<Signals::connection> delete_connection;
 				void onUiUpdate()
 				{			}
 				void onParamUpdate()
