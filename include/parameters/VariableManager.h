@@ -10,7 +10,7 @@ namespace Parameters
     class PARAMETER_EXPORTS VariableManager: public IVariableManager
     {
         std::map<std::string, Parameters::Parameter*> _parameters;
-		std::vector<Signals::connection::Ptr> _delete_connections;
+		std::vector<std::shared_ptr<Signals::connection>> _delete_connections;
     public:
         virtual void AddParameter(Parameters::Parameter* param);
 		virtual void RemoveParameter(Parameters::Parameter* param);

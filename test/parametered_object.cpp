@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(explicit_parameters)
 		BOOST_TEST_CHECKPOINT("parameter delete signals");
 
 		bool delete_signal_sent = false;
-		Signals::connection::Ptr connection;
+		std::shared_ptr<Signals::connection> connection;
 		{
 			TypedParameterPtr<int> test_delete_obj("test_delete_obj");
 			connection = test_delete_obj.RegisterDeleteNotifier([&delete_signal_sent](Parameter*)
