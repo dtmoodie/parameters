@@ -1061,6 +1061,8 @@ namespace Parameters
 				void onParamDelete()
 				{
 					parameter = nullptr;
+					connection.reset();
+					delete_connection.reset();
 				}
 			public:
 				ParameterProxy(Parameters::Parameter* param)

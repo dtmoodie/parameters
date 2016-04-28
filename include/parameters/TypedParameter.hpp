@@ -36,6 +36,10 @@ namespace Parameters
 			const std::string& tooltip = "") :
 			MetaTypedParameter<T>(name, type, tooltip), data(init) 
 		{}
+		virtual ~TypedParameter()
+		{
+
+		}
 		virtual T* Data(long long time_index = -1)
 		{
 			if(time_index != -1)
@@ -77,14 +81,14 @@ namespace Parameters
         {
             return Parameter::Ptr(new TypedParameter<T>(Parameter::GetName(), data));
         }
-		virtual bool Update(Parameter::Ptr other, cv::cuda::Stream* stream = nullptr)
+		virtual bool Update(Parameter* other)
         {
-            auto typed = dynamic_cast<ITypedParameter<T>*>(other.get());
+            auto typed = dynamic_cast<ITypedParameter<T>*>(other);
             if (typed)
             {
                 data = *(typed->Data());
 				Parameter::changed = true;
-				Parameter::OnUpdate(stream);
+				Parameter::OnUpdate(nullptr);
                 return true;
             }
             return false;
@@ -159,15 +163,15 @@ namespace Parameters
 			Parameter::changed = true;
 			Parameter::OnUpdate(stream);
 		}
-		virtual bool Update(Parameter::Ptr other, cv::cuda::Stream* stream = nullptr)
+		virtual bool Update(Parameter* other)
         {
-            auto typed = dynamic_cast<ITypedParameter<T>*>(other.get());
+            auto typed = dynamic_cast<ITypedParameter<T>*>(other);
             if(typed)
             {
                 *ptr = *(typed->Data());
 				_current_time_index = other->GetTimeIndex();
 				Parameter::changed = true;
-				Parameter::OnUpdate(stream);
+				Parameter::OnUpdate(nullptr);
                 return true;
             }
             return false;

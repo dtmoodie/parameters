@@ -34,5 +34,9 @@ namespace Parameters
 	public:
 		MetaTypedParameter(const std::string& name, const Parameter::ParameterType& type = Parameter::Control, const std::string& tooltip = "") :
 			ITypedParameter<T>(name, type, tooltip){}
+		virtual ~MetaTypedParameter()
+		{
+
+		}
 	};
 }

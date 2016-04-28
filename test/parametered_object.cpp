@@ -149,5 +149,19 @@ BOOST_AUTO_TEST_CASE(explicit_parameters)
 		}
 		BOOST_CHECK(delete_signal_sent);
 	}
+	{
+		BOOST_TEST_CHECKPOINT("input update on object delete");
+		TypedInputParameter<int> test_param("input");
+		{
+			test_paramed_object obj;
+			test_param.SetInput(&obj.test2_param);
+			BOOST_CHECK(test_param.changed == true);
+			test_param.changed = false;
+		}
+		BOOST_CHECK(test_param.changed == true);
+		BOOST_CHECK(test_param.GetInput() == nullptr);
+		BOOST_CHECK(test_param.Data() == nullptr);
+	}
+
 }
 BOOST_AUTO_TEST_SUITE_END()

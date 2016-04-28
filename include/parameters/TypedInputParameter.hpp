@@ -33,6 +33,7 @@ namespace Parameters
 		}
 		virtual void onInputDelete()
 		{
+			std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
 			input = nullptr;
 			Parameter::OnUpdate(nullptr);
 		}
@@ -44,11 +45,11 @@ namespace Parameters
 			const std::function<bool(Parameter*)>& qualifier_ = std::function<bool(Parameter*)>()) :
 			ITypedParameter<T>(name, Parameter::ParameterType::Input, tooltip)
 		{ 
-				qualifier = qualifier_; 
+			qualifier = qualifier_;
+			input = nullptr;
 		}
         ~TypedInputParameter()
         {
-            //inputConnection.disconnect();
 			if (input)
 				input->subscribers--;
         }
@@ -60,6 +61,7 @@ namespace Parameters
 
 		virtual bool SetInput(Parameter* param)
 		{
+			std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
 			if (param == nullptr)
 			{
 				if (input)
@@ -84,7 +86,6 @@ namespace Parameters
 				inputConnection = castedParam->RegisterNotifier(std::bind(&TypedInputParameter<T>::onInputUpdate, this));
 				deleteConnection = castedParam->RegisterDeleteNotifier(std::bind(&TypedInputParameter<T>::onInputDelete, this));
 				Parameter::OnUpdate(nullptr);
-                Parameter::changed = true;
 				return true;
 			}
 			return false;
@@ -107,12 +108,14 @@ namespace Parameters
 		}
 		virtual T* Data(long long time_step = -1)
 		{
+			std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
 			if (input)
 				return input->Data(time_step);
 			return nullptr;
 		}
 		virtual bool GetData(T& value, long long time_step = -1)
 		{
+			std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
 			if (input)
 			{
 				return input->GetData(value, time_step);
@@ -144,14 +147,18 @@ namespace Parameters
 	template<typename T> class TypedInputParameterCopy : public MetaTypedParameter<T>, public InputParameter
 	{
 		T* userVar; // Pointer to the user space variable of type T
-		typename ITypedParameter<T>::Ptr input;
+		ITypedParameter<T>* input;
 		std::shared_ptr<Signals::connection> inputConnection;
+		std::shared_ptr<Signals::connection> deleteConnection;
 
 		virtual void onInputUpdate()
 		{
-			// The input variable has been updated, update user var
 			*userVar = *input->Data();
-			Parameter::changed = true;
+			Parameter::OnUpdate(nullptr);
+		}
+		virtual void onInputDelete()
+		{
+			input = nullptr;
 			Parameter::OnUpdate(nullptr);
 		}
 	public:
@@ -162,7 +169,10 @@ namespace Parameters
 		}
 		TypedInputParameterCopy(const std::string& name, T* userVar_,
 			const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "") :
-			MetaTypedParameter<T>(name, type, tooltip), userVar(userVar_) {}
+			MetaTypedParameter<T>(name, type, tooltip), userVar(userVar_) 
+		{
+			input = nullptr;
+		}
         ~TypedInputParameterCopy()
         {
             //inputConnection.disconnect();
@@ -172,30 +182,31 @@ namespace Parameters
 			return false;
 		}
 
-		virtual bool SetInput(const Parameter::Ptr param)
+		virtual bool SetInput(Parameter* param)
 		{
             if(input)
                 input->subscribers--;
-			typename ITypedParameter<T>::Ptr castedParam = std::dynamic_pointer_cast<ITypedParameter<T>>(param);
+			typename ITypedParameter<T>* castedParam = dynamic_cast<ITypedParameter<T>*>(param);
 			if (castedParam)
 			{
 				input = castedParam;
 				param->subscribers++;
 				inputConnection = castedParam->RegisterNotifier(std::bind(&TypedInputParameterCopy<T>::onInputUpdate, this));
+				deleteConnection = castedParam->RegisterDeleteNotifier(std::bind(&TypedInputParameterCopy<T>::onInputDelete, this));
 				*userVar = *input->Data();
 				return true;
 			}
 			return false;
 		}
-		std::shared_ptr<Parameter> GetInput()
+		Parameter* GetInput()
 		{
 			return input;
 		}
 
-		virtual bool AcceptsInput(const Parameter::Ptr param)
+		virtual bool AcceptsInput(Parameter* param)
 		{
 			if (qualifier)
-				return qualifier(param.get());
+				return qualifier(param);
 			return Loki::TypeInfo(typeid(T)) == param->GetTypeInfo();
 		}
 
@@ -206,6 +217,15 @@ namespace Parameters
 		virtual T* Data(long long time_step = -1)
 		{
 			return userVar;
+		}
+		virtual bool GetData(T& value, long long time_step = -1)
+		{
+			if (userVar)
+			{
+				value = *userVar;
+				return true;
+			}
+			return false;				
 		}
 		virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
@@ -261,7 +281,10 @@ namespace Parameters
 		}
 		TypedInputParameterPtr(const std::string& name, T** userVar_,
 			const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "") :
-			MetaTypedParameter<T>(name, type, tooltip), userVar(userVar_){}
+			MetaTypedParameter<T>(name, type, tooltip), userVar(userVar_)
+		{
+			input = nullptr;
+		}
         ~TypedInputParameterPtr()
         {
             inputConnection.reset();
