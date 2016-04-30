@@ -28,12 +28,6 @@ ParameteredObject::~ParameteredObject()
     _parameters.clear();
 }
 
-void ParameteredObject::setup_signals(Signals::signal_manager* manager)
-{
-	_sig_parameter_updated = manager->get_signal<void(ParameteredObject*)>("parameter_updated", this, "Emitted when a parameter is updated from ui");
-	_sig_parameter_added = manager->get_signal<void(ParameteredObject*)>("parameter_added", this, "Emitted when a new parameter is added");
-}
-
 void ParameteredObject::SetupVariableManager(IVariableManager* manager)
 {
     _variable_manager = manager;
@@ -79,7 +73,7 @@ Parameter* ParameteredObject::addParameter(Parameter* param)
 		LOG(debug) << "Parameter with name " << param->GetName() << " already exists but not as an explicitly defined parameter";
 		return param;
 	}
-	DOIF_LOG_FAIL(_sig_parameter_added, (*_sig_parameter_updated)(this), warning);
+	DOIF_LOG_FAIL(_sig_parameter_added, (*_sig_parameter_updated)(this), debug);
 	DOIF_LOG_FAIL(_variable_manager, _variable_manager->AddParameter(param), debug);
 	
 	_callback_connections.push_back(param->RegisterNotifier(std::bind(&ParameteredObject::onUpdate, this, param, std::placeholders::_1)));

@@ -17,8 +17,7 @@ namespace Parameters
 }
 namespace Signals
 {
-	template<typename T> class default_combiner;
-	template<class T, template<class> class C> class typed_signal_base;
+	template<class T> class typed_signal_base;
 	class signal_manager;
 }
 namespace cv
@@ -38,7 +37,7 @@ namespace Parameters
     public:
         ParameteredObject();
         ~ParameteredObject();
-		virtual void setup_signals(Signals::signal_manager* manager);
+		//virtual void setup_signals(Signals::signal_manager* manager);
 		virtual void SetupVariableManager(IVariableManager* manager);
         virtual IVariableManager* GetVariableManager();
 
@@ -104,11 +103,16 @@ namespace Parameters
         
         // Mutex for blocking processing of a object during update
         std::recursive_mutex																mtx;
+		SIGNALS_BEGIN
+			SIG_SEND(parameter_updated, ParameteredObject*);
+			SIG_SEND(parameter_added, ParameteredObject*);
+		SIGNALS_END
     protected:
 		IVariableManager*			                            _variable_manager;
 		
-		Signals::typed_signal_base<void(ParameteredObject*)>*   _sig_parameter_updated;
-		Signals::typed_signal_base<void(ParameteredObject*)>*	_sig_parameter_added;
+		//Signals::typed_signal_base<void(ParameteredObject*)>*   _sig_parameter_updated;
+		//Signals::typed_signal_base<void(ParameteredObject*)>*	_sig_parameter_added;
+
 		// callback connections for each parameter for the onUpdate signal
         std::list<std::shared_ptr<Signals::connection>>         _callback_connections;
         // Implicitly defined parameters are ones defined via addParameter or update parameter, there is no user space typed variable for access
