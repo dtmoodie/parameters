@@ -59,6 +59,7 @@ std::tuple<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSeria
     }
     LOG_TRIVIAL(debug) << type_string << " not registered to the registry";
     ::cv::error(::cv::Error::StsAssert, "Datatype not registered to the registry", CV_Func, __FILE__, __LINE__);
+    return std::tuple<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSerializerFunction, InterpreterRegistry::FactoryFunction >();
 }
 void Parameters::Persistence::cv::Serialize(::cv::FileStorage* fs, Parameters::Parameter* param)
 {

@@ -9,75 +9,75 @@
 #include <boost/lexical_cast.hpp>
 
 #define BEGIN_PARAMS \
-template<int N> struct ParamRegisterer \
+template<int N, class DUMMY> struct ParamRegisterer \
 { \
 	template<class C> static void Register(C* obj){} \
 }; \
-template<> struct ParamRegisterer<__COUNTER__> \
+template<class DUMMY> struct ParamRegisterer<__COUNTER__, DUMMY> \
 { \
 	template<class C> static void Register(C* obj){} \
 };\
 
 #define DEFINE_PARAM_3(type, name, N) \
-template<> struct ParamRegisterer<N> \
+template<class DUMMY> struct ParamRegisterer<N, DUMMY> \
 { \
 	template<class C> static void Register(C* obj) { \
 		obj->##name##_param.SetName(#name); \
 		obj->##name##_param.UpdateData(&obj->name); \
 		obj->addParameter(&obj->##name##_param); \
-		ParamRegisterer<N-1>::Register(obj); \
+        ParamRegisterer<N-1, DUMMY>::Register(obj); \
 	} \
 };
 
 #define DEFINE_PARAM_4(type, name, initial_value, N) \
-template<> struct ParamRegisterer<N> \
+template<class DUMMY> struct ParamRegisterer<N, DUMMY> \
 { \
 	template<class C> static void Register(C* obj) { \
 		obj->name = initial_value; \
-		obj->##name##_param.SetName(#name); \
-		obj->##name##_param.UpdateData(&obj->name); \
-		obj->addParameter(&obj->##name##_param); \
-		ParamRegisterer<N-1>::Register(obj); \
+        obj->name##_param.SetName(#name); \
+        obj->name##_param.UpdateData(&obj->name); \
+        obj->addParameter(&obj->name##_param); \
+        ParamRegisterer<N-1, DUMMY>::Register(obj); \
 	} \
 };
 
 #define DEFINE_PARAM_5(type, name, min, max, N) \
-template<> struct ParamRegisterer<N> \
+template<class DUMMY> struct ParamRegisterer<N, DUMMY> \
 { \
 	template<class C> static void Register(C* obj) { \
-		obj->##name##_param.SetName(#name); \
-		obj->##name##_param.SetRange(min, max); \
-		obj->##name##_param.UpdateData(&obj->name); \
-		obj->addParameter(&obj->##name##_param); \
-		ParamRegisterer<N-1>::Register(obj); \
+        obj->name##_param.SetName(#name); \
+        obj->name##_param.SetRange(min, max); \
+        obj->name##_param.UpdateData(&obj->name); \
+        obj->addParameter(&obj->name##_param); \
+        ParamRegisterer<N-1, DUMMY>::Register(obj); \
 	} \
 };
 
 #define DEFINE_PARAM_6(type, name, min, max, initial_value, N) \
-template<> struct ParamRegisterer<N> \
+template<class DUMMY> struct ParamRegisterer<N, DUMMY> \
 { \
 	template<class C> static void Register(C* obj) { \
 		obj->name = initial_value; \
-		obj->##name##_param.SetName(#name); \
-		obj->##name##_param.SetRange(min, max); \
-		obj->##name##_param.UpdateData(&obj->name); \
-		obj->addParameter(&obj->##name##_param); \
-		ParamRegisterer<N-1>::Register(obj); \
+        obj->name##_param.SetName(#name); \
+        obj->name##_param.SetRange(min, max); \
+        obj->name##_param.UpdateData(&obj->name); \
+        obj->addParameter(&obj->name##_param); \
+        ParamRegisterer<N-1, DUMMY>::Register(obj); \
 	} \
 };
 
 #define PARAM_2(type, name) DEFINE_PARAM_3(type, name, __COUNTER__); type name; TypedParameterPtr<type> ##name##_param;
-#define PARAM_3(type, name, initial_value) DEFINE_PARAM_4(type, name, initial_value, __COUNTER__); type name; TypedParameterPtr<type> ##name##_param;
-#define PARAM_4(type, name, min, max) DEFINE_PARAM_5(type, name, min, max, __COUNTER__); type name; RangedParameterPtr<type> ##name##_param;
-#define PARAM_5(type, name, min, max, initial_value) DEFINE_PARAM_6(type, name, min, max, initial_value, __COUNTER__); type name; RangedParameterPtr<type> ##name##_param;
+#define PARAM_3(type, name, initial_value) DEFINE_PARAM_4(type, name, initial_value, __COUNTER__); type name; TypedParameterPtr<type> name##_param;
+#define PARAM_4(type, name, min, max) DEFINE_PARAM_5(type, name, min, max, __COUNTER__); type name; RangedParameterPtr<type> name##_param;
+#define PARAM_5(type, name, min, max, initial_value) DEFINE_PARAM_6(type, name, min, max, initial_value, __COUNTER__); type name; RangedParameterPtr<type> name##_param;
 
 #ifdef _MSC_VER
 #define PARAM(...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(PARAM_, __VA_ARGS__ )(__VA_ARGS__), BOOST_PP_EMPTY() )
 #else
-#define PARAM(...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(PARAM_, __VA_ARGS__ )(__VA_ARGS__), BOOST_PP_EMPTY() )
+#define PARAM(...) BOOST_PP_OVERLOAD(PARAM_, __VA_ARGS__ )(__VA_ARGS__)
 #endif
 
-#define END_PARAMS_(N) virtual void RegisterAllParams(){ ParamRegisterer<N- 1>::Register(this);}
+#define END_PARAMS_(N) virtual void RegisterAllParams(){ ParamRegisterer<N- 1, int>::Register(this);}
 
 #define END_PARAMS END_PARAMS_(__COUNTER__);
 
@@ -133,7 +133,7 @@ namespace Parameters
 		auto param = getParameter(name);
 		if (param && param->type & Parameters::Parameter::Input)
 		{
-			Parameters::InputParameter* inputParam = dynamic_cast<Parameters::InputParameter*>(param.get());
+            Parameters::InputParameter* inputParam = dynamic_cast<Parameters::InputParameter*>(param);
 			if (inputParam)
 			{
 				inputParam->SetQualifier(qualifier_);
@@ -238,7 +238,7 @@ namespace Parameters
 	template<typename T> 
 	Parameters::ITypedParameter<T>* ParameteredObject::updateParameter(const std::string& name, const T& data, const T& min_value_, const T& max_value_, long long timestamp, cv::cuda::Stream* stream)
 	{
-		typename Parameters::ITypedParameter<T>* param;
+        Parameters::ITypedParameter<T>* param;
 		param = getParameterOptional<T>(name);
 		if (param == nullptr)
 		{

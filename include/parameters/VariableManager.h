@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Parameters/IVariableManager.h"
+#include "parameters/IVariableManager.h"
 
-#include <Signals/connection.h>
+#include <signals/connection.h>
 #include <map>
 
 namespace Parameters

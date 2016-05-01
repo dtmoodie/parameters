@@ -1,7 +1,7 @@
 #pragma once
-#include "Parameters/Parameter_def.hpp"
+#include "parameters/Parameter_def.hpp"
 
-#include <Signals/signaler.h>
+#include <signals/signaler.h>
 #include <signals/connection.h>
 #include <memory>
 #include <list>
@@ -17,7 +17,7 @@ namespace Parameters
 }
 namespace Signals
 {
-	template<class T> class typed_signal_base;
+    template<class Sig> class typed_signal_base;
 	class signal_manager;
 }
 namespace cv
@@ -95,10 +95,10 @@ namespace Parameters
 		Parameter* updateParameter(std::shared_ptr<Parameter> parameter);
 
 		// Typed parameter fetching functions
-        template<typename T> typename ITypedParameter<T>* getParameter(std::string name);
-        template<typename T> typename ITypedParameter<T>* getParameter(int idx);
-        template<typename T> typename ITypedParameter<T>* getParameterOptional(std::string name);
-        template<typename T> typename ITypedParameter<T>* getParameterOptional(int idx);
+        template<typename T> ITypedParameter<T>* getParameter(std::string name);
+        template<typename T> ITypedParameter<T>* getParameter(int idx);
+        template<typename T> ITypedParameter<T>* getParameterOptional(std::string name);
+        template<typename T> ITypedParameter<T>* getParameterOptional(int idx);
 
         
         // Mutex for blocking processing of a object during update

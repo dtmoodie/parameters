@@ -133,35 +133,35 @@ namespace Parameters
         }
 		virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
-			if(data_ > min_value && data_ > max_value)
+            if(data_ > ITypedRangedParameter<T>::min_value && data_ > ITypedRangedParameter<T>::max_value)
 			{
 				TypedParameter<T>::UpdateData(data_, time_index, stream);
 			}			
 		}
 		virtual void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
-			if(data_ > min_value && data_ < max_value)
+            if(data_ > ITypedRangedParameter<T>::min_value && data_ < ITypedRangedParameter<T>::max_value)
 			{
 				TypedParameter<T>::UpdateData(data_, time_index, stream);
 			}			
 		}
 		virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
-			if(*data_ > min_value && *data_ < max_value)
+            if(*data_ > ITypedRangedParameter<T>::min_value && *data_ < ITypedRangedParameter<T>::max_value)
 			{
 				TypedParameter<T>::UpdateData(data_, time_index, stream);
 			}
 		}
         virtual Parameter::Ptr DeepCopy() const
         {
-            return Parameter::Ptr(new RangedParameter<T>(ITypedRangedParameter<T>::min_value, ITypedRangedParameter<T>::max_value, Parameter::GetName(), data));
+            return Parameter::Ptr(new RangedParameter<T>(ITypedRangedParameter<T>::min_value, ITypedRangedParameter<T>::max_value, Parameter::GetName(), TypedParameter<T>::data));
         }
 		virtual bool Update(Parameter::Ptr other, cv::cuda::Stream* stream = nullptr)
         {
             auto typed = dynamic_cast<ITypedParameter<T>*>(other.get());
             if (typed)
             {
-				if (CheckInRange(*(typed->Data())))
+                if (ITypedRangedParameter<T>::CheckInRange(*(typed->Data())))
 				{
 					TypedParameter<T>::UpdateData(typed->Data(), other->GetTimeIndex(), stream);
 				}
@@ -171,7 +171,7 @@ namespace Parameters
         }
 		virtual void RailValue()
 		{
-			rail(TypedParameter<T>::data, min_value, max_value);
+            rail(TypedParameter<T>::data, ITypedRangedParameter<T>::min_value, ITypedRangedParameter<T>::max_value);
 		}
 	}; // class RangedParameter
     template<typename T> class RangedParameter<std::vector<T>>: public TypedParameter<std::vector<T>>, public ITypedRangedParameter<std::vector<T>>
@@ -209,14 +209,14 @@ namespace Parameters
         }
         virtual Parameter::Ptr DeepCopy() const
         {
-            return Parameter::Ptr(new RangedParameter<std::vector<T>>(ITypedRangedParameter<std::vector<T>>::min_value, ITypedRangedParameter<std::vector<T>>::max_value, Parameter::GetName(), data));
+            return Parameter::Ptr(new RangedParameter<std::vector<T>>(ITypedRangedParameter<std::vector<T>>::min_value, ITypedRangedParameter<std::vector<T>>::max_value, Parameter::GetName(), TypedParameter<std::vector<T>>::data));
         }
         virtual bool Update(Parameter::Ptr other, cv::cuda::Stream* stream = nullptr)
         {
             auto typed = dynamic_cast<ITypedParameter<std::vector<T>>*>(other.get());
             if (typed)
             {
-                if (CheckInRange(*(typed->Data())))
+                if (ITypedRangedParameter<std::vector<T>>::CheckInRange(*(typed->Data())))
                 {
                     TypedParameter<std::vector<T>>::UpdateData(typed->Data(), other->GetTimeIndex(), stream);
                 }
@@ -226,7 +226,7 @@ namespace Parameters
         }
         virtual void RailValue()
         {
-            rail(TypedParameter<std::vector<T>>::data, min_value, max_value);
+            rail(TypedParameter<std::vector<T>>::data, ITypedRangedParameter<std::vector<T>>::min_value, ITypedRangedParameter<std::vector<T>>::max_value);
         }
     }; // class RangedParameter
 	// -----------------------------------------------------------------------------------------------------
@@ -257,14 +257,14 @@ namespace Parameters
         }
         virtual void UpdateData(T& data, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
-			if (CheckInRange(data))
+            if (ITypedRangedParameter<T>::CheckInRange(data))
 			{
 				TypedParameterPtr<T>::UpdateData(data, time_index, stream);
 			}
 		}
 		virtual void UpdateData(const T& data, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
-			if (CheckInRange(data))
+            if (ITypedRangedParameter<T>::CheckInRange(data))
 			{
 				TypedParameterPtr<T>::UpdateData(data, time_index, stream);
 			}
@@ -273,18 +273,18 @@ namespace Parameters
 		{
 			if (data_)
 			{
-				if (CheckInRange(*data_) || ptr == nullptr)
+                if (ITypedRangedParameter<T>::CheckInRange(*data_) || TypedParameterPtr<T>::ptr == nullptr)
 				{
-					ptr = data_;
-					_current_time_index = time_index;
+                    TypedParameterPtr<T>::ptr = data_;
+                    Parameter::_current_time_index = time_index;
 					Parameter::changed = true;
 					Parameter::OnUpdate(stream);
 				}
 			}
 			else
 			{
-				ptr = data_;
-				_current_time_index = time_index;
+                TypedParameterPtr<T>::ptr = data_;
+                Parameter::_current_time_index = time_index;
 				Parameter::changed = true;
 				Parameter::OnUpdate(stream);
 			}
@@ -298,10 +298,10 @@ namespace Parameters
 			{
 				if (typed->Data())
 				{
-					if (CheckInRange(*typed->Data()))
+                    if (ITypedRangedParameter<T>::CheckInRange(*typed->Data()))
 					{
-						*ptr = *(typed->Data());
-						_current_time_index = other->GetTimeIndex();
+                        *TypedParameterPtr<T>::ptr = *(typed->Data());
+                        TypedParameterPtr<T>::_current_time_index = other->GetTimeIndex();
 						Parameter::changed = true;
 						Parameter::OnUpdate(stream);
 						return true;
@@ -317,12 +317,12 @@ namespace Parameters
 		}
 		virtual Parameter::Ptr DeepCopy() const
 		{
-			return Parameter::Ptr(new RangedParameterPtr<T>(ITypedRangedParameter<T>::min_value, ITypedRangedParameter<T>::max_value, Parameter::GetName(), ptr, Parameter::type, Parameter::tooltip));
+            return Parameter::Ptr(new RangedParameterPtr<T>(ITypedRangedParameter<T>::min_value, ITypedRangedParameter<T>::max_value, Parameter::GetName(), TypedParameterPtr<T>::ptr, Parameter::type, Parameter::tooltip));
 		}
 		virtual void RailValue()
 		{
 			if (TypedParameterPtr<T>::ptr)
-				rail(*TypedParameterPtr<T>::ptr, min_value, max_value);
+                rail(*TypedParameterPtr<T>::ptr, ITypedRangedParameter<T>::min_value, ITypedRangedParameter<T>::max_value);
 		}
 	}; // class RangedParameterPtr
     template<typename T> class RangedParameterPtr<std::vector<T>>: public TypedParameterPtr<std::vector<T>>, public ITypedRangedParameter<std::vector<T>>
@@ -352,14 +352,14 @@ namespace Parameters
         }
         virtual void UpdateData(std::vector<T>& data, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
         {
-            if (CheckInRange(data))
+            if (ITypedRangedParameter<std::vector<T>>::CheckInRange(data))
             {
                 TypedParameterPtr<std::vector<T>>::UpdateData(data, time_index, stream);
             }
         }
         virtual void UpdateData(const std::vector<T>& data, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
         {
-            if (CheckInRange(data))
+            if (ITypedRangedParameter<std::vector<T>>::CheckInRange(data))
             {
                 TypedParameterPtr<std::vector<T>>::UpdateData(data, time_index, stream);
             }
@@ -368,18 +368,18 @@ namespace Parameters
         {
             if (data_)
             {
-                if (CheckInRange(*data_))
+                if (ITypedRangedParameter<std::vector<T>>::CheckInRange(*data_))
                 {
-                    ptr = data_;
-                    _current_time_index = time_index;
+                    TypedParameterPtr<std::vector<T>>::ptr = data_;
+                    Parameter::_current_time_index = time_index;
                     Parameter::changed = true;
                     Parameter::OnUpdate(stream);
                 }
             }
             else
             {
-                ptr = data_;
-                _current_time_index = time_index;
+                TypedParameterPtr<std::vector<T>>::ptr = data_;
+                Parameter::_current_time_index = time_index;
                 Parameter::changed = true;
                 Parameter::OnUpdate(stream);
             }
@@ -393,10 +393,10 @@ namespace Parameters
             {
                 if (typed->Data())
                 {
-                    if (CheckInRange(*typed->Data()))
+                    if (ITypedRangedParameter<std::vector<T>>::CheckInRange(*typed->Data()))
                     {
-                        *ptr = *(typed->Data());
-                        _current_time_index = other->GetTimeIndex();
+                        *TypedParameterPtr<std::vector<T>>::ptr = *(typed->Data());
+                        Parameter::_current_time_index = other->GetTimeIndex();
                         Parameter::changed = true;
                         Parameter::OnUpdate(stream);
                         return true;
@@ -412,12 +412,15 @@ namespace Parameters
         }
         virtual Parameter::Ptr DeepCopy() const
         {
-            return Parameter::Ptr(new RangedParameterPtr<std::vector<T>>(ITypedRangedParameter<std::vector<T>>::min_value, ITypedRangedParameter<std::vector<T>>::max_value, Parameter::GetName(), ptr, Parameter::type, Parameter::tooltip));
+            return Parameter::Ptr(new RangedParameterPtr<std::vector<T>>(
+                                      ITypedRangedParameter<std::vector<T>>::min_value,
+                                      ITypedRangedParameter<std::vector<T>>::max_value,
+                                      Parameter::GetName(), TypedParameterPtr<std::vector<T>>::ptr, TypedParameterPtr<std::vector<T>>::Parameter::type, Parameter::tooltip));
         }
         virtual void RailValue()
         {
             if (TypedParameterPtr<std::vector<T>>::ptr)
-                rail(*TypedParameterPtr<std::vector<T>>::ptr, min_value, max_value);
+                rail(*TypedParameterPtr<std::vector<T>>::ptr, ITypedRangedParameter<std::vector<T>>::min_value, ITypedRangedParameter<std::vector<T>>::max_value);
         }
     }; // class RangedParameterPtr
 }// namespace Parameters

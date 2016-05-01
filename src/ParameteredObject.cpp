@@ -2,7 +2,7 @@
 #include "parameters/ParameteredObjectImpl.hpp"
 #include "parameters/IVariableManager.h"
 
-#include "Signals/signal_manager.h"
+#include "signals/signal_manager.h"
 
 #include <signals/logging.hpp>
 

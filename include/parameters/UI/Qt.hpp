@@ -1017,7 +1017,7 @@ namespace Parameters
                 auto rangedParam = dynamic_cast<ITypedRangedParameter<T>*>(param);
                 if (rangedParam)
                 {
-                    Handler<T>::min_max_type min, max;
+                    typename Handler<T>::min_max_type min, max;
                     rangedParam->GetRange(min, max);
                     handler.SetMinMax(min, max);
                 }

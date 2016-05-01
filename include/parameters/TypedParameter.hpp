@@ -43,7 +43,7 @@ namespace Parameters
 		virtual T* Data(long long time_index = -1)
 		{
 			if(time_index != -1)
-				LOGIF_NEQ(time_index, _current_time_index, trace);
+                LOGIF_NEQ(time_index, Parameter::_current_time_index, trace);
 			return &data;
 		}
 		virtual bool GetData(T& value, long long time_index = -1)
@@ -58,21 +58,21 @@ namespace Parameters
 		}
 		virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
-			_current_time_index = time_index;
+            Parameter::_current_time_index = time_index;
 			data = data_;
 			Parameter::changed = true;
 			Parameter::OnUpdate(stream);
 		}
 		virtual void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
-			_current_time_index = time_index;
+            Parameter::_current_time_index = time_index;
 			data = data_;
 			Parameter::changed = true;
 			ITypedParameter<T>::OnUpdate(stream);
 		}
 		virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
-			_current_time_index = time_index;
+            Parameter::_current_time_index = time_index;
 			data = *data_;
 			Parameter::changed = true;
 			Parameter::OnUpdate(stream);
@@ -125,13 +125,13 @@ namespace Parameters
 
 		virtual T* Data(long long time_index)
 		{
-			LOGIF_NEQ(time_index, _current_time_index, trace);
+            LOGIF_NEQ(time_index, Parameter::_current_time_index, trace);
 			return ptr;
 		}
 		virtual bool GetData(T& value, long long time_index = -1)
 		{
-			std::lock_guard<std::recursive_mutex> lock(_mtx);
-			LOGIF_NEQ(time_index, _current_time_index, trace);
+            std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
+            LOGIF_NEQ(time_index, Parameter::_current_time_index, trace);
 			if (ptr)
 			{
 				value = *ptr;
@@ -151,7 +151,7 @@ namespace Parameters
 			if (ptr)
 			{
 				*ptr = data;
-				_current_time_index = time_index;
+                Parameter::_current_time_index = time_index;
 				Parameter::changed = true;
 				Parameter::OnUpdate(stream);
 			}				
@@ -159,7 +159,7 @@ namespace Parameters
 		virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 		{
 			ptr = data_;
-			_current_time_index = time_index;
+            Parameter::_current_time_index = time_index;
 			Parameter::changed = true;
 			Parameter::OnUpdate(stream);
 		}
@@ -169,7 +169,7 @@ namespace Parameters
             if(typed)
             {
                 *ptr = *(typed->Data());
-				_current_time_index = other->GetTimeIndex();
+                Parameter::_current_time_index = other->GetTimeIndex();
 				Parameter::changed = true;
 				Parameter::OnUpdate(nullptr);
                 return true;

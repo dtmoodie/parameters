@@ -69,7 +69,7 @@ namespace Parameters
 			}
 			virtual bool GetData(T& value, long long time_index = -1)
 			{
-				std::lock_guard<std::recursive_mutex> lock(_mtx);
+                std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
 				if (time_index == -1 && _data_buffer.size())
 				{
 					value = _data_buffer.back().second;
@@ -88,21 +88,21 @@ namespace Parameters
 			}
 			virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 			{
-				std::lock_guard<std::recursive_mutex> lock(_mtx);
+                std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
 				_data_buffer.push_back(std::pair<long long, T>(time_index, data_));
 				Parameter::changed = true;
 				Parameter::OnUpdate(stream);
 			}
 			virtual void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 			{
-				std::lock_guard<std::recursive_mutex> lock(_mtx);
+                std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
 				_data_buffer.push_back(std::pair<long long, T>(time_index, data_));
 				Parameter::changed = true;
 				Parameter::OnUpdate(stream);
 			}
 			virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
 			{
-				std::lock_guard<std::recursive_mutex> lock(_mtx);
+                std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
 				_data_buffer.push_back(std::pair<long long, T>(time_index, *data_));
 				Parameter::changed = true;
 				Parameter::OnUpdate(stream);
@@ -120,7 +120,7 @@ namespace Parameters
 					auto ptr = typedParameter->Data();
 					if (ptr)
 					{
-						std::lock_guard<std::recursive_mutex> lock(_mtx);
+                        std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
 						_data_buffer.push_back(std::pair<long long, T>(typedParameter->GetTimeIndex(), *ptr));
 						Parameter::changed = true;
 						Parameter::OnUpdate(stream);
@@ -130,19 +130,19 @@ namespace Parameters
 			}
 			virtual void SetSize(int size)
 			{
-				std::lock_guard<std::recursive_mutex> lock(_mtx);
+                std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
 				_data_buffer.set_capacity(size);
 			}
 			virtual int GetSize()
 			{
-				std::lock_guard<std::recursive_mutex> lock(_mtx);
+                std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
 				return _data_buffer.capacity();
 			}
 			virtual void GetTimestampRange(long long& start, long long& end)
 			{
 				if (_data_buffer.size())
 				{
-					std::lock_guard<std::recursive_mutex> lock(_mtx);
+                    std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
 					start = _data_buffer.back().first;
 					end = _data_buffer.front().first;
 				}
@@ -184,20 +184,20 @@ namespace Parameters
 			}
 			void onInputDelete()
 			{
-				std::lock_guard<std::recursive_mutex> lock(_mtx);
+                std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
 				_input_update_connection.reset();
 				_input_delete_connection.reset();
 				_input_parameter = nullptr;
 			}
 			void onInputUpdate(cv::cuda::Stream* stream)
 			{
-				std::lock_guard<std::recursive_mutex> lock(_mtx);
+                std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
 				if (_input_parameter)
 				{
 					auto time = _input_parameter->GetTimeIndex();
 					if (auto data = _input_parameter->Data(time))
 					{
-						UpdateData(data, time, stream);
+                        ParameterBuffer<T>::UpdateData(data, time, stream);
 					}
 				}				
 			}

@@ -3,7 +3,7 @@ CMAKE_POLICY(SET CMP0020 NEW)
 PROJECT(Parameters)
 set(link_libs "")
 
-SET(Boost_REQUIRED_COMPONENTS  filesystem system thread chrono date_time log log_setup)
+SET(Boost_REQUIRED_COMPONENTS  filesystem system thread chrono date_time log log_setup unit_test_framework)
 IF(NOT WIN32)	    
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fpermissive")
 else()
@@ -17,7 +17,7 @@ IF(Boost_FOUND)
     INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 ENDIF()
 
-find_package(Signals)
+#find_package(Signals)
   include_directories(${Signals_INCLUDE_DIRS})
 
 

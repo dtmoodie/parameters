@@ -24,7 +24,7 @@ namespace Parameters
 {
 	template<typename T> class TypedInputParameter : public ITypedParameter<T>, public InputParameter
 	{
-		typename ITypedParameter<T>* input;
+        ITypedParameter<T>* input;
 		std::shared_ptr<Signals::connection> inputConnection;
 		std::shared_ptr<Signals::connection> deleteConnection;
 		virtual void onInputUpdate()
@@ -74,7 +74,7 @@ namespace Parameters
 				Parameter::OnUpdate(nullptr);
 				return true;
 			}				
-			typename ITypedParameter<T>* castedParam = dynamic_cast<ITypedParameter<T>*>(param);
+            ITypedParameter<T>* castedParam = dynamic_cast<ITypedParameter<T>*>(param);
             if(input)
             {
                 input->subscribers--;
@@ -186,7 +186,7 @@ namespace Parameters
 		{
             if(input)
                 input->subscribers--;
-			typename ITypedParameter<T>* castedParam = dynamic_cast<ITypedParameter<T>*>(param);
+            ITypedParameter<T>* castedParam = dynamic_cast<ITypedParameter<T>*>(param);
 			if (castedParam)
 			{
 				input = castedParam;
@@ -256,14 +256,14 @@ namespace Parameters
 	template<typename T> class TypedInputParameterPtr : public MetaTypedParameter<T>, public InputParameter
 	{
 		T** userVar; // Pointer to the user space pointer variable of type T
-		typename ITypedParameter<T>* input;
+        ITypedParameter<T>* input;
 		std::shared_ptr<Signals::connection> inputConnection;
 		std::shared_ptr<Signals::connection> deleteConnection;
 		virtual void onInputUpdate()
 		{
 			// The input variable has been updated, update user var
 			*userVar = input->Data();
-			Parameter::onUpdate(nullptr);
+            Parameter::OnUpdate(nullptr);
 		}
 		virtual void onInputDelete()
 		{
@@ -271,7 +271,7 @@ namespace Parameters
 			input = nullptr;
 			inputConnection.reset();
 			deleteConnection.reset();
-			Parameter::onUpdate(nullptr);
+            Parameter::OnUpdate(nullptr);
 		}
 	public:
 		typedef std::shared_ptr<TypedInputParameterPtr<T>> Ptr;
