@@ -130,6 +130,11 @@ namespace Parameters
 				virtual bool CheckParameter(Parameter* param);
 				QWidget* GetParameterWidget(QWidget* parent);
 			};
+            struct PARAMETER_EXPORTS UiUpdateListener
+            {
+                virtual void OnUpdate(IHandler* handler) = 0;
+            };
+
 			// *****************************************************************************
 			//								IHandler
 			// *****************************************************************************
@@ -138,10 +143,10 @@ namespace Parameters
             private:
                 std::recursive_mutex* paramMtx;
 			protected:
+                UiUpdateListener* _listener;
 				SignalProxy* proxy;
 				std::function<void(void)> onUpdate;
 			public:
-				
                 IHandler();
                 virtual void OnUiUpdate(QObject* sender);
                 virtual void OnUiUpdate(QObject* sender, double val);
@@ -149,6 +154,7 @@ namespace Parameters
                 virtual void OnUiUpdate(QObject* sender, bool val);
                 virtual void OnUiUpdate(QObject* sender, QString val);
                 virtual void OnUiUpdate(QObject* sender, int row, int col);
+                virtual void SetUpdateListener(UiUpdateListener* listener);
 				
                 virtual std::function<void(void)>& GetOnUpdate();
                 virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent);
@@ -175,20 +181,25 @@ namespace Parameters
 			template<typename T, typename Enable = void> class Handler : public IHandler
 			{
 				T* currentData;
+                
 			public:
-				Handler() :currentData(nullptr) 
+				Handler() :currentData(nullptr)
 				{
 					
 					BOOST_LOG_TRIVIAL(debug) << "Creating handler for default unspecialized parameter";
 				}
-				virtual void UpdateUi(const T& data)
+				virtual void UpdateUi( T* data)
 				{}
 				virtual void OnUiUpdate(QObject* sender)
 				{}
-				virtual void SetData(T*)
+				virtual void SetData(T* data)
 				{
-
+                    currentData = data;
 				}
+                T* GetData()
+                {
+                    return currentData;
+                }
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
 					
@@ -211,14 +222,13 @@ namespace Parameters
 				bool* boolData;
 			public:
 				Handler() : chkBox(nullptr), boolData(nullptr) {}
-				virtual void UpdateUi(const bool& data)
+				virtual void UpdateUi( bool* data)
 				{
-					
-					chkBox->setChecked(data);
+					if(data)
+					    chkBox->setChecked(*data);
 				}
 				virtual void OnUiUpdate(QObject* sender, int val)
 				{
-					
 					if (sender == chkBox)
 					{
                         std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
@@ -227,17 +237,22 @@ namespace Parameters
 							*boolData = chkBox->isChecked();
 							if (onUpdate)
 								onUpdate();
+                            if(_listener)
+                                _listener->OnUpdate(this);
 						}							
 					}
 				}
 				virtual void SetData(bool* data_)
-				{
-					
+				{	
 					std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
 					boolData = data_;
 					if (chkBox)
-						UpdateUi(*data_);
+						UpdateUi(data_);
 				}
+                bool* GetData()
+                {
+                    return boolData;
+                }
 				virtual std::vector < QWidget*> GetUiWidgets(QWidget* parent_)
 				{
 					
@@ -270,15 +285,16 @@ namespace Parameters
 				T* fileData;
 			public:
 				Handler(): btn(nullptr), parent(nullptr){}
-				virtual void UpdateUi(const T& data)
+				virtual void UpdateUi( T* data)
 				{
-					
-					std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
-					btn->setText(QString::fromStdString(data.string()));
+                    if(data)
+                    {
+                        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+					    btn->setText(QString::fromStdString(data->string()));
+                    }					
 				}
 				virtual void OnUiUpdate(QObject* sender)
 				{
-					
 					if (sender == btn)
 					{
 						std::lock_guard<std::recursive_mutex>lock(*IHandler::GetParamMtx());
@@ -299,15 +315,20 @@ namespace Parameters
 						*fileData = T(filename.toStdString());
                         if(onUpdate)
                             onUpdate();
+                        if(_listener)
+                                _listener->OnUpdate(this);
 					}					
 				}
 				virtual void SetData(T* data_)
 				{
-					
 					fileData = data_;
 					if (btn)
-						UpdateUi(*data_);
+						UpdateUi(data_);
 				}
+                T* GetData()
+                {
+                    return fileData;
+                }
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent_)
 				{
 					
@@ -365,19 +386,25 @@ namespace Parameters
 				{
 					
 					matData = data;
-					UpdateUi(*data);
+					UpdateUi(data);
 				}
-				virtual void UpdateUi(const ::cv::Matx<T, ROW, COL>& data)
+                ::cv::Matx<T, ROW, COL>* GetData()
+                {
+                    return matData;
+                }
+				virtual void UpdateUi( ::cv::Matx<T, ROW, COL>* data)
 				{
-					
-					std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
-                    for (int i = 0; i < ROW; ++i)
-					{
-						for (int j = 0; j < COL; ++j)
-						{
-							items[i*COL + j]->setData(Qt::EditRole, data(i, j));
-						}
-					}
+					if(data)
+                    {
+                        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+                        for (int i = 0; i < ROW; ++i)
+					    {
+						    for (int j = 0; j < COL; ++j)
+						    {
+							    items[i*COL + j]->setData(Qt::EditRole, (*data)(i, j));
+						    }
+					    }
+                    }					
 				}
 				virtual void OnUiUpdate(QObject* sender, int row = -1, int col = -1)
 				{
@@ -395,18 +422,21 @@ namespace Parameters
 								(*matData)(row, col) = (T)items[row* COL + col]->data(Qt::EditRole).toInt();
 							if(typeid(T) == typeid(unsigned int))
 								(*matData)(row, col) = (T)items[row* COL + col]->data(Qt::EditRole).toUInt();
+                            if(_listener)
+                                _listener->OnUpdate(this);
 						}
 					}
 					else if (row == -1 && col == -1)
 					{
 						if (matData)
-							UpdateUi(*matData);
+							UpdateUi(matData);
+                        if(_listener)
+                                _listener->OnUpdate(this);
 					}
 
 				}
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
-					
 					std::vector<QWidget*> output;
 					output.push_back(table);
 					return output;
@@ -443,20 +473,22 @@ namespace Parameters
 					table->setColumnCount(2);
 					proxy->connect(table, SIGNAL(cellChanged(int, int)), proxy, SLOT(on_update(int, int)));
 				}
-				virtual void UpdateUi(const ::cv::Point_<T>& data)
+				virtual void UpdateUi(::cv::Point_<T>* data)
 				{
-					
-					std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
-					if (table)
-					{
-						first = new QTableWidgetItem();
-						second = new QTableWidgetItem();
-						first->setData(Qt::EditRole, ptData->x);
-						second->setData(Qt::EditRole, ptData->y);
-						table->setItem(0, 0, first);
-						table->setItem(0, 1, second);
-						table->update();
-					}
+					if(data)
+                    {
+                        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+					    if (table)
+					    {
+						    first = new QTableWidgetItem();
+						    second = new QTableWidgetItem();
+						    first->setData(Qt::EditRole, ptData->x);
+						    second->setData(Qt::EditRole, ptData->y);
+						    table->setItem(0, 0, first);
+						    table->setItem(0, 1, second);
+						    table->update();
+					    }
+                    }					
 				}
 				virtual void OnUiUpdate(QObject* sender, int row = -1, int col = -1)
 				{
@@ -484,13 +516,18 @@ namespace Parameters
 						ptData->x = (T)first->data(Qt::EditRole).toUInt();
 						ptData->y = (T)second->data(Qt::EditRole).toUInt();
 					}
+                    if(_listener)
+                        _listener->OnUpdate(this);
 				}
 				virtual void SetData(::cv::Point_<T>* data_)
 				{
-					
 					ptData = data_;
-					UpdateUi(*ptData);
+					UpdateUi(ptData);
 				}
+                ::cv::Point_<T>* GetData()
+                {
+                    return ptData;
+                }
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
 					
@@ -527,18 +564,21 @@ namespace Parameters
                     table->setColumnCount(3);
                     proxy->connect(table, SIGNAL(cellChanged(int, int)), proxy, SLOT(on_update(int, int)));
                 }
-                virtual void UpdateUi(const ::cv::Point3_<T>& data)
+                virtual void UpdateUi( ::cv::Point3_<T>* data)
 				{
-					std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
-                    first = new QTableWidgetItem();
-                    second = new QTableWidgetItem();
-                    third = new QTableWidgetItem();
-                    first->setData(Qt::EditRole, ptData->x);
-                    second->setData(Qt::EditRole, ptData->y);
-                    third->setData(Qt::EditRole, ptData->z);
-                    table->setItem(0, 0, first);
-                    table->setItem(0, 1, second);
-                    table->setItem(0, 2, third);
+                    if(data)
+                    {
+                        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+                        first = new QTableWidgetItem();
+                        second = new QTableWidgetItem();
+                        third = new QTableWidgetItem();
+                        first->setData(Qt::EditRole, ptData->x);
+                        second->setData(Qt::EditRole, ptData->y);
+                        third->setData(Qt::EditRole, ptData->z);
+                        table->setItem(0, 0, first);
+                        table->setItem(0, 1, second);
+                        table->setItem(0, 2, third);
+                    }					
                 }
                 virtual void OnUiUpdate(QObject* sender, int row = -1, int col = -1)
 				{
@@ -570,12 +610,18 @@ namespace Parameters
                         ptData->y = (T)second->data(Qt::EditRole).toUInt();
                         ptData->z = (T)third->data(Qt::EditRole).toUInt();
                     }
+                    if(_listener)
+                                _listener->OnUpdate(this);
                 }
                 virtual void SetData(::cv::Point3_<T>* data_)
 				{
 					
                     ptData = data_;
-                    UpdateUi(*ptData);
+                    UpdateUi(ptData);
+                }
+                ::cv::Point3_<T>* GetData()
+                {
+                    return ptData;
                 }
                 virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
@@ -597,17 +643,20 @@ namespace Parameters
                 bool _updating;
 			public:
 				Handler() : enumCombo(nullptr), _updating(false){}
-				virtual void UpdateUi(const Parameters::EnumParameter& data)
+				virtual void UpdateUi( Parameters::EnumParameter* data)
 				{
-					std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
-                    _updating = true;
-					enumCombo->clear();
-					for (int i = 0; i < data.enumerations.size(); ++i)
-					{
-						enumCombo->addItem(QString::fromStdString(data.enumerations[i]));
-					}
-                    enumCombo->setCurrentIndex(data.currentSelection);
-                    _updating = false;
+                    if(data)
+                    {
+                        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+                        _updating = true;
+					    enumCombo->clear();
+					    for (int i = 0; i < data->enumerations.size(); ++i)
+					    {
+						    enumCombo->addItem(QString::fromStdString(data->enumerations[i]));
+					    }
+                        enumCombo->setCurrentIndex(data->currentSelection);
+                        _updating = false;
+                    }					
 				}
 				virtual void OnUiUpdate(QObject* sender, int idx)
 				{
@@ -621,14 +670,20 @@ namespace Parameters
 						enumData->currentSelection = idx;
 						if (onUpdate)
 							onUpdate();
+                        if(_listener)
+                                _listener->OnUpdate(this);
 					}
 				}
 				virtual void SetData(Parameters::EnumParameter* data_)
 				{
 					enumData = data_;
 					if (enumCombo)
-						UpdateUi(*enumData);
+						UpdateUi(enumData);
 				}
+                Parameters::EnumParameter*  GetData()
+                {
+                    return enumData;
+                }
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
 					
@@ -651,11 +706,13 @@ namespace Parameters
 				QLineEdit* lineEdit;
 			public:
 				Handler() : strData(nullptr), lineEdit(nullptr) {}
-				virtual void UpdateUi(const std::string& data)
+				virtual void UpdateUi( std::string* data)
 				{
-					
-					std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
-					lineEdit->setText(QString::fromStdString(data));
+					if(data)
+                    {
+                        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+					    lineEdit->setText(QString::fromStdString(*data));
+                    }					
 				}
 				virtual void OnUiUpdate(QObject* sender)
 				{
@@ -666,15 +723,20 @@ namespace Parameters
 						*strData = lineEdit->text().toStdString();
 						if (onUpdate)
 							onUpdate();
+                        if(_listener)
+                            _listener->OnUpdate(this);
 					}
 				}
 				virtual void SetData(std::string* data_)
 				{
-					
 					strData = data_;
 					if (lineEdit)
 						lineEdit->setText(QString::fromStdString(*strData));
 				}
+                std::string* GetData()
+                {
+                    return strData;
+                }
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
 					
@@ -698,9 +760,9 @@ namespace Parameters
 				QPushButton* btn;
 			public:
 				Handler() : funcData(nullptr), btn(nullptr) {}
-				void UpdateUi(std::function<void(void)>& data)
+				void UpdateUi(std::function<void(void)>* data)
 				{
-                    funcData = &data;
+                    funcData = data;
                 }
 				virtual void OnUiUpdate(QObject* sender)
 				{
@@ -710,14 +772,12 @@ namespace Parameters
 						std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
 						if (funcData)
 						{
-							//ProcessingThreadCallbackService::post(*funcData, 
-                                //std::make_pair((void*)this, Loki::TypeInfo(typeid(Handler<std::function<void(void)>, void>))));
                             (*funcData)();
 							if (onUpdate)
 							{
-								//ProcessingThreadCallbackService::post(onUpdate, 
-                                  //  std::make_pair((void*)this, Loki::TypeInfo(typeid(Handler<std::function<void(void)>, void>))));
                                 onUpdate();
+                                if(_listener)
+                                _listener->OnUpdate(this);
 							}
 						}
 					}
@@ -726,6 +786,10 @@ namespace Parameters
 				{
 					funcData = data_;
 				}
+                std::function<void(void)>* GetData()
+                {
+                    return funcData;
+                }
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
 					
@@ -753,9 +817,12 @@ namespace Parameters
 			public:
 				typedef T min_max_type;
 				Handler() : box(nullptr), floatData(nullptr) {}
-				virtual void UpdateUi(const T& data)
+				virtual void UpdateUi( T* data)
 				{
-					box->setValue(data);
+                    if(data)
+                    {
+                        box->setValue(*data);
+                    }					
 				}
 				virtual void OnUiUpdate(QObject* sender, double val = 0)
 				{
@@ -764,15 +831,20 @@ namespace Parameters
 						*floatData = box->value();
 					if (onUpdate)
 						onUpdate();
+                    if(_listener)
+                        _listener->OnUpdate(this);
 				}
 				virtual void SetData(T* data_)
 				{
-					
 					std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
 					floatData = data_;
 					if (box)
 						box->setValue(*floatData);
 				}
+                T* GetData()
+                {
+                    return floatData;
+                }
                 void SetMinMax(T min, T max)
                 {
                     box->setMinimum(min);
@@ -807,10 +879,13 @@ namespace Parameters
 			public:
 				typedef T min_max_type;
 				Handler() : box(nullptr), intData(nullptr){}
-				virtual void UpdateUi(const T& data)
+				virtual void UpdateUi( T* data)
 				{
-					std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
-					box->setValue(data);
+                    if(data)
+                    {
+                        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+					    box->setValue(*data);
+                    }					
 				}
 				virtual void OnUiUpdate(QObject* sender, int val = -1)
 				{
@@ -827,14 +902,19 @@ namespace Parameters
                     }
 					if (onUpdate)
 						onUpdate();
+                    if(_listener)
+                        _listener->OnUpdate(this);
 				}
 				virtual void SetData(T* data_)
 				{
-					
 					intData = data_;
 					if (box)
 						box->setValue(*intData);
 				}
+                T* GetData()
+                {
+                    return intData;
+                }
                 void SetMinMax(T min_, T max_)
                 {
                     box->setMinimum(min_);
@@ -872,39 +952,65 @@ namespace Parameters
 			// *************************** std::pair ********************************************
 			// **********************************************************************************
 
-			template<typename T1> class Handler<std::pair<T1, T1>> : public Handler<T1>
+			template<typename T1> class Handler<std::pair<T1, T1>>  : public IHandler
 			{
 				std::pair<T1,T1>* pairData;
+                Handler<T1> _handler1;
+                Handler<T1> _handler2;
 			public:
 				Handler() : pairData(nullptr) {}
 
-				virtual void UpdateUi(const std::pair<T1, T1>& data)
+				virtual void UpdateUi( std::pair<T1, T1>* data)
 				{
-					
-
+                    if(data)
+                    {
+                        _handler1.UpdateUi(&data->first);
+                        _handler2.UpdateUi(&data->second);
+                    }else
+                    {
+                        _handler1.UpdateUi(nullptr);
+                        _handler2.UpdateUi(nullptr);
+                    }
 				}
 				virtual void OnUiUpdate(QObject* sender)
 				{
-					
 					std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
-					Handler<T1>::OnUiUpdate(sender);
-					Handler<T1>::OnUiUpdate(sender);
+					_handler1.OnUiUpdate(sender);
+					_handler2.OnUiUpdate(sender);
+                    if(_listener)
+                        _listener->OnUpdate(this);
 				}
 				virtual void SetData(std::pair<T1, T1>* data_)
 				{
-					
 					pairData = data_;
-					Handler<T1>::SetData(&data_->first);
-					Handler<T1>::SetData(&data_->second);
+                    if(data_)
+                    {
+                        _handler1.SetData(&data_->first);
+					    _handler2.SetData(&data_->second);
+                    }
 				}
+                std::pair<T1, T1>* GetData()
+                {
+                    return pairData;
+                }
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
-					
-					auto output = Handler<T1>::GetUiWidgets(parent);
-					auto out2 = Handler<T1>::GetUiWidgets(parent);
-					output.insert(output.end(), out2.begin(), out2.end());
-					return output;
+					auto out1 = _handler1.GetUiWidgets(parent);
+					auto out2 = _handler2.GetUiWidgets(parent);
+					out2.insert(out2.end(), out1.begin(), out1.end());
+					return out2;
 				}
+                virtual void SetParamMtx(std::recursive_mutex* mtx)
+                {
+                    IHandler::SetParamMtx(mtx);
+                    _handler1.SetParamMtx(mtx);
+                    _handler2.SetParamMtx(mtx);
+                }
+                virtual void SetUpdateListener(UiUpdateListener* listener)
+                {
+                    _handler1.SetUpdateListener(listener);
+                    _handler2.SetUpdateListener(listener);
+                }
 			};
 
 			template<typename T1, typename T2> class Handler<std::pair<T1, T2>>: public Handler<T1>, public Handler<T2>
@@ -913,24 +1019,26 @@ namespace Parameters
 			public:
 				Handler() : pairData(nullptr) {}
 
-				virtual void UpdateUi(const std::pair<T1, T2>& data)
+				virtual void UpdateUi( std::pair<T1, T2>* data)
 				{
 					
 				}
 				virtual void OnUiUpdate(QObject* sender)
 				{
-					
 					std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
 					Handler<T1>::OnUiUpdate(sender);
 					Handler<T2>::OnUiUpdate(sender);
 				}
 				virtual void SetData(std::pair<T1, T2>* data_)
 				{
-					
 					pairData = data_;
 					Handler<T1>::SetData(&data_->first);
 					Handler<T2>::SetData(&data_->second);
 				}
+                std::pair<T1, T2>* GetData()
+                {
+                    return pairData;
+                }
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
 					
@@ -944,30 +1052,43 @@ namespace Parameters
 			// **********************************************************************************
 			// *************************** std::vector ******************************************
 			// **********************************************************************************
-			template<typename T> class Handler<std::vector<T>> : public Handler < T >
+			template<typename T> class Handler<std::vector<T>> : public Handler < T >, public UiUpdateListener
 			{
 				std::vector<T>* vectorData;
+                T _appendData;
 				QSpinBox* index;
 			public:
-				Handler() : index(new QSpinBox()), vectorData(nullptr) {}
-				virtual void UpdateUi(const std::vector<T>& data)
+				Handler(): index(new QSpinBox()), vectorData(nullptr) 
+                {
+                    Handler<T>::SetUpdateListener(this);
+                }
+				virtual void UpdateUi( std::vector<T>* data)
 				{
-					if (data.size())
+					if (data && data->size())
 					{
                         std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
-						index->setMaximum(data.size() - 1);
-						Handler<T>::UpdateUi(data[index->value()]);
+						index->setMaximum(data->size());
+                        if(index->value() < data->size())
+						    Handler<T>::UpdateUi(&(*data)[index->value()]);
+                        else
+                            Handler<T>::UpdateUi(&_appendData);
 					}
 				}
 				virtual void OnUiUpdate(QObject* sender, int idx = 0)
 				{
-					
-					if (sender == index && vectorData && vectorData->size() && idx < vectorData->size())
+					if (sender == index && vectorData )
 					{
-                        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
-						Handler<T>::SetData(&(*vectorData)[idx]);
-						Handler<T>::OnUiUpdate(sender);
-					}						
+                        if(vectorData->size() && idx < vectorData->size())
+                        {
+                            std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+						    Handler<T>::SetData(&(*vectorData)[idx]);
+    						Handler<T>::OnUiUpdate(sender);
+                        }else
+                        {
+                            Handler<T>::SetData(&_appendData);
+    						Handler<T>::OnUiUpdate(sender);
+                        }   
+					}
 				}
 				virtual void SetData(std::vector<T>* data_)
 				{
@@ -981,9 +1102,12 @@ namespace Parameters
 						}
 					}
 				}
+                std::vector<T>* GetData()
+                {
+                    return vectorData;
+                }
 				virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
 				{
-					
 					auto output = Handler<T>::GetUiWidgets(parent);
 					index->setParent(parent);
 					index->setMinimum(0);
@@ -991,6 +1115,15 @@ namespace Parameters
 					output.push_back(index);
 					return output;
 				}
+                virtual void OnUpdate(IHandler* handler)
+                {
+                    if(Handler<T>::GetData() == &_appendData && vectorData)
+                    {
+                        vectorData->push_back(_appendData);
+                        Handler<T>::SetData(&vectorData->back());
+                        index->setMaximum(vectorData->size());
+                    }
+                }
 			};
 
 			// **********************************************************************************
@@ -1045,6 +1178,7 @@ namespace Parameters
 					parameter->changed = true;
 					parameter->OnUpdate(nullptr);
 				}
+                // Guaranteed to be called on the GUI thread thanks to the signal connection configuration
 				void onParamUpdate(cv::cuda::Stream* stream)
 				{
 					auto dataPtr = parameter->Data();	
@@ -1052,9 +1186,7 @@ namespace Parameters
 					{
 						if (Handler<T>::UiUpdateRequired())
 						{
-							UiCallbackService::Instance()->post(
-                                std::bind(&Handler<T>::UpdateUi, &paramHandler, std::ref(*dataPtr)), 
-                                std::make_pair((void*)&paramHandler, Loki::TypeInfo(typeid(Handler<T>))));
+                            paramHandler.UpdateUi(dataPtr);
 						}
 					}
 				}
@@ -1104,7 +1236,12 @@ namespace Parameters
 						{
 							layout->addWidget(*itr, 0, count);
 						}
-						paramHandler.UpdateUi(*parameter->Data());
+                        // Correct the tab order of the widgets
+                        for(int i = widgets.size() - 1; i > 0; --i)
+                        {
+                            QWidget::setTabOrder(widgets[i], widgets[i - 1]);
+                        }
+						paramHandler.UpdateUi(parameter->Data());
 					}
 					return output;
 				}
