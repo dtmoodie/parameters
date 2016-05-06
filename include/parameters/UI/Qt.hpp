@@ -372,6 +372,10 @@ namespace Parameters
 					{
 						for (int j = 0; j < COL; ++j)
 						{
+                            if(COL != 1)
+                                table->setColumnWidth(j, 40);
+                            else
+                                table->setColumnWidth(i, 40);
 							QTableWidgetItem* item = new QTableWidgetItem();
 							items.push_back(item);
                             if(COL == 1)
@@ -380,6 +384,7 @@ namespace Parameters
                                 table->setItem(i, j, item);
 						}
 					}
+                    
 					proxy->connect(table, SIGNAL(cellChanged(int, int)), proxy, SLOT(on_update(int, int)));
 				}
 				virtual void SetData(::cv::Matx<T, ROW, COL>* data)
@@ -401,6 +406,7 @@ namespace Parameters
 					    {
 						    for (int j = 0; j < COL; ++j)
 						    {
+                                items[i*COL + j]->setToolTip(QString::number((*data)(i,j)));
 							    items[i*COL + j]->setData(Qt::EditRole, (*data)(i, j));
 						    }
 					    }
@@ -471,6 +477,8 @@ namespace Parameters
 					table->setItem(0, 1, second);
 					table->setRowCount(1);
 					table->setColumnCount(2);
+                    table->setColumnWidth(0, 40);
+                    table->setColumnWidth(1, 40);
 					proxy->connect(table, SIGNAL(cellChanged(int, int)), proxy, SLOT(on_update(int, int)));
 				}
 				virtual void UpdateUi(::cv::Point_<T>* data)
@@ -484,6 +492,8 @@ namespace Parameters
 						    second = new QTableWidgetItem();
 						    first->setData(Qt::EditRole, ptData->x);
 						    second->setData(Qt::EditRole, ptData->y);
+                            first->setToolTip(QString::number(ptData->x));
+                            second->setToolTip(QString::number(ptData->y));
 						    table->setItem(0, 0, first);
 						    table->setItem(0, 1, second);
 						    table->update();
@@ -562,6 +572,9 @@ namespace Parameters
                     table->setItem(0, 2, third);
                     table->setRowCount(1);
                     table->setColumnCount(3);
+                    table->setColumnWidth(0, 40);
+                    table->setColumnWidth(1, 40);
+                    table->setColumnWidth(2, 40);
                     proxy->connect(table, SIGNAL(cellChanged(int, int)), proxy, SLOT(on_update(int, int)));
                 }
                 virtual void UpdateUi( ::cv::Point3_<T>* data)
@@ -575,6 +588,9 @@ namespace Parameters
                         first->setData(Qt::EditRole, ptData->x);
                         second->setData(Qt::EditRole, ptData->y);
                         third->setData(Qt::EditRole, ptData->z);
+                        first->setToolTip(QString::number(ptData->x));
+                        second->setToolTip(QString::number(ptData->y));
+                        third->setToolTip(QString::number(ptData->z));
                         table->setItem(0, 0, first);
                         table->setItem(0, 1, second);
                         table->setItem(0, 2, third);
