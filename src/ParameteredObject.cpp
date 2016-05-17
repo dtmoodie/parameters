@@ -10,8 +10,8 @@ using namespace Parameters;
 
 ParameteredObject::ParameteredObject()
 {
-	_sig_parameter_updated = nullptr;
-	_sig_parameter_added = nullptr;
+	//_sig_parameter_updated = nullptr;
+	//_sig_parameter_added = nullptr;
     _variable_manager = nullptr;
 }
 
@@ -48,7 +48,8 @@ Parameters::IVariableManager* ParameteredObject::GetVariableManager()
 Parameter* ParameteredObject::addParameter(Parameter::Ptr param)
 {
 	std::lock_guard<std::recursive_mutex> lock(mtx);
-	DOIF_LOG_FAIL(_sig_parameter_added, (*_sig_parameter_updated)(this), warning);
+	//DOIF_LOG_FAIL(_sig_parameter_added, (*_sig_parameter_updated)(this), warning);
+	sig_parameter_added(this);
     DOIF_LOG_FAIL(_variable_manager, _variable_manager->AddParameter(param.get()), debug);
 	_callback_connections.push_back(param->RegisterNotifier(std::bind(&ParameteredObject::onUpdate, this, param.get(), std::placeholders::_1)));
     _parameters.push_back(param.get());
@@ -73,7 +74,8 @@ Parameter* ParameteredObject::addParameter(Parameter* param)
 		LOG(debug) << "Parameter with name " << param->GetName() << " already exists but not as an explicitly defined parameter";
 		return param;
 	}
-	DOIF_LOG_FAIL(_sig_parameter_added, (*_sig_parameter_updated)(this), debug);
+	//DOIF_LOG_FAIL(_sig_parameter_added, (*_sig_parameter_updated)(this), debug);
+	sig_parameter_added(this);
 	DOIF_LOG_FAIL(_variable_manager, _variable_manager->AddParameter(param), debug);
 	
 	_callback_connections.push_back(param->RegisterNotifier(std::bind(&ParameteredObject::onUpdate, this, param, std::placeholders::_1)));
@@ -197,7 +199,8 @@ void ParameteredObject::RegisterParameterCallback(Parameter* param, const std::f
 
 void ParameteredObject::onUpdate(Parameters::Parameter* param, cv::cuda::Stream* stream)
 {
-	DOIF_LOG_FAIL(_sig_parameter_updated != nullptr, (*_sig_parameter_updated)(this), debug);
+	//DOIF_LOG_FAIL(_sig_parameter_updated != nullptr, (*_sig_parameter_updated)(this), debug);
+	sig_parameter_updated(this);
 }
 
 void ParameteredObject::RunCallbackLockObject(cv::cuda::Stream* stream, const std::function<void(cv::cuda::Stream*)>& callback)

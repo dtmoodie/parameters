@@ -103,7 +103,7 @@ namespace Parameters
         
         // Mutex for blocking processing of a object during update
         std::recursive_mutex																mtx;
-		SIGNALS_BEGIN
+		SIGNALS_BEGIN(ParameteredObject)
 			SIG_SEND(parameter_updated, ParameteredObject*);
 			SIG_SEND(parameter_added, ParameteredObject*);
 		SIGNALS_END
