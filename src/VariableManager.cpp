@@ -8,18 +8,12 @@ using namespace Parameters;
 void VariableManager::AddParameter(Parameters::Parameter* param)
 {
     _parameters[param->GetTreeName()] = param;
-	_delete_connections.push_back(param->RegisterDeleteNotifier(std::bind(&VariableManager::RemoveParameter, this, std::placeholders::_1)));
+	_delete_connections[param->GetTreeName()] = param->RegisterDeleteNotifier(std::bind(&VariableManager::RemoveParameter, this, std::placeholders::_1));
 }
 void VariableManager::RemoveParameter(Parameters::Parameter* param)
 {
-    for(auto itr = _parameters.begin(); itr != _parameters.end(); ++itr)
-    {
-        if(itr->second == param)
-        {
-            _parameters.erase(itr);
-            return;
-        }
-    }
+	_parameters.erase(param->GetTreeName());
+	_delete_connections.erase(param->GetTreeName());
 }
 std::vector<Parameters::Parameter*> VariableManager::GetOutputParameters(Loki::TypeInfo type)
 {

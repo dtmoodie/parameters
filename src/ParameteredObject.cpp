@@ -125,7 +125,7 @@ Parameter* ParameteredObject::getParameter(const std::string& name)
         {
             return itr;
         }
-    }
+    }	
     throw std::string("Unable to find parameter by name: " + name);
 }
 
@@ -148,7 +148,21 @@ Parameter* ParameteredObject::getParameterOptional(const std::string& name)
             return itr;
         }
     }
-    LOG(debug) << "Unable to find parameter by name: " << name;
+	for(auto& itr : _explicit_parameters)
+	{
+		if(itr->GetName() == name)
+		{
+			return itr;
+		}
+	}
+	for(auto& itr : _implicit_parameters)
+	{
+		if(itr->GetName() == name)
+		{
+			return itr.get();
+		}
+	}
+    LOG(trace) << "Unable to find parameter by name: " << name;
 	return nullptr;
 }
 

@@ -8,7 +8,6 @@
 #include <vector>
 #include <mutex>
 
-struct ISimpleSerializer;
 namespace Parameters
 {
 	class Parameter;

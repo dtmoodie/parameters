@@ -16,7 +16,7 @@ template<int N, class DUMMY> struct ParamRegisterer \
 template<class DUMMY> struct ParamRegisterer<__COUNTER__, DUMMY> \
 { \
 	template<class C> static void Register(C* obj){} \
-};\
+};
 
 #define DEFINE_PARAM_3(type, name, N) \
 template<class DUMMY> struct ParamRegisterer<N, DUMMY> \
@@ -24,7 +24,7 @@ template<class DUMMY> struct ParamRegisterer<N, DUMMY> \
 	template<class C> static void Register(C* obj) { \
 		obj->##name##_param.SetName(#name); \
 		obj->##name##_param.UpdateData(&obj->name); \
-		obj->addParameter(&obj->##name##_param); \
+		obj->ParameteredObject::addParameter(&obj->##name##_param); \
         ParamRegisterer<N-1, DUMMY>::Register(obj); \
 	} \
 };
@@ -36,7 +36,7 @@ template<class DUMMY> struct ParamRegisterer<N, DUMMY> \
 		obj->name = initial_value; \
         obj->name##_param.SetName(#name); \
         obj->name##_param.UpdateData(&obj->name); \
-        obj->addParameter(&obj->name##_param); \
+        obj->ParameteredObject::addParameter(&obj->name##_param); \
         ParamRegisterer<N-1, DUMMY>::Register(obj); \
 	} \
 };
@@ -48,7 +48,7 @@ template<class DUMMY> struct ParamRegisterer<N, DUMMY> \
         obj->name##_param.SetName(#name); \
         obj->name##_param.SetRange(min, max); \
         obj->name##_param.UpdateData(&obj->name); \
-        obj->addParameter(&obj->name##_param); \
+        obj->ParameteredObject::addParameter(&obj->name##_param); \
         ParamRegisterer<N-1, DUMMY>::Register(obj); \
 	} \
 };
@@ -61,15 +61,15 @@ template<class DUMMY> struct ParamRegisterer<N, DUMMY> \
         obj->name##_param.SetName(#name); \
         obj->name##_param.SetRange(min, max); \
         obj->name##_param.UpdateData(&obj->name); \
-        obj->addParameter(&obj->name##_param); \
+        obj->ParameteredObject::addParameter(&obj->name##_param); \
         ParamRegisterer<N-1, DUMMY>::Register(obj); \
 	} \
 };
 
-#define PARAM_2(type, name) DEFINE_PARAM_3(type, name, __COUNTER__); type name; TypedParameterPtr<type> ##name##_param;
-#define PARAM_3(type, name, initial_value) DEFINE_PARAM_4(type, name, initial_value, __COUNTER__); type name; TypedParameterPtr<type> name##_param;
-#define PARAM_4(type, name, min, max) DEFINE_PARAM_5(type, name, min, max, __COUNTER__); type name; RangedParameterPtr<type> name##_param;
-#define PARAM_5(type, name, min, max, initial_value) DEFINE_PARAM_6(type, name, min, max, initial_value, __COUNTER__); type name; RangedParameterPtr<type> name##_param;
+#define PARAM_2(type, name) DEFINE_PARAM_3(type, name, __COUNTER__); type name; Parameters::TypedParameterPtr<type> name##_param;
+#define PARAM_3(type, name, initial_value) DEFINE_PARAM_4(type, name, initial_value, __COUNTER__); type name; Parameters::TypedParameterPtr<type> name##_param;
+#define PARAM_4(type, name, min, max) DEFINE_PARAM_5(type, name, min, max, __COUNTER__); type name; Parameters::RangedParameterPtr<type> name##_param;
+#define PARAM_5(type, name, min, max, initial_value) DEFINE_PARAM_6(type, name, min, max, initial_value, __COUNTER__); type name; Parameters::RangedParameterPtr<type> name##_param;
 
 #ifdef _MSC_VER
 #define PARAM(...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(PARAM_, __VA_ARGS__ )(__VA_ARGS__), BOOST_PP_EMPTY() )
