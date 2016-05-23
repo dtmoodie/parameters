@@ -117,7 +117,11 @@ DefaultProxy::DefaultProxy(Parameters::Parameter* param)
 	parameter = param;
 	delete_connection = param->RegisterDeleteNotifier(std::bind(&DefaultProxy::onParamDelete, this));
 }
-
+bool DefaultProxy::SetParameter(Parameters::Parameter* param)
+{
+	parameter = param;
+	return true;
+}
 bool DefaultProxy::CheckParameter(Parameters::Parameter* param)
 {	
 	return param == parameter;
