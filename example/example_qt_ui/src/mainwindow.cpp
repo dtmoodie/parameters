@@ -30,6 +30,11 @@ MainWindow::MainWindow(QWidget *parent) :
 		param->Data()->z = 15;
 		parameters.push_back(Parameters::Parameter::Ptr(param));
 	}
+    {
+        auto param = new Parameters::TypedParameter<std::vector<std::pair<std::string, std::string>>>("Vector std::pair<std::string, std::string>");
+        param->Data()->push_back(std::pair<std::string, std::string>("asdf", "1234"));
+        parameters.push_back(Parameters::Parameter::Ptr(param));
+    }
 	{
 		Parameters::Parameter::Ptr param(new Parameters::TypedParameterPtr<std::vector<cv::Point2f>>("Vector cv::Point2f", &testRefVec));
 		testRefVec.push_back(cv::Point2f(0, 1));

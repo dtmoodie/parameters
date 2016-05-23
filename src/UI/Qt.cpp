@@ -134,13 +134,17 @@ QWidget* DefaultProxy::GetParameterWidget(QWidget* parent)
 	output->setLayout(layout);
 	return output;
 }
-IHandler::IHandler() : paramMtx(nullptr), proxy(new SignalProxy(this)) {}
+IHandler::IHandler() : paramMtx(nullptr), proxy(new SignalProxy(this)), _listener(nullptr) {}
 void IHandler::OnUiUpdate(QObject* sender) {}
 void IHandler::OnUiUpdate(QObject* sender, double val) {}
 void IHandler::OnUiUpdate(QObject* sender, int val) {}
 void IHandler::OnUiUpdate(QObject* sender, bool val) {}
 void IHandler::OnUiUpdate(QObject* sender, QString val) {}
 void IHandler::OnUiUpdate(QObject* sender, int row, int col) {}
+void IHandler::SetUpdateListener(UiUpdateListener* listener)
+{
+    _listener = listener;
+}
 
 std::function<void(void)>& IHandler::GetOnUpdate()
 {
