@@ -54,8 +54,8 @@ namespace Parameters
                 typedef std::function<void(::std::stringstream*, Parameters::Parameter*)> SSDeSerializerFunction;
                 typedef std::function<void(::std::string*, Parameters::Parameter*)> DeSerializerFunction;
                 typedef std::function<Parameters::Parameter::Ptr(const ::std::string&)> FactoryFunction;
-                typedef std::tuple<SerializerFunction, SSDeSerializerFunction, DeSerializerFunction> InterpreterSet;
-                static void RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, SSDeSerializerFunction ssdeserializer, DeSerializerFunction deserializer, FactoryFunction factory);
+                typedef std::tuple<SerializerFunction, SerializerFunction, SSDeSerializerFunction, DeSerializerFunction> InterpreterSet;
+                static void RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, SerializerFunction serializeValue, SSDeSerializerFunction ssdeserializer, DeSerializerFunction deserializer, FactoryFunction factory);
                 static InterpreterSet& GetInterpretingFunction(Loki::TypeInfo type);
 
             private:
@@ -73,6 +73,7 @@ namespace Parameters
             PARAMETER_EXPORTS void DeSerialize(::std::string* ss, Parameters::Parameter* param);
 			PARAMETER_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::stringstream* ss);
 			PARAMETER_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::string* ss);
+            PARAMETER_EXPORTS  void SerializeValue(::std::stringstream* ss, Parameters::Parameter* param);
 
             template<typename T, typename Enable = void> struct Serializer
             {
@@ -221,6 +222,14 @@ namespace Parameters
                         (*ss) << "\n";
                     }
                 }
+                static void WriteValue(::std::stringstream* ss, Parameter* param)
+                {
+                    ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
+                    if(typedParam)
+                    {
+                        Serializer<T>::Serialize(ss, typedParam->Data());
+                    }
+                }
                 static void ssRead(::std::stringstream* ss, Parameter* param)
                 {
 					LOG_TRIVIAL(trace) << "Reading parameter with name " << param->GetName();
@@ -260,6 +269,7 @@ namespace Parameters
 				{
 					InterpreterRegistry::RegisterFunction(Loki::TypeInfo(typeid(T)),
 						std::bind(SerializeWrapper<T>::Write, std::placeholders::_1, std::placeholders::_2),
+                        std::bind(SerializeWrapper<T>::WriteValue, std::placeholders::_1, std::placeholders::_2),
 						std::bind(SerializeWrapper<T>::ssRead, std::placeholders::_1, std::placeholders::_2),
 						std::bind(SerializeWrapper<T>::Read, std::placeholders::_1, std::placeholders::_2),
 						std::bind(ParameterFactory<T>::create, std::placeholders::_1));

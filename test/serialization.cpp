@@ -15,11 +15,12 @@ using namespace Parameters;
 	std::stringstream ss; \
 	Persistence::Text::Serialize(&ss, &test); \
 	std::string str = ss.str(); \
+    BOOST_LOG_TRIVIAL(debug) << "Serialized value: " << str; \
 	auto deserialized_param = Persistence::Text::DeSerialize(&str); \
 	auto typed = std::dynamic_pointer_cast<TypedParameter<type>>(deserialized_param); \
 	BOOST_REQUIRE(typed); \
 	BOOST_REQUIRE(typed->Data()); \
-	BOOST_REQUIRE(*typed->Data() == *test.Data()); \
+	BOOST_CHECK_EQUAL(*typed->Data() , *test.Data()); \
 }
 #define TYPED_TEST_CASE(type) TYPED_TEST_CASE_(type); 
 

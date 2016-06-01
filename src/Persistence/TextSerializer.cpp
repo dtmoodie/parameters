@@ -31,16 +31,14 @@ std::map<std::string, InterpreterRegistry::FactoryFunction>& InterpreterRegistry
     static std::map<std::string, InterpreterRegistry::FactoryFunction> factory_registry;
     return factory_registry;
 }
-void InterpreterRegistry::RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, SSDeSerializerFunction ssdeserializer, DeSerializerFunction deserializer, FactoryFunction factoryFunc)
-{
-    
-    registry()[type] = std::make_tuple(serializer, ssdeserializer, deserializer);
+void InterpreterRegistry::RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, SerializerFunction valueSerializer, SSDeSerializerFunction ssdeserializer, DeSerializerFunction deserializer, FactoryFunction factoryFunc)
+{   
+    registry()[type] = std::make_tuple(serializer, valueSerializer, ssdeserializer, deserializer);
     factory()[type.name()] = factoryFunc;
 }
 
 InterpreterRegistry::InterpreterSet& InterpreterRegistry::GetInterpretingFunction(Loki::TypeInfo type)
-{
-    
+{   
     if (registry().find(type) == registry().end())
     {
         LOG_TRIVIAL(debug) << type.name() << " not registered to the registry";
@@ -49,28 +47,26 @@ InterpreterRegistry::InterpreterSet& InterpreterRegistry::GetInterpretingFunctio
     return registry()[type];
 }
 
-
+void Parameters::Persistence::Text::SerializeValue(::std::stringstream* ss, Parameters::Parameter* param)
+{
+    std::get<1>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo())).operator()(ss, param);
+}
 void Parameters::Persistence::Text::Serialize(::std::stringstream* ss, Parameters::Parameter* param)
 {
-    
     std::get<0>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo())).operator()(ss, param);
-    //InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo()).first(ss, param);
 }
 
 void Parameters::Persistence::Text::DeSerialize(::std::stringstream* ss, Parameters::Parameter* param)
 {
-    
-    std::get<1>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo())).operator()(ss, param);
+    std::get<2>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo())).operator()(ss, param);
 }
 void Parameters::Persistence::Text::DeSerialize(::std::string* ss, Parameters::Parameter* param)
 {
-    std::get<2>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo())).operator()(ss, param);
+    std::get<3>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo())).operator()(ss, param);
 }
 
 std::shared_ptr<Parameters::Parameter> Parameters::Persistence::Text::DeSerialize(::std::stringstream* ss)
 {
-    
-    //TODO object factory based on serialized type
     std::string type;
 	std::getline(*ss, type, ']');
 	std::string name;
@@ -84,7 +80,7 @@ std::shared_ptr<Parameters::Parameter> Parameters::Persistence::Text::DeSerializ
 	}
 	auto param = InterpreterRegistry::factory()[type.substr(1)](name);
 	param->SetTreeRoot(root);
-	std::get<1>(InterpreterRegistry::registry()[param->GetTypeInfo()])(ss, param.get());
+	std::get<2>(InterpreterRegistry::registry()[param->GetTypeInfo()])(ss, param.get());
 	return param;
 }
 std::shared_ptr<Parameters::Parameter> Parameters::Persistence::Text::DeSerialize(::std::string* str)
@@ -105,12 +101,11 @@ std::shared_ptr<Parameters::Parameter> Parameters::Persistence::Text::DeSerializ
 	}
 	auto param = InterpreterRegistry::factory()[type.substr(1)](name);
 	param->SetTreeRoot(root);
-	std::get<1>(InterpreterRegistry::registry()[param->GetTypeInfo()])(&ss, param.get());
+	std::get<2>(InterpreterRegistry::registry()[param->GetTypeInfo()])(&ss, param.get());
 	return param;
 }
 void Serializer<Parameters::EnumParameter, void>::Serialize(::std::stringstream* ss, Parameters::EnumParameter* param)
 {
-    
     (*ss) << "Values:";
     for (int i = 0; i < param->enumerations.size(); ++i)
     {
