@@ -62,20 +62,25 @@ namespace Parameters
 				{
 					if (arr.kind() == cv::_InputArray::CUDA_GPU_MAT)
 					{
-                        auto tmp_roi = roi;
-                        tmp_roi.width = std::min(tmp_roi.x + tmp_roi.width, arr.size().width);
-                        tmp_roi.height = std::min(tmp_roi.y + tmp_roi.height, arr.size().height);
-						if (stream)
-							arr.getGpuMat()(tmp_roi).download(output, *stream);
-						else
-							arr.getGpuMat()(tmp_roi).download(output);
+                        auto tmp_roi = roi & cv::Rect(cv::Point(0,0), cv::Size(arr.cols(), arr.rows()));
+                        if(tmp_roi.size().area())
+						{
+							if (stream)
+							{
+								arr.getGpuMat()(tmp_roi).download(output, *stream);
+							}
+							else
+							{
+								arr.getGpuMat()(tmp_roi).download(output);
+							}
+						}
 						return output;
 					}
 					else
 					{
 						arr.getMat()(roi).copyTo(output);
 					}
-				}				
+				}
 				return output;
 			}
 			template<typename T> cv::Mat ToMat(const cv::Point_<T>& data, cv::cuda::Stream* stream, cv::Rect roi, cv::Size& full_size, int)
