@@ -31,12 +31,20 @@ std::map<std::string, InterpreterRegistry::FactoryFunction>& InterpreterRegistry
     static std::map<std::string, InterpreterRegistry::FactoryFunction> factory_registry;
     return factory_registry;
 }
-void InterpreterRegistry::RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, SerializerFunction valueSerializer, SSDeSerializerFunction ssdeserializer, DeSerializerFunction deserializer, FactoryFunction factoryFunc)
+void InterpreterRegistry::RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, SerializerFunction valueSerializer, SSDeSerializerFunction ssdeserializer, DeSerializerFunction deserializer, FactoryFunction factoryFunc, bool is_default)
 {   
-    registry()[type] = std::make_tuple(serializer, valueSerializer, ssdeserializer, deserializer);
+    registry()[type] = std::make_tuple(serializer, valueSerializer, ssdeserializer, deserializer, is_default);
     factory()[type.name()] = factoryFunc;
 }
-
+bool InterpreterRegistry::Exists(Loki::TypeInfo type)
+{
+    auto itr = registry().find(type);
+    if(itr != registry().end())
+    {
+        return !std::get<4>(itr->second);
+    }
+    return false;
+}
 InterpreterRegistry::InterpreterSet& InterpreterRegistry::GetInterpretingFunction(Loki::TypeInfo type)
 {   
     if (registry().find(type) == registry().end())
@@ -47,13 +55,13 @@ InterpreterRegistry::InterpreterSet& InterpreterRegistry::GetInterpretingFunctio
     return registry()[type];
 }
 
-void Parameters::Persistence::Text::SerializeValue(::std::stringstream* ss, Parameters::Parameter* param)
+bool Parameters::Persistence::Text::SerializeValue(::std::stringstream* ss, Parameters::Parameter* param)
 {
-    std::get<1>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo())).operator()(ss, param);
+    return std::get<1>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo())).operator()(ss, param);
 }
-void Parameters::Persistence::Text::Serialize(::std::stringstream* ss, Parameters::Parameter* param)
+bool Parameters::Persistence::Text::Serialize(::std::stringstream* ss, Parameters::Parameter* param)
 {
-    std::get<0>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo())).operator()(ss, param);
+    return std::get<0>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo())).operator()(ss, param);
 }
 
 void Parameters::Persistence::Text::DeSerialize(::std::stringstream* ss, Parameters::Parameter* param)
@@ -104,13 +112,14 @@ std::shared_ptr<Parameters::Parameter> Parameters::Persistence::Text::DeSerializ
 	std::get<2>(InterpreterRegistry::registry()[param->GetTypeInfo()])(&ss, param.get());
 	return param;
 }
-void Serializer<Parameters::EnumParameter, void>::Serialize(::std::stringstream* ss, Parameters::EnumParameter* param)
+bool Serializer<Parameters::EnumParameter, void>::Serialize(::std::stringstream* ss, Parameters::EnumParameter* param)
 {
     (*ss) << "Values:";
     for (int i = 0; i < param->enumerations.size(); ++i)
     {
         (*ss) << "(" << param->values[i] << "," << param->enumerations[i] << ")";
     }
+    return true;
 }
 
 bool Serializer<Parameters::EnumParameter, void>::DeSerialize(::std::stringstream* ss, Parameters::EnumParameter* param)
@@ -164,9 +173,9 @@ bool Serializer<Parameters::EnumParameter, void>::DeSerialize(::std::string* ss,
     return false;
 }
 
-void Parameters::Persistence::Text::Serializer<::cv::cuda::GpuMat, void>::Serialize(::std::stringstream* ss, ::cv::cuda::GpuMat* param)
+bool Parameters::Persistence::Text::Serializer<::cv::cuda::GpuMat, void>::Serialize(::std::stringstream* ss, ::cv::cuda::GpuMat* param)
 {
-
+    return false;
 }
 bool Parameters::Persistence::Text::Serializer<::cv::cuda::GpuMat, void>::DeSerialize(::std::stringstream* ss, ::cv::cuda::GpuMat* param)
 {

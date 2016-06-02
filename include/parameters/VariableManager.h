@@ -15,7 +15,10 @@ namespace Parameters
         virtual void AddParameter(Parameters::Parameter* param);
 		virtual void RemoveParameter(Parameters::Parameter* param);
 		virtual std::vector<Parameters::Parameter*> GetOutputParameters(Loki::TypeInfo type);
+        virtual std::vector<Parameters::Parameter*> GetAllParmaeters();
+        virtual std::vector<Parameters::Parameter*> GetAllOutputParmaeters();
         virtual Parameters::Parameter* GetOutputParameter(std::string name);
+        virtual Parameters::Parameter* GetParameter(std::string name);
 		virtual void LinkParameters(Parameters::Parameter* output, Parameters::Parameter* input);
     };
 
