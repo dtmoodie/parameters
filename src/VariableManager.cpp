@@ -27,6 +27,33 @@ std::vector<Parameters::Parameter*> VariableManager::GetOutputParameters(Loki::T
     }
     return valid_outputs;
 }
+std::vector<Parameters::Parameter*> VariableManager::GetAllParmaeters()
+{
+    std::vector<Parameters::Parameter*> output;
+    for(auto& itr : _parameters)
+    {
+        output.push_back(itr.second);
+    }
+    return output;
+}
+std::vector<Parameters::Parameter*> VariableManager::GetAllOutputParmaeters()
+{
+    std::vector<Parameters::Parameter*> output;
+    for(auto& itr : _parameters)
+    {
+        if(itr.second->type & Parameters::Parameter::Output)
+        {
+            output.push_back(itr.second);
+        }
+        
+    }
+    return output;    
+}
+Parameters::Parameter* VariableManager::GetParameter(std::string name)
+{
+    return GetOutputParameter(name);
+}
+
 Parameters::Parameter* VariableManager::GetOutputParameter(std::string name)
 {
     auto itr = _parameters.find(name);

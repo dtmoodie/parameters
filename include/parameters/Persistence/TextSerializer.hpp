@@ -50,14 +50,16 @@ namespace Parameters
             class PARAMETER_EXPORTS InterpreterRegistry
             {
             public:
-                typedef std::function<void(::std::stringstream*, Parameters::Parameter*)> SerializerFunction;
+                typedef std::function<bool(::std::stringstream*, Parameters::Parameter*)> SerializerFunction;
                 typedef std::function<void(::std::stringstream*, Parameters::Parameter*)> SSDeSerializerFunction;
                 typedef std::function<void(::std::string*, Parameters::Parameter*)> DeSerializerFunction;
                 typedef std::function<Parameters::Parameter::Ptr(const ::std::string&)> FactoryFunction;
-                typedef std::tuple<SerializerFunction, SerializerFunction, SSDeSerializerFunction, DeSerializerFunction> InterpreterSet;
-                static void RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, SerializerFunction serializeValue, SSDeSerializerFunction ssdeserializer, DeSerializerFunction deserializer, FactoryFunction factory);
+                typedef std::tuple<SerializerFunction, SerializerFunction, SSDeSerializerFunction, DeSerializerFunction, bool> InterpreterSet;
+                static void RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, SerializerFunction serializeValue, SSDeSerializerFunction ssdeserializer, DeSerializerFunction deserializer, FactoryFunction factory, bool is_default);
                 static InterpreterSet& GetInterpretingFunction(Loki::TypeInfo type);
 
+                // Return true if a properly formed serialization function exists for this type
+                static bool Exists(Loki::TypeInfo type);
             private:
                 // Mapping from Loki::typeinfo to file writing functors
 				static std::map<Loki::TypeInfo, InterpreterSet>& registry();
@@ -66,19 +68,20 @@ namespace Parameters
 				friend PARAMETER_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::stringstream* ss);
 				friend PARAMETER_EXPORTS void DeSerialize(::std::string* ss, Parameters::Parameter* param);
 				friend PARAMETER_EXPORTS void DeSerialize(::std::stringstream* ss, Parameters::Parameter* param);
-				friend PARAMETER_EXPORTS void Serialize(::std::stringstream* ss, Parameters::Parameter* param);
+				friend PARAMETER_EXPORTS bool Serialize(::std::stringstream* ss, Parameters::Parameter* param);
             };
-            PARAMETER_EXPORTS void Serialize(::std::stringstream* ss, Parameters::Parameter* param);
+            PARAMETER_EXPORTS bool Serialize(::std::stringstream* ss, Parameters::Parameter* param);
             PARAMETER_EXPORTS void DeSerialize(::std::stringstream* ss, Parameters::Parameter* param);
             PARAMETER_EXPORTS void DeSerialize(::std::string* ss, Parameters::Parameter* param);
 			PARAMETER_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::stringstream* ss);
 			PARAMETER_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::string* ss);
-            PARAMETER_EXPORTS  void SerializeValue(::std::stringstream* ss, Parameters::Parameter* param);
+            PARAMETER_EXPORTS bool SerializeValue(::std::stringstream* ss, Parameters::Parameter* param);
 
             template<typename T, typename Enable = void> struct Serializer
             {
-                static void Serialize(::std::stringstream* ss, T* param)
+                static bool Serialize(::std::stringstream* ss, T* param)
                 {
+                    return false;
                 }
                 static bool DeSerialize(::std::stringstream* ss, T* param)
                 {
@@ -88,6 +91,7 @@ namespace Parameters
                 {
                     return false;
                 }
+                const static bool IS_DEFAULT = true;
             };
 			template<typename T> struct Serializer<T, typename std::enable_if<
 				std::is_same<T, Parameters::ReadDirectory>::value ||
@@ -95,9 +99,10 @@ namespace Parameters
 				std::is_same<T, Parameters::WriteDirectory>::value ||
 				std::is_same<T, Parameters::WriteFile>::value>::type>
 			{
-				static void Serialize(::std::stringstream* ss, T* param)
+				static bool Serialize(::std::stringstream* ss, T* param)
 				{
 					(*ss) << param->string();
+                    return true;
 				}
 				static bool DeSerialize(::std::stringstream* ss, T* param)
 				{
@@ -111,6 +116,7 @@ namespace Parameters
 					*param = T(*str);
 					return true;
 				}
+                const static bool IS_DEFAULT = false;
 			};
             template<typename T> struct Serializer<T, typename std::enable_if<
                 std::is_floating_point<T>::value || 
@@ -119,9 +125,10 @@ namespace Parameters
                 std::is_same<T, std::string>::value
             >::type>
             {
-                static void Serialize(::std::stringstream* ss, T* param)
+                static bool Serialize(::std::stringstream* ss, T* param)
                 {
                     (*ss) << *param;
+                    return true;
                 }
                 static bool DeSerialize(::std::stringstream* ss, T* param)
                 {
@@ -139,6 +146,7 @@ namespace Parameters
                     }catch(...){}
 					return false;
 				}
+                const static bool IS_DEFAULT = false;
             };
 
             template<typename T> struct Serializer<T, typename std::enable_if<
@@ -147,8 +155,9 @@ namespace Parameters
                 !std::is_same<T, std::string>::value
             >::type>
             {
-                static void Serialize(::std::stringstream* ss, T* param)
+                static bool Serialize(::std::stringstream* ss, T* param)
                 {
+                    return false;
                 }
                 static bool DeSerialize(::std::stringstream* ss, T* param)
                 {
@@ -158,22 +167,25 @@ namespace Parameters
                 {
                     return false;
                 }
+                const static bool IS_DEFAULT = true;
             };
             template<> struct PARAMETER_EXPORTS Serializer<EnumParameter, void>
             {
-                static void Serialize(::std::stringstream* ss, EnumParameter* param);
+                static bool Serialize(::std::stringstream* ss, EnumParameter* param);
                 static bool DeSerialize(::std::stringstream* ss, EnumParameter* param);
                 static bool DeSerialize(::std::string* ss, EnumParameter* param);
+                const static bool IS_DEFAULT = false;
             };
             template<> struct PARAMETER_EXPORTS Serializer<::cv::cuda::GpuMat, void>
             {
-                static void Serialize(::std::stringstream* ss, ::cv::cuda::GpuMat* param);
+                static bool Serialize(::std::stringstream* ss, ::cv::cuda::GpuMat* param);
                 static bool DeSerialize(::std::stringstream* ss, ::cv::cuda::GpuMat* param);
                 static bool DeSerialize(::std::string* ss, ::cv::cuda::GpuMat* param);
+                const static bool IS_DEFAULT = true;
             };
             template<typename T> struct Serializer<std::vector<T>, void>: public Serializer<T>
             {
-                static void Serialize(std::stringstream* ss, std::vector<T>* param)
+                static bool Serialize(std::stringstream* ss, std::vector<T>* param)
                 {
                     
                     (*ss) << "<" << param->size() << ">";
@@ -181,8 +193,10 @@ namespace Parameters
                     {
                         if (i != 0)
                             (*ss) << ",";
-                        Serializer<T>::Serialize(ss, &(*param)[i]);
+                        if(!Serializer<T>::Serialize(ss, &(*param)[i]))
+                            return false;
                     }
+                    return true;
                 }
                 static bool DeSerialize(::std::stringstream* ss, std::vector<T>* param)
                 {
@@ -204,12 +218,13 @@ namespace Parameters
                 {
 					return true;
                 }
+                const static bool IS_DEFAULT = false;
             };
 
 
             template<typename T> struct SerializeWrapper
             {
-                static void Write(::std::stringstream* ss, Parameter* param)
+                static bool Write(::std::stringstream* ss, Parameter* param)
                 {
                     LOG_TRIVIAL(trace) << "Writing parameter with name " << param->GetName();
                     ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
@@ -218,17 +233,21 @@ namespace Parameters
                     {
                         (*ss) << "[" << param->GetTypeInfo().name() << "]";
 						(*ss) << param->GetTreeName() << "#";
-                        Serializer<T>::Serialize(ss, typedParam->Data());
+                        if(!Serializer<T>::Serialize(ss, typedParam->Data()))
+                            return false;
                         (*ss) << "\n";
                     }
+                    return true;
                 }
-                static void WriteValue(::std::stringstream* ss, Parameter* param)
+                static bool WriteValue(::std::stringstream* ss, Parameter* param)
                 {
                     ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
                     if(typedParam)
                     {
-                        Serializer<T>::Serialize(ss, typedParam->Data());
+                        if(!Serializer<T>::Serialize(ss, typedParam->Data()))
+                            return false;
                     }
+                    return true;
                 }
                 static void ssRead(::std::stringstream* ss, Parameter* param)
                 {
@@ -261,6 +280,7 @@ namespace Parameters
 						param->OnUpdate(nullptr);
                     }
                 }
+                const static bool IS_DEFAULT = Serializer<T>::IS_DEFAULT;
             };
 
             template<typename T> struct ParameterFactory
@@ -272,7 +292,8 @@ namespace Parameters
                         std::bind(SerializeWrapper<T>::WriteValue, std::placeholders::_1, std::placeholders::_2),
 						std::bind(SerializeWrapper<T>::ssRead, std::placeholders::_1, std::placeholders::_2),
 						std::bind(SerializeWrapper<T>::Read, std::placeholders::_1, std::placeholders::_2),
-						std::bind(ParameterFactory<T>::create, std::placeholders::_1));
+						std::bind(ParameterFactory<T>::create, std::placeholders::_1),
+                        SerializeWrapper<T>::IS_DEFAULT);
 				}
                 static Parameters::Parameter::Ptr create(const std::string& name)
                 {
