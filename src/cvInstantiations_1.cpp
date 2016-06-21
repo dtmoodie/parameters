@@ -28,7 +28,7 @@ https://github.com/dtmoodie/parameters
 
 using namespace Parameters;
 
-#ifdef OPENCV_FOUND
+#ifdef HAVE_OPENCV
 #include <opencv2/core.hpp>
 #include <opencv2/core/cuda.hpp>
 static TypedParameter<std::vector<cv::Point>> vecpoint_("instance");

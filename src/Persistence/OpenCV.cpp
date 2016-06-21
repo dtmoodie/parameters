@@ -16,7 +16,7 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
 https://github.com/dtmoodie/parameters
 */
-#ifdef OPENCV_FOUND
+#ifdef HAVE_OPENCV
 #include "parameters/Parameters.hpp"
 #include <opencv2/core/base.hpp>
 #include <boost/log/trivial.hpp>
@@ -24,33 +24,33 @@ https://github.com/dtmoodie/parameters
 
 using namespace Parameters::Persistence::cv;
 
-std::map<Loki::TypeInfo, std::tuple<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSerializerFunction, InterpreterRegistry::FactoryFunction >>& InterpreterRegistry::registry()
-{
-	static std::map<Loki::TypeInfo, std::tuple<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSerializerFunction, InterpreterRegistry::FactoryFunction >> instance;
-	return instance;
-}
+
 
 void InterpreterRegistry::RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, DeSerializerFunction deserializer, FactoryFunction creator)
-{
-	
-    
-	registry()[type] = std::make_tuple(serializer, deserializer, creator);
+{    
+	registry[type] = std::make_tuple(serializer, deserializer, creator);
 }
 
 std::tuple<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSerializerFunction, InterpreterRegistry::FactoryFunction >& InterpreterRegistry::GetInterpretingFunction(Loki::TypeInfo type)
 {
 	
-	if (registry().find(type) == registry().end())
+	if (registry.find(type) == registry.end())
 	{
 		LOG_TRIVIAL(debug) << type.name() << " not registered to the registry";
 		::cv::error(::cv::Error::StsAssert, "Datatype not registered to the registry", CV_Func, __FILE__, __LINE__);
 	}
 		
-	return registry()[type];
+	return registry[type];
+}
+
+InterpreterRegistry* InterpreterRegistry::instance()
+{
+	static InterpreterRegistry inst;
+	return &inst;
 }
 std::tuple<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSerializerFunction, InterpreterRegistry::FactoryFunction > InterpreterRegistry::GetInterpretingFunction(std::string type_string)
 {
-    for(auto itr : registry())
+    for(auto itr : registry)
     {
         if(itr.first.name() == type_string)
         {
@@ -64,19 +64,27 @@ std::tuple<InterpreterRegistry::SerializerFunction, InterpreterRegistry::DeSeria
 void Parameters::Persistence::cv::Serialize(::cv::FileStorage* fs, Parameters::Parameter* param)
 {
 	
-	std::get<0>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo()))(fs, param);
+	std::get<0>(InterpreterRegistry::instance()->GetInterpretingFunction(param->GetTypeInfo()))(fs, param);
 }
 void Parameters::Persistence::cv::DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param)
 {
 	
-	std::get<1>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo()))(fs, param);
+	std::get<1>(InterpreterRegistry::instance()->GetInterpretingFunction(param->GetTypeInfo()))(fs, param);
 }
 Parameters::Parameter* Parameters::Persistence::cv::DeSerialize(::cv::FileNode* fs)
 {
 	
     std::string type = (std::string)(*fs)["Type"];
     if(type.size())
-        return std::get<2>(InterpreterRegistry::GetInterpretingFunction(type))(fs);
+	{
+		try
+		{
+			return std::get<2>(InterpreterRegistry::instance()->GetInterpretingFunction(type))(fs);
+		}catch(...)
+		{
+			return nullptr;
+		}
+	}
 	return nullptr;
 }
 void Serializer<char, void>::Serialize(::cv::FileStorage* fs, char* param)
@@ -142,4 +150,4 @@ void Serializer<Parameters::EnumParameter, void>::Serialize(::cv::FileStorage* f
 	}
 	(*fs)["Current value"] >> param->currentSelection;
 }*/
-#endif // OPENCV_FOUND
+#endif // HAVE_OPENCV

@@ -39,7 +39,7 @@ https://github.com/dtmoodie/parameters
 #include <mutex>
 #include "../Types.hpp"
 #include "InterThread.hpp"
-#if defined(OPENCV_FOUND) || defined(CV_EXPORTS) || defined(CVAPI_EXPORTS)
+#if defined(HAVE_OPENCV) || defined(CV_EXPORTS) || defined(CVAPI_EXPORTS)
 #include <opencv2/core/types.hpp>
 #endif
 #include <memory>

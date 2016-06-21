@@ -28,7 +28,7 @@ https://github.com/dtmoodie/parameters
 
 using namespace Parameters;
 
-#ifdef OPENCV_FOUND
+#ifdef HAVE_OPENCV
 #include <opencv2/core.hpp>
 
 static TypedParameter<cv::Point> point_("instance");

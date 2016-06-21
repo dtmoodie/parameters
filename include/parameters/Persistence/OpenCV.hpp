@@ -18,7 +18,7 @@ https://github.com/dtmoodie/parameters
 */
 #pragma once
 
-#ifdef OPENCV_FOUND
+
 // Check if being built with OpenCV
 #include <map>
 #include <functional>
@@ -38,6 +38,12 @@ https://github.com/dtmoodie/parameters
 #include <boost/log/attributes/named_scope.hpp>
 #include "parameters/TypedParameter.hpp"
 
+namespace cv
+{
+	class FileStorage;
+	class FileNode;
+}
+
 namespace Parameters
 {
 	class Parameter;
@@ -55,27 +61,28 @@ namespace Parameters
 				typedef std::function<void(::cv::FileStorage*, Parameters::Parameter*)> SerializerFunction;
 				typedef std::function<void(::cv::FileNode*, Parameters::Parameter*)> DeSerializerFunction;
                 typedef std::function<Parameter*(::cv::FileNode*)> FactoryFunction;
-				static void RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, DeSerializerFunction deserializer, FactoryFunction creator);
-				static std::tuple<SerializerFunction, DeSerializerFunction, FactoryFunction >& GetInterpretingFunction(Loki::TypeInfo type);
-                static std::tuple<SerializerFunction, DeSerializerFunction, FactoryFunction > GetInterpretingFunction(std::string type_string);
+				void RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, DeSerializerFunction deserializer, FactoryFunction creator);
+				std::tuple<SerializerFunction, DeSerializerFunction, FactoryFunction >& GetInterpretingFunction(Loki::TypeInfo type);
+                std::tuple<SerializerFunction, DeSerializerFunction, FactoryFunction > GetInterpretingFunction(std::string type_string);
+				static InterpreterRegistry* instance();
 			private:
 				// Mapping from Loki::typeinfo to file writing functors
-				static	std::map<Loki::TypeInfo, std::tuple<SerializerFunction, DeSerializerFunction, FactoryFunction>>& registry();
+				std::map<Loki::TypeInfo, std::tuple<SerializerFunction, DeSerializerFunction, FactoryFunction>> registry;
 			};
 			PARAMETER_EXPORTS void Serialize(::cv::FileStorage* fs, Parameters::Parameter* param);
 			PARAMETER_EXPORTS void DeSerialize(::cv::FileNode* fs, Parameters::Parameter* param);
 			PARAMETER_EXPORTS Parameters::Parameter* DeSerialize(::cv::FileNode* fs);
-
+#ifdef HAVE_OPENCV
 			template<typename T, typename Enable = void> struct Serializer
 			{
 				static void Serialize(::cv::FileStorage* fs, T* param)
 				{
-					LOG_TRIVIAL(debug) << "Default non specialized serializer called for " << typeid(T).name();
+					LOG_TRIVIAL(trace) << "Default non specialized serializer called for " << typeid(T).name();
 					//std::cout << "Default non specialized serializer called for " << typeid(T).name();
 				}
 				template<typename U> static void DeSerialize(U fs, T* param)
 				{
-					LOG_TRIVIAL(debug) << "Default non specialized DeSerializer called for " << typeid(T).name();
+					LOG_TRIVIAL(trace) << "Default non specialized DeSerializer called for " << typeid(T).name();
 				}
 			};
 			template<> struct PARAMETER_EXPORTS Serializer<char, void>
@@ -98,7 +105,6 @@ namespace Parameters
 				static void Serialize(::cv::FileStorage* fs, Parameters::EnumParameter* param);
 				static void DeSerialize(::cv::FileNode&  fs, Parameters::EnumParameter* param)
 				{
-					
 					(fs)["Values"] >> param->values;
 
 					auto end = (fs)["Enumerations"].end();
@@ -114,12 +120,10 @@ namespace Parameters
 			{
 				static void Serialize(::cv::FileStorage* fs, T* param)
 				{
-					
 					(*fs) << boost::lexical_cast<std::string>(*param);
 				}
 				static void DeSerialize(::cv::FileNode& fs, T* param)
 				{
-					
 					*param = boost::lexical_cast<T>((std::string)(fs));
 				}
 			}; 
@@ -183,6 +187,22 @@ namespace Parameters
 			};
 			template<typename T, int M> struct Serializer<::cv::Vec<T, M>, void> : public Serializer<::cv::Matx<T,M,1>>{};
 			template<typename T> struct Serializer<::cv::Scalar_<T>, void> : public Serializer<::cv::Vec<T, 4>>{};
+
+			template<typename T1, typename T2> struct Serializer<std::pair<T1, T2>, void>
+			{
+				static void Serialize(::cv::FileStorage* fs, std::pair<T1, T2>* param)
+				{
+					(*fs) << "{";
+					(*fs) << "first"; Serializer<T1>::Serialize(fs, &param->first);
+					(*fs) << "second"; Serializer<T2>::Serialize(fs, &param->second);
+					(*fs) << "}";
+				}
+				static void DeSerialize(::cv::FileNode&  fs, std::pair<T1, T2>* param)
+				{
+					Serializer<T1>::DeSerialize(fs["first"], &param->first);
+					Serializer<T1>::DeSerialize(fs["second"], &param->second);
+				}
+			};
 			// TODO, this doesn't work for types like std::vector<unsigned int> because opencv doesn't natively support it.  Instead needs to be modified to manually handle serialization
 			template<typename T> struct Serializer<std::vector<T>, void>: public Serializer<T>
 			{
@@ -333,7 +353,7 @@ namespace Parameters
 			public:
 				Constructor()
 				{
-					InterpreterRegistry::RegisterFunction(Loki::TypeInfo(typeid(T)), 
+					InterpreterRegistry::instance()->RegisterFunction(Loki::TypeInfo(typeid(T)), 
                         std::bind(SerializeWrapper<T>::Write, std::placeholders::_1, std::placeholders::_2), 
                         std::bind(SerializeWrapper<T>::Read, std::placeholders::_1, std::placeholders::_2), 
                         std::bind(SerializeWrapper<T>::create, std::placeholders::_1));
@@ -350,10 +370,11 @@ namespace Parameters
 				}
 			};
 			template<typename T> Constructor<T> PersistencePolicy<T>::constructor;
+#endif
 		} // namespace cv
 	} // namespace Persistence
 } // namespace Parameters
-#else
+#ifndef HAVE_OPENCV
 namespace Parameters
 {
 	namespace Persistence

@@ -1,0 +1,64 @@
+syntax = "proto2";
+package parameters;
+
+enum ParameterType{
+	NONE = 0;
+	INPUT = 1;
+	OUTPUT = 2;
+	STATE = 4;
+	CONTROL = 8;
+}
+
+message NDArrayType{
+	required int64 dimensions = 1;
+	repeated int64 shape = 2;
+	repeated bytes byte_data = 3;
+	repeated float float_data = 4;
+	repeated double double_data = 5;
+	repeated int32 int_data = 6;
+}
+
+// just use this for vector and scalar types when
+message KeyValueType{
+	repeated string string_key = 1;
+	repeated int32 int_key = 2;
+	repeated int64 long_key = 3;
+	repeated double double_key = 4;
+	repeated float float_key = 5;
+	repeated int32 int_values = 6;
+	repeated int64 long_values = 7;
+	repeated double double_values = 8;
+	repeated float float_values = 9;
+	repeated NDArrayType NDArray_values = 10;
+}
+
+message VectorType{
+
+}
+
+message TimeIndexedType{
+	repeated int64 time_index = 1;
+	repeated NDArrayType array_values = 2;
+	repeated KeyValueType KeyValue_values = 3;
+	repeated VectorType vector_values = 5;
+}
+
+message Value{
+	optional NDArrayType ndarray_data = 1;
+	optional KeyValueType keyvalue_data= 2;
+	optional VectorType vector_data = 4;
+	optional TimeIndexedType timeindexed_data = 5;
+}
+
+message Parameter{
+  required string name = 1;
+  required string tree_root = 2;
+  optional string platform_specific_name = 3;
+  optional string platform_agnostic_name = 4;
+  optional int64 timestamp_data= 5;
+  optional Value value_data = 6;
+  optional string tooltip = 7;
+  optional string description = 8;
+  optional ParameterType parameter_type = 9;
+  optional string platform_type_name = 10;
+}

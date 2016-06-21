@@ -18,17 +18,27 @@ https://github.com/dtmoodie/parameters
 */
 #pragma once
 #ifdef PARAMTERS_GENERATE_PERSISTENCE
-
+#ifdef HAVE_OPENCV
 #include "OpenCV.hpp"
+#endif
 #include "TextSerializer.hpp"
+#ifdef HAVE_PROTOBUF
+#include "ProtobufSerializer.hpp"
+#endif
 
 namespace Parameters
 {
 	namespace Persistence
 	{
-		template<typename T> class PersistencePolicy : 
-			public Parameters::Persistence::cv::PersistencePolicy<T>, 
+		template<typename T> class PersistencePolicy :
 			public Parameters::Persistence::Text::PersistencePolicy<T>
+#ifdef HAVE_OPENCV
+			, public Parameters::Persistence::cv::PersistencePolicy<T>
+#endif
+#ifdef HAVE_PROTOBUF
+			, public Parameters::Persistence::Protobuf::ProtoPolicy<T>
+#endif
+			
 		{	
 		};
 	}
