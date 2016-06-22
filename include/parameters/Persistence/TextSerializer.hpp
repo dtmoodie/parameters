@@ -51,8 +51,8 @@ namespace Parameters
             {
             public:
                 typedef std::function<bool(::std::stringstream*, Parameters::Parameter*)> SerializerFunction;
-                typedef std::function<void(::std::stringstream*, Parameters::Parameter*)> SSDeSerializerFunction;
-                typedef std::function<void(::std::string*, Parameters::Parameter*)> DeSerializerFunction;
+                typedef std::function<bool(::std::stringstream*, Parameters::Parameter*)> SSDeSerializerFunction;
+                typedef std::function<bool(::std::string*, Parameters::Parameter*)> DeSerializerFunction;
                 typedef std::function<Parameters::Parameter::Ptr(const ::std::string&)> FactoryFunction;
                 typedef std::tuple<SerializerFunction, SerializerFunction, SSDeSerializerFunction, DeSerializerFunction, bool> InterpreterSet;
                 static void RegisterFunction(Loki::TypeInfo type, SerializerFunction serializer, SerializerFunction serializeValue, SSDeSerializerFunction ssdeserializer, DeSerializerFunction deserializer, FactoryFunction factory, bool is_default);
@@ -66,13 +66,13 @@ namespace Parameters
 				static std::map<std::string, FactoryFunction>& factory();
 				friend PARAMETER_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::string* ss);
 				friend PARAMETER_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::stringstream* ss);
-				friend PARAMETER_EXPORTS void DeSerialize(::std::string* ss, Parameters::Parameter* param);
-				friend PARAMETER_EXPORTS void DeSerialize(::std::stringstream* ss, Parameters::Parameter* param);
+				friend PARAMETER_EXPORTS bool DeSerialize(::std::string* ss, Parameters::Parameter* param);
+				friend PARAMETER_EXPORTS bool DeSerialize(::std::stringstream* ss, Parameters::Parameter* param);
 				friend PARAMETER_EXPORTS bool Serialize(::std::stringstream* ss, Parameters::Parameter* param);
             };
             PARAMETER_EXPORTS bool Serialize(::std::stringstream* ss, Parameters::Parameter* param);
-            PARAMETER_EXPORTS void DeSerialize(::std::stringstream* ss, Parameters::Parameter* param);
-            PARAMETER_EXPORTS void DeSerialize(::std::string* ss, Parameters::Parameter* param);
+            PARAMETER_EXPORTS bool DeSerialize(::std::stringstream* ss, Parameters::Parameter* param);
+            PARAMETER_EXPORTS bool DeSerialize(::std::string* ss, Parameters::Parameter* param);
 			PARAMETER_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::stringstream* ss);
 			PARAMETER_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::string* ss);
             PARAMETER_EXPORTS bool SerializeValue(::std::stringstream* ss, Parameters::Parameter* param);
@@ -134,7 +134,13 @@ namespace Parameters
                 {
                     std::string line;
 					std::getline(*ss, line);
-                    *param = boost::lexical_cast<T>(line);
+					try
+					{
+						*param = boost::lexical_cast<T>(line);
+					}catch(...)
+					{
+						return false;
+					}
                     return true;
                 }
 				static bool DeSerialize(::std::string* str, T* param)
@@ -142,9 +148,11 @@ namespace Parameters
                     try
                     {
                         *param = boost::lexical_cast<T>(*str);
-                        return true;
-                    }catch(...){}
-					return false;
+                    }catch(...)
+					{
+						return false;
+					}
+					return true;
 				}
                 const static bool IS_DEFAULT = false;
             };
@@ -249,7 +257,7 @@ namespace Parameters
                     }
                     return true;
                 }
-                static void ssRead(::std::stringstream* ss, Parameter* param)
+                static bool ssRead(::std::stringstream* ss, Parameter* param)
                 {
 					LOG_TRIVIAL(trace) << "Reading parameter with name " << param->GetName();
                     ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
@@ -259,13 +267,12 @@ namespace Parameters
                         {
                             typedParam->changed = true;
                             typedParam->OnUpdate(nullptr);
+							return true;
                         }
-						param->changed = true;
-						param->OnUpdate(nullptr);
                     }
-					
+					return false;
                 }
-                static void Read(::std::string* ss, Parameter* param)
+                static bool Read(::std::string* ss, Parameter* param)
                 {
 					LOG_TRIVIAL(trace) << "Reading parameter with name " << param->GetName();
                     ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
@@ -275,10 +282,10 @@ namespace Parameters
                         {
                             typedParam->changed = true;
                             typedParam->OnUpdate(nullptr);
+							return true;
                         }
-						param->changed = true;
-						param->OnUpdate(nullptr);
                     }
+					return false;
                 }
                 const static bool IS_DEFAULT = Serializer<T>::IS_DEFAULT;
             };

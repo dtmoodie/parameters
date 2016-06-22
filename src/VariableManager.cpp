@@ -61,6 +61,26 @@ Parameters::Parameter* VariableManager::GetOutputParameter(std::string name)
     {
         return itr->second;
     }
+	// Check if the passed in value is the item specific name
+	std::vector<Parameter*> potentials;
+	for(auto& itr : _parameters)
+	{
+		if(auto pos = itr.first.find(name) != std::string::npos)
+		{
+			potentials.push_back(itr.second);
+		}
+	}
+	if(potentials.size())
+	{
+		if(potentials.size() > 1)
+		{
+			std::stringstream ss;
+			for(auto potential : potentials)
+				ss << potential->GetTreeName() << "\n";
+			LOG(debug) << "Warning ambiguous name \"" << name << "\" passed in, multiple potential matches\n " << ss.str();
+		}
+		return potentials[0];
+	}
     LOG(debug) << "Unable to find parameter named " << name;
 	return nullptr;
 }

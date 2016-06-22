@@ -64,13 +64,13 @@ bool Parameters::Persistence::Text::Serialize(::std::stringstream* ss, Parameter
     return std::get<0>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo())).operator()(ss, param);
 }
 
-void Parameters::Persistence::Text::DeSerialize(::std::stringstream* ss, Parameters::Parameter* param)
+bool Parameters::Persistence::Text::DeSerialize(::std::stringstream* ss, Parameters::Parameter* param)
 {
-    std::get<2>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo())).operator()(ss, param);
+    return std::get<2>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo())).operator()(ss, param);
 }
-void Parameters::Persistence::Text::DeSerialize(::std::string* ss, Parameters::Parameter* param)
+bool Parameters::Persistence::Text::DeSerialize(::std::string* ss, Parameters::Parameter* param)
 {
-    std::get<3>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo())).operator()(ss, param);
+    return std::get<3>(InterpreterRegistry::GetInterpretingFunction(param->GetTypeInfo())).operator()(ss, param);
 }
 
 std::shared_ptr<Parameters::Parameter> Parameters::Persistence::Text::DeSerialize(::std::stringstream* ss)
