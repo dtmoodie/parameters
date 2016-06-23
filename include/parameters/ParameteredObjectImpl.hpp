@@ -302,9 +302,7 @@ namespace Parameters
 			return nullptr;
 		}
 		auto typedParam = dynamic_cast<typename Parameters::ITypedParameter<T>*>(param);
-		if (typedParam == nullptr)
-			throw cv::Exception(0, "Failed to cast parameter to the appropriate type, requested type: " +
-			TypeInfo::demangle(typeid(T).name()) + " parameter actual type: " + param->GetTypeInfo().name(), __FUNCTION__, __FILE__, __LINE__);
+        ASSERT_NE(typedParam, nullptr) << "Failed to cast parameter to the appropriate type, requested type: " << TypeInfo::demangle(typeid(T).name()) << " actual type: " << param->GetTypeInfo().name();
 
 		return typedParam;
 	}
@@ -317,9 +315,7 @@ namespace Parameters
 			throw cv::Exception(0, "Failed to get parameter by index " + boost::lexical_cast<std::string>(idx), __FUNCTION__, __FILE__, __LINE__);
 
 		auto typedParam = dynamic_cast<typename Parameters::ITypedParameter<T>*>(param);
-		if (typedParam == nullptr)
-			throw cv::Exception(0, "Failed to cast parameter to the appropriate type, requested type: " +
-			TypeInfo::demangle(typeid(T).name()) + " parameter actual type: " + param->GetTypeInfo().name(), __FUNCTION__, __FILE__, __LINE__);
+		ASSERT_NE(typedParam, nullptr) << "Failed to cast parameter to the appropriate type, requested type: " << TypeInfo::demangle(typeid(T).name()) << " actual type: " << param->GetTypeInfo().name();
 		return typedParam;
 	}
 
@@ -333,9 +329,7 @@ namespace Parameters
 			return nullptr;
 		}
 		auto typedParam = dynamic_cast<typename Parameters::ITypedParameter<T>*>(param);
-		if (typedParam == nullptr)
-			LOG(debug) << "Failed to cast parameter to the appropriate type, requested type: " <<
-			TypeInfo::demangle(typeid(T).name()) << " parameter actual type: " << param->GetTypeInfo().name();
+		ASSERT_NE(typedParam, nullptr) << "Failed to cast parameter to the appropriate type, requested type: " << TypeInfo::demangle(typeid(T).name()) << " actual type: " << param->GetTypeInfo().name();
 
 		return typedParam;
 	}

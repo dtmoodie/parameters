@@ -237,7 +237,7 @@ namespace Parameters
                     LOG_TRIVIAL(trace) << "Writing parameter with name " << param->GetName();
                     ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
                     
-                    if (typedParam)
+                    if (typedParam && typedParam->Data())
                     {
                         (*ss) << "[" << param->GetTypeInfo().name() << "]";
 						(*ss) << param->GetTreeName() << "#";
@@ -250,7 +250,7 @@ namespace Parameters
                 static bool WriteValue(::std::stringstream* ss, Parameter* param)
                 {
                     ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
-                    if(typedParam)
+                    if(typedParam && typedParam->Data())
                     {
                         if(!Serializer<T>::Serialize(ss, typedParam->Data()))
                             return false;
@@ -261,7 +261,7 @@ namespace Parameters
                 {
 					LOG_TRIVIAL(trace) << "Reading parameter with name " << param->GetName();
                     ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
-                    if (typedParam)
+                    if (typedParam && typedParam->Data())
                     {
 						if(Serializer<T>::DeSerialize(ss, typedParam->Data()))
                         {
