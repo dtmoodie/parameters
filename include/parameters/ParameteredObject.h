@@ -35,10 +35,10 @@ namespace Parameters
     {
     public:
         ParameteredObject();
-        ~ParameteredObject();
+        virtual ~ParameteredObject();
 		//virtual void setup_signals(Signals::signal_manager* manager);
-		virtual void SetupVariableManager(IVariableManager* manager);
-        virtual IVariableManager* GetVariableManager();
+		virtual void SetupVariableManager(std::shared_ptr<IVariableManager> manager);
+        virtual std::shared_ptr<IVariableManager> GetVariableManager();
 
 
 		virtual Parameter* addParameter(Parameter* param);
@@ -108,7 +108,7 @@ namespace Parameters
 			SIG_SEND(parameter_added, ParameteredObject*);
 		SIGNALS_END
     protected:
-		IVariableManager*			                            _variable_manager;
+		std::shared_ptr<IVariableManager>						_variable_manager;
 		
 		//Signals::typed_signal_base<void(ParameteredObject*)>*   _sig_parameter_updated;
 		//Signals::typed_signal_base<void(ParameteredObject*)>*	_sig_parameter_added;

@@ -1,0 +1,138 @@
+/*
+Copyright (c) 2015 Daniel Moodie.
+All rights reserved.
+
+Redistribution and use in source and binary forms are permitted
+provided that the above copyright notice and this paragraph are
+duplicated in all such forms and that any documentation,
+advertising materials, and other materials related to such
+distribution and use acknowledge that the software was developed
+by the Daniel Moodie. The name of
+Daniel Moodie may not be used to endorse or promote products derived
+from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+https://github.com/dtmoodie/parameters
+*/
+#pragma once
+
+#include "parameters/ITypedParameter.hpp"
+#include "IBuffer.hpp"
+#include <map>
+
+namespace Parameters
+{
+	namespace Buffer
+	{
+		template<typename T> class Map: public ITypedParameter<T>, public IBuffer
+		{
+			std::map<long long, T> _data_buffer;
+		public:
+			Map(const std::string& name,
+				const T& init = T(), long long time_index = -1,
+				const Parameter::ParameterType& type = Parameter::ParameterType::Control,
+				const std::string& tooltip = "") :
+				ITypedParameter<T>(name)
+			{
+			}
+			virtual T* Data(long long time_index = -1)
+			{
+				std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
+				if (time_index == -1 && _data_buffer.size())
+				{
+					return &(*_data_buffer.rbegin());
+				}
+				else
+				{
+					auto itr = _data_buffer.find(time_index);
+					if (itr != _data_buffer.end())
+					{
+						return &itr->second;
+					}
+				}
+				return nullptr;
+			}
+			virtual bool GetData(T& value, long long time_index = -1)
+			{
+				std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
+				if (time_index == -1 && _data_buffer.size())
+				{
+					value = _data_buffer.back().second;
+					return true;
+				}
+				auto itr = _data_buffer.find(time_index);
+				if (itr != _data_buffer.end())
+				{
+					value = itr->second;
+				}
+				return false;
+			}
+			virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
+			{
+				std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
+				_data_buffer[time_index] = data_;
+				Parameter::changed = true;
+				Parameter::OnUpdate(stream);
+			}
+			virtual void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
+			{
+				std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
+				_data_buffer[time_index] = data_;
+				Parameter::changed = true;
+				Parameter::OnUpdate(stream);
+			}
+			virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
+			{
+				std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
+				_data_buffer[time_index] = *data_;
+				Parameter::changed = true;
+				Parameter::OnUpdate(stream);
+			}
+
+			virtual Loki::TypeInfo GetTypeInfo()
+			{
+				return Loki::TypeInfo(typeid(T));
+			}
+			virtual bool Update(Parameter::Ptr other, cv::cuda::Stream* stream = nullptr)
+			{
+				auto typedParameter = std::dynamic_pointer_cast<ITypedParameter<T>>(other);
+				if (typedParameter)
+				{
+					auto ptr = typedParameter->Data();
+					if (ptr)
+					{
+						std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
+						_data_buffer[typedParameter->GetTimeIndex()] = *ptr;
+						Parameter::changed = true;
+						Parameter::OnUpdate(stream);
+					}
+				}
+				return false;
+			}
+			virtual void SetSize(long long size)
+			{
+				
+			}
+			virtual long long GetSize() const
+			{
+				std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
+				return _data_buffer.size();
+			}
+			virtual void GetTimestampRange(long long& start, long long& end) const
+			{
+				if (_data_buffer.size())
+				{
+					std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
+					start = _data_buffer.begin()->first;
+					end = _data_buffer.rbegin()->first;
+				}
+			}
+			virtual Parameter::Ptr DeepCopy() const
+			{
+				return Parameter::Ptr(new Map<T>(*this));
+			}
+		};
+	}
+}

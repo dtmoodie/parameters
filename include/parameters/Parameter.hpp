@@ -81,6 +81,5 @@ namespace Parameters
 		std::string treeRoot;
 		long long _current_time_index;
 		std::recursive_mutex _mtx;
-		
 	};
 }

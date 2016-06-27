@@ -18,29 +18,19 @@ https://github.com/dtmoodie/parameters
 */
 #pragma once
 
-#include "ITypedParameter.hpp"
+#include "parameters/ITypedParameter.hpp"
+#include "IBuffer.hpp"
 #include <boost/circular_buffer.hpp>
 
 namespace Parameters
 {
 	namespace Buffer
 	{
-		class IParameterBuffer
-		{
-		public:
-			virtual ~IParameterBuffer()
-			{
-
-			}
-			virtual void SetSize(int size) = 0;
-			virtual int GetSize() = 0;
-			virtual void GetTimestampRange(long long& start, long long& end) = 0;
-		};
-		template<typename T> class ParameterBuffer : public ITypedParameter<T>, public IParameterBuffer
+		template<typename T> class CircularBuffer: public ITypedParameter<T>, public IBuffer
 		{
 			boost::circular_buffer<std::pair<long long, T>> _data_buffer;
 		public:
-			ParameterBuffer(const std::string& name,
+			CircularBuffer(const std::string& name,
 				const T& init = T(), long long time_index = -1,
 				const Parameter::ParameterType& type = Parameter::ParameterType::Control,
 				const std::string& tooltip = ""):
@@ -48,10 +38,6 @@ namespace Parameters
 			{
 				_data_buffer.set_capacity(10);
 				_data_buffer.push_back(std::make_pair(time_index, init));
-			}
-			virtual ~ParameterBuffer()
-			{
-
 			}
 			virtual T* Data(long long time_index = -1)
 			{
@@ -79,7 +65,6 @@ namespace Parameters
 				{
 					if (itr.first == time_index)
 					{
-						//return &itr.second;
 						value = itr.second;
 						return true;
 					}
@@ -128,17 +113,17 @@ namespace Parameters
 				}
 				return false;
 			}
-			virtual void SetSize(int size)
+			virtual void SetSize(long long size)
 			{
                 std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
 				_data_buffer.set_capacity(size);
 			}
-			virtual int GetSize()
+			virtual long long GetSize() const
 			{
                 std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
 				return _data_buffer.capacity();
 			}
-			virtual void GetTimestampRange(long long& start, long long& end)
+			virtual void GetTimestampRange(long long& start, long long& end) const
 			{
 				if (_data_buffer.size())
 				{
@@ -147,63 +132,9 @@ namespace Parameters
 					end = _data_buffer.front().first;
 				}
 			}
-		};
-
-		template<typename T> class ParameterBufferProxy : public ParameterBuffer<T>
-		{
-			ITypedParameter<T>* _input_parameter;
-			std::shared_ptr<Signals::connection> _input_update_connection;
-			std::shared_ptr<Signals::connection> _input_delete_connection;
-		public:
-			ParameterBufferProxy(ITypedParameter<T>* input = nullptr) :
-				ParameterBuffer<T>(std::string("proxy for ") + (input ? input->GetName() : std::string("NULL"))),
-				_input_parameter(input)
-			{
-				if (input)
-				{
-					_input_update_connection = _input_parameter->RegisterNotifier(std::bind(&ParameterBufferProxy::onInputUpdate, this, std::placeholders::_1));
-					_input_delete_connection = _input_parameter->RegisterDeleteNotifier(std::bind(&ParameterBufferProxy::onInputDelete, this));
-					_input_parameter->subscribers++;
-				}
-			}
-			~ParameterBufferProxy()
-			{
-				if (_input_parameter)
-					_input_parameter->subscribers--;
-				_input_parameter = nullptr;
-				_input_update_connection.reset();
-				_input_delete_connection.reset();
-			}
-			void setInput(Parameter* param)
-			{
-				if (_input_parameter = dynamic_cast<ITypedParameter<T>*>(param))
-				{
-					_input_update_connection = _input_parameter->RegisterNotifier(std::bind(&ParameterBufferProxy::onInputUpdate, this, std::placeholders::_1));
-					_input_delete_connection = _input_parameter->RegisterDeleteNotifier(std::bind(&ParameterBufferProxy::onInputDelete, this));
-				}
-			}
-			void onInputDelete()
-			{
-                std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
-				_input_update_connection.reset();
-				_input_delete_connection.reset();
-				_input_parameter = nullptr;
-			}
-			void onInputUpdate(cv::cuda::Stream* stream)
-			{
-                std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
-				if (_input_parameter)
-				{
-					auto time = _input_parameter->GetTimeIndex();
-					if (auto data = _input_parameter->Data(time))
-					{
-                        ParameterBuffer<T>::UpdateData(data, time, stream);
-					}
-				}				
-			}
 			virtual Parameter::Ptr DeepCopy() const
 			{
-				return Parameter::Ptr(new ParameterBufferProxy(_input_parameter));
+				return Parameter::Ptr(new CircularBuffer<T>(*this));
 			}
 		};
 	}

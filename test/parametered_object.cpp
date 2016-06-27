@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(explicit_parameters)
 	BOOST_CHECK(test_obj.test2_param.subscribers == 0);
 	{
 		BOOST_TEST_CHECKPOINT("dynamic buffer creation");
-		auto int_proxy = Parameters::Buffer::ParameterProxyBufferFactory::Instance()->CreateProxy(&test_obj.test2_param);
+		auto int_proxy = Parameters::Buffer::ParameterProxyBufferFactory::Instance()->CreateProxy(&test_obj.test2_param, Parameters::Buffer::ParameterProxyBufferFactory::cbuffer);
 		BOOST_CHECK(int_proxy);
 
 
@@ -96,10 +96,10 @@ BOOST_AUTO_TEST_CASE(explicit_parameters)
 				BOOST_CHECK(*test_input.Data(i - 1) == i - 1);
 		}
 		BOOST_TEST_CHECKPOINT("multi threaded buffer access");
-		BOOST_REQUIRE(dynamic_cast<Buffer::IParameterBuffer*>(int_proxy));
+		BOOST_REQUIRE(dynamic_cast<Buffer::IBuffer*>(int_proxy));
 		
-		dynamic_cast<Buffer::IParameterBuffer*>(int_proxy)->SetSize(0);
-		dynamic_cast<Buffer::IParameterBuffer*>(int_proxy)->SetSize(200);
+		dynamic_cast<Buffer::IBuffer*>(int_proxy)->SetSize(0);
+		dynamic_cast<Buffer::IBuffer*>(int_proxy)->SetSize(200);
 		test_obj.test2_param.SetRange(-1, 100000);
 		boost::thread thread = boost::thread(
 			[&test_input]()
