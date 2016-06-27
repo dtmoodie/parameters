@@ -28,7 +28,7 @@ ParameteredObject::~ParameteredObject()
     _parameters.clear();
 }
 
-void ParameteredObject::SetupVariableManager(IVariableManager* manager)
+void ParameteredObject::SetupVariableManager(std::shared_ptr<IVariableManager> manager)
 {
     _variable_manager = manager;
 	if (_variable_manager)
@@ -40,7 +40,7 @@ void ParameteredObject::SetupVariableManager(IVariableManager* manager)
 	}
 }
 
-Parameters::IVariableManager* ParameteredObject::GetVariableManager()
+std::shared_ptr<Parameters::IVariableManager> ParameteredObject::GetVariableManager()
 {
     return _variable_manager;
 }

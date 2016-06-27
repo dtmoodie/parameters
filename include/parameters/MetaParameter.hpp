@@ -22,7 +22,7 @@ https://github.com/dtmoodie/parameters
 #include "RangedParameter.hpp"
 #include "UI/UI.hpp"
 #include <parameters/Parameter.hpp>
-#include <parameters/BufferProxy.hpp>
+#include <parameters/buffers/BufferProxy.hpp>
 #include "Converters/ConverterPolicy.hpp"
 
 namespace Parameters
