@@ -47,4 +47,17 @@ static TypedParameter<cv::cuda::GpuMat> gpumat_("instance");
 static TypedParameter<cv::cuda::HostMem> hostmem_("instance");
 static TypedParameter<cv::Mat> mat_("instance");
 
+
+CEREAL_REGISTER_TYPE(TypedParameter<std::vector<cv::Point>>);
+CEREAL_REGISTER_TYPE(TypedParameter<std::vector<cv::Point2d>>);
+CEREAL_REGISTER_TYPE(TypedParameter<std::vector<cv::Point2f>>);
+CEREAL_REGISTER_TYPE(TypedParameter<std::vector<cv::Vec2d>>);
+CEREAL_REGISTER_TYPE(TypedParameter<std::vector<cv::Vec2i>>);
+CEREAL_REGISTER_TYPE(TypedParameter<std::vector<cv::Vec3b>>);
+CEREAL_REGISTER_TYPE(TypedParameter<std::vector<cv::Vec3d>>);
+CEREAL_REGISTER_TYPE(TypedParameter<std::vector<cv::Vec3f>>);
+CEREAL_REGISTER_TYPE(TypedParameter<std::vector<cv::Vec3i>>);
+CEREAL_REGISTER_TYPE(TypedParameter<cv::Mat>);
+CEREAL_REGISTER_TYPE(TypedParameter<cv::cuda::HostMem>);
+CEREAL_REGISTER_TYPE(TypedParameter<cv::cuda::GpuMat>);
 #endif

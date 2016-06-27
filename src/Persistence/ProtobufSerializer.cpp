@@ -1,4 +1,4 @@
-#ifdef HAVE_PROTOBUF
+
 
 #include "parameters/Persistence/ProtobufSerializer.hpp"
 
@@ -37,4 +37,3 @@ SerializationFactory::SerializationFactory(const SerializationFactory& other)
 {
 
 }
-#endif

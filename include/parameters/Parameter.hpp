@@ -34,7 +34,6 @@ namespace Parameters
 {
 	class PARAMETER_EXPORTS Parameter
 	{
-		
 	public:
 		enum ParameterType
 		{
@@ -75,6 +74,14 @@ namespace Parameters
 		void OnUpdate(cv::cuda::Stream* stream = nullptr);
 		Signals::typed_signal_base<void(cv::cuda::Stream*)> update_signal;
 		Signals::typed_signal_base<void(Parameter*)> delete_signal;
+        template<class Archive>
+        void serialize(Archive& ar)
+        {
+            ar(name);
+            ar(treeRoot);
+            ar(_current_time_index);
+            ar(type);
+        }
 	protected:
 		std::string name;
 		std::string tooltip;

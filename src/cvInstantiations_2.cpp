@@ -34,13 +34,23 @@ using namespace Parameters;
 static TypedParameter<cv::Point> point_("instance");
 static TypedParameter<cv::Point2d> point2d_("instance");
 static TypedParameter<cv::Point2f> point2f_("instance");
-//static TypedParameter<cv::Vec2b> vec2b_("instance");
+
 static TypedParameter<cv::Vec2d> vec2d_("instance");
 static TypedParameter<cv::Vec2f> vec2f_("instance");
 static TypedParameter<cv::Vec2i> vec2i_("instance");
-//static TypedParameter<cv::Vec3b> vec3b_("instance");
+
 static TypedParameter<cv::Vec3d> vec3d_("instance");
 static TypedParameter<cv::Vec3f> vec3f_("instance");
 static TypedParameter<cv::Vec3i> vec3i_("instance");
+
+CEREAL_REGISTER_TYPE(TypedParameter<cv::Point>);
+CEREAL_REGISTER_TYPE(TypedParameter<cv::Point2d>);
+CEREAL_REGISTER_TYPE(TypedParameter<cv::Point2f>);
+CEREAL_REGISTER_TYPE(TypedParameter<cv::Vec2d>);
+CEREAL_REGISTER_TYPE(TypedParameter<cv::Vec2f>);
+CEREAL_REGISTER_TYPE(TypedParameter<cv::Vec2i>);
+CEREAL_REGISTER_TYPE(TypedParameter<cv::Vec3d>);
+CEREAL_REGISTER_TYPE(TypedParameter<cv::Vec3f>);
+CEREAL_REGISTER_TYPE(TypedParameter<cv::Vec3i>);
 
 #endif

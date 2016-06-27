@@ -1,11 +1,26 @@
 #pragma once
 #include <parameters/Parameter_def.hpp>
+#ifdef HAVE_PROTOBUF
 #include "parameter.pb.h"
+#endif
 #include <parameters/LokiTypeInfo.h>
 
 #include <map>
 #include <functional>
 #include <istream>
+namespace google
+{
+    namespace protobuf
+    {
+        namespace io
+        {
+            class ZeroCopyInputStream;
+            class CodedInputStream;
+            class ZeroCopyOutputStream;
+            class CodedOutputStream;
+        }
+    }
+}
 namespace Parameters
 {
 	class Parameter;
@@ -74,7 +89,7 @@ namespace Parameters
 				SerializationFactory();
 				SerializationFactory(const SerializationFactory& other);
 			};
-
+#ifdef HAVE_PROTOBUF
 			template<class T> struct PARAMETER_EXPORTS interpreter
 			{
 				static const bool IS_DEFAULT = true;
@@ -171,6 +186,11 @@ namespace Parameters
 				static constructor<T> _constructor;
 			};
 			template<class T> constructor<T> ProtoPolicy<T>::_constructor;
+#else
+            template<class T> class PARAMETER_EXPORTS ProtoPolicy
+            {
+            };
+#endif
 		}
 	}
 }

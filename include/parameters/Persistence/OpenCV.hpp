@@ -17,26 +17,26 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 https://github.com/dtmoodie/parameters
 */
 #pragma once
+#include <parameters/LokiTypeInfo.h>
+#include <parameters/Parameter_def.hpp>
+#include <parameters/ITypedParameter.hpp>
+#include <parameters/Types.hpp>
+#include "parameters/TypedParameter.hpp"
 
+#ifdef HAVE_OPENCV
+#include <opencv2/core.hpp>
+#endif
 
-// Check if being built with OpenCV
+#include <boost/log/trivial.hpp>
+#include <boost/log/attributes/named_scope.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/function.hpp>
+
 #include <map>
 #include <functional>
 #include <string>
 #include <vector>
 #include <set>
-#include <opencv2/core.hpp>
-
-#include <boost/lexical_cast.hpp>
-#include <boost/function.hpp>
-
-#include <parameters/LokiTypeInfo.h>
-#include <parameters/Parameter_def.hpp>
-#include <parameters/ITypedParameter.hpp>
-#include <parameters/Types.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/attributes/named_scope.hpp>
-#include "parameters/TypedParameter.hpp"
 
 namespace cv
 {
@@ -370,18 +370,8 @@ namespace Parameters
 				}
 			};
 			template<typename T> Constructor<T> PersistencePolicy<T>::constructor;
-#endif
-		} // namespace cv
-	} // namespace Persistence
-} // namespace Parameters
-#ifndef HAVE_OPENCV
-namespace Parameters
-{
-	namespace Persistence
-	{
-		namespace cv
-		{
-			template<typename T> class PersistencePolicy
+#else
+            template<typename T> class PersistencePolicy
 			{
 			public:
 				PersistencePolicy()
@@ -389,8 +379,7 @@ namespace Parameters
 					
 				}
 			};
-		}
-	}
-}
-
 #endif
+		} // namespace cv
+	} // namespace Persistence
+} // namespace Parameters

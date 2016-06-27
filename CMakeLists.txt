@@ -14,6 +14,7 @@ else()
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
 ENDIF(NOT WIN32)
 FIND_PACKAGE(Boost REQUIRED COMPONENTS ${Boost_REQUIRED_COMPONENTS})
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 IF(Boost_FOUND)
   IF(NOT WIN32)
@@ -163,7 +164,7 @@ IF(${Parameters_persistence})
       GET_FILENAME_COMPONENT(cv_core_lib_rel ${cv_core_lib_rel} NAME)
     ENDIF()
     LIST(APPEND PERSISTENCE_LIBS opencv_core)
-  ENDIF()
+  ENDIF() #opencv
   
   find_package(Protobuf QUIET)
   if(Protobuf_FOUND)
@@ -178,7 +179,15 @@ IF(${Parameters_persistence})
 	list(APPEND hdr ${PROTO_HDRS})
 	add_definitions(-DHAVE_PROTOBUF)
 	LIST(APPEND PERSISTENCE_LIBS optimized;${PROTOBUF_LIBRARY};debug;${PROTOBUF_LIBRARY_DEBUG})
+  endif() # Protobuf
+  
+  find_package(cereal REQUIRED)
+  if(cereal_FOUND)
+      include_directories(${cereal_INCLUDE_DIRS})
+	  add_definitions(-DHAVE_CEREAL)
+
   endif()
+
 ENDIF()
 
 INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/include")

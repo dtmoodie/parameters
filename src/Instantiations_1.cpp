@@ -28,16 +28,6 @@ https://github.com/dtmoodie/parameters
 
 using namespace Parameters;
 
-/*static TypedParameter<char> char_("instance");
-static TypedParameter<unsigned char> uchar_("instance");
-static TypedParameter<short> short_("instance");
-static TypedParameter<unsigned short> ushort_("instance");
-static TypedParameter<int> int_("instance");
-static TypedParameter<unsigned int> uint_("instance");
-static TypedParameter<long> long_("instance");
-static TypedParameter<unsigned long> ulong_("instance");
-static TypedParameter<long long> longlong_("instance");*/
-
 static TypedParameter<unsigned long long> ulonglong_("instance");
 static TypedParameter<float> float_("instance");
 static TypedParameter<double> double_("instance");
@@ -51,3 +41,13 @@ static Parameters::TypedParameter<Parameters::ReadDirectory> readDir_("instance"
 static Parameters::TypedParameter<Parameters::WriteDirectory> writeDir_("instance");
 static Parameters::TypedParameter<Parameters::EnumParameter> enum_("instance");
 
+CEREAL_REGISTER_TYPE(TypedParameter<unsigned long long>);
+CEREAL_REGISTER_TYPE(TypedParameter<float>);
+CEREAL_REGISTER_TYPE(TypedParameter<double>);
+CEREAL_REGISTER_TYPE(TypedParameter<std::string>);
+CEREAL_REGISTER_TYPE(TypedParameter<std::vector<std::string>>);
+CEREAL_REGISTER_TYPE(TypedParameter<Parameters::ReadFile>);
+CEREAL_REGISTER_TYPE(TypedParameter<Parameters::WriteFile>);
+CEREAL_REGISTER_TYPE(TypedParameter<Parameters::ReadDirectory>);
+CEREAL_REGISTER_TYPE(TypedParameter<Parameters::WriteDirectory>);
+CEREAL_REGISTER_TYPE(TypedParameter<Parameters::EnumParameter>);

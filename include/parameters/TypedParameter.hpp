@@ -30,7 +30,7 @@ namespace Parameters
 		{
 			return std::shared_ptr<TypedParameter<T>>(new TypedParameter<T>(name, init, type, tooltip));
 		}
-		TypedParameter(const std::string& name, 
+		TypedParameter(const std::string& name = "", 
 			const T& init = T(), 
 			const Parameter::ParameterType& type = Parameter::ParameterType::Control, 
 			const std::string& tooltip = "") :
@@ -92,6 +92,12 @@ namespace Parameters
                 return true;
             }
             return false;
+        }
+        template<class Archive>
+        void serialize(Archive& ar)
+        {
+            ar(data);
+            Parameter::serialize(ar);
         }
 	};
 
