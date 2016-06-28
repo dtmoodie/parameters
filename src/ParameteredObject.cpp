@@ -7,6 +7,8 @@
 #include <signals/logging.hpp>
 
 using namespace Parameters;
+CEREAL_REGISTER_TYPE(ParameteredObject);
+
 
 ParameteredObject::ParameteredObject()
 {

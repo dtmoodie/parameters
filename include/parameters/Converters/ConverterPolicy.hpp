@@ -21,23 +21,23 @@ https://github.com/dtmoodie/parameters
 #include "DoubleConverter.hpp"
 namespace Parameters
 {
-	namespace Converters
-	{
-		template<typename T> class ConverterPolicy: public Double::ConverterPolicy<T>
-		{
+    namespace Converters
+    {
+        template<typename T> class ConverterPolicy: public Double::ConverterPolicy<T>
+        {
 
-		};
-	}
+        };
+    }
 }
 #else
 namespace Parameters
 {
-	namespace Converters
-	{
-		template<typename T> class ConverterPolicy
-		{
+    namespace Converters
+    {
+        template<typename T> class ConverterPolicy
+        {
 
-		};
-	}
+        };
+    }
 }
 #endif

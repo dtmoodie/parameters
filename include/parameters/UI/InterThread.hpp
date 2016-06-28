@@ -28,8 +28,8 @@ https://github.com/dtmoodie/parameters
 #include "parameters/LokiTypeInfo.h"
 namespace Parameters
 {
-	namespace UI
-	{
+    namespace UI
+    {
         template<typename Data>
         class concurrent_queue
         {
@@ -57,7 +57,7 @@ namespace Parameters
             }
             void push(Data const& data)
             {
-				std::unique_lock<std::mutex> lock(the_mutex);
+                std::unique_lock<std::mutex> lock(the_mutex);
                 bool const was_empty = the_queue.empty();
                 the_queue.push(data);
                 lock.unlock(); // unlock the mutex
@@ -79,7 +79,7 @@ namespace Parameters
             }
             bool try_pop(Data& popped_value)
             {
-				std::lock_guard<std::mutex>  lock(the_mutex);
+                std::lock_guard<std::mutex>  lock(the_mutex);
                 if (the_queue.empty())
                     return false;
                 popped_value = the_queue.front();
@@ -89,7 +89,7 @@ namespace Parameters
 
             size_t size()
             {
-				std::lock_guard<std::mutex>  lock(the_mutex);
+                std::lock_guard<std::mutex>  lock(the_mutex);
                 return the_queue.size();
             }
             void clear()
@@ -106,34 +106,34 @@ namespace Parameters
             static void clear();
         private:
             static std::list<void*> invalid_senders;
-			static std::mutex mtx;
+            static std::mutex mtx;
         };
-		class PARAMETER_EXPORTS UiCallbackService
-		{
-			std::function<void(std::function<void(void)>, std::pair<void*, Loki::TypeInfo>)> user_thread_callback_service;
-			std::function<void(void)> user_thread_callback_notifier;
-			concurrent_queue < std::pair<std::pair<void*, Loki::TypeInfo>, std::function<void(void)>>> io_queue;
-		public:
+        class PARAMETER_EXPORTS UiCallbackService
+        {
+            std::function<void(std::function<void(void)>, std::pair<void*, Loki::TypeInfo>)> user_thread_callback_service;
+            std::function<void(void)> user_thread_callback_notifier;
+            concurrent_queue < std::pair<std::pair<void*, Loki::TypeInfo>, std::function<void(void)>>> io_queue;
+        public:
             static UiCallbackService* Instance();
 
-			void post(std::function<void(void)> f, std::pair<void*, Loki::TypeInfo> sender = std::make_pair((void*)nullptr, Loki::TypeInfo(typeid(void*))));
+            void post(std::function<void(void)> f, std::pair<void*, Loki::TypeInfo> sender = std::make_pair((void*)nullptr, Loki::TypeInfo(typeid(void*))));
             size_t queue_size();
             static void setCallback(std::function<void(std::function<void(void)>, std::pair<void*, Loki::TypeInfo>)> f);
-			static void setCallback(std::function<void(void)>& f);
+            static void setCallback(std::function<void(void)>& f);
             // To be called from the UI thread
             static void run();
 
 
-		};
-		class PARAMETER_EXPORTS ProcessingThreadCallbackService
-		{
-			concurrent_queue < std::pair<std::pair<void*, Loki::TypeInfo>, std::function<void(void)>>> io_queue;
-			std::function<void(std::function<void(void)>, std::pair<void*, Loki::TypeInfo>)> user_processing_thread_callback_function;
-		public:
+        };
+        class PARAMETER_EXPORTS ProcessingThreadCallbackService
+        {
+            concurrent_queue < std::pair<std::pair<void*, Loki::TypeInfo>, std::function<void(void)>>> io_queue;
+            std::function<void(std::function<void(void)>, std::pair<void*, Loki::TypeInfo>)> user_processing_thread_callback_function;
+        public:
             static ProcessingThreadCallbackService* Instance();
-			static void setCallback(std::function<void(std::function<void(void)>, std::pair<void*, Loki::TypeInfo>)> f);
-			static void run();
-			static void post(std::function<void(void)> f, std::pair<void*, Loki::TypeInfo> sender = std::make_pair((void*)nullptr, Loki::TypeInfo(typeid(void*))));
-		};
-	}
+            static void setCallback(std::function<void(std::function<void(void)>, std::pair<void*, Loki::TypeInfo>)> f);
+            static void run();
+            static void post(std::function<void(void)> f, std::pair<void*, Loki::TypeInfo> sender = std::make_pair((void*)nullptr, Loki::TypeInfo(typeid(void*))));
+        };
+    }
 }

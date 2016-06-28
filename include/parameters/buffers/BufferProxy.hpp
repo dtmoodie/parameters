@@ -2,6 +2,7 @@
 #include "parameters/Parameter_def.hpp"
 #include "parameters/LokiTypeInfo.h"
 #include "parameters/buffers/CircularBuffer.hpp"
+#include "parameters/buffers/ConstMap.hpp"
 #include "parameters/buffers/proxy.hpp"
 #include <functional>
 #include <map>

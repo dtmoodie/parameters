@@ -96,8 +96,8 @@ namespace Parameters
         template<class Archive>
         void serialize(Archive& ar)
         {
+			Parameter::serialize(ar);
             ar(data);
-            Parameter::serialize(ar);
         }
 	};
 

@@ -28,6 +28,7 @@ namespace Parameters
 	{
 		template<typename T> class Map: public ITypedParameter<T>, public IBuffer
 		{
+		protected:
 			std::map<long long, T> _data_buffer;
 		public:
 			Map(const std::string& name,
@@ -42,7 +43,7 @@ namespace Parameters
 				std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
 				if (time_index == -1 && _data_buffer.size())
 				{
-					return &(*_data_buffer.rbegin());
+					return &(_data_buffer.rbegin()->second);
 				}
 				else
 				{
@@ -59,7 +60,7 @@ namespace Parameters
 				std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
 				if (time_index == -1 && _data_buffer.size())
 				{
-					value = _data_buffer.back().second;
+					value = _data_buffer.rbegin()->second;
 					return true;
 				}
 				auto itr = _data_buffer.find(time_index);
@@ -115,12 +116,12 @@ namespace Parameters
 			{
 				
 			}
-			virtual long long GetSize() const
+			virtual long long GetSize() 
 			{
 				std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
 				return _data_buffer.size();
 			}
-			virtual void GetTimestampRange(long long& start, long long& end) const
+			virtual void GetTimestampRange(long long& start, long long& end) 
 			{
 				if (_data_buffer.size())
 				{
@@ -131,7 +132,9 @@ namespace Parameters
 			}
 			virtual Parameter::Ptr DeepCopy() const
 			{
-				return Parameter::Ptr(new Map<T>(*this));
+				auto ptr = new Map<T>(Parameter::name);
+				ptr->_data_buffer = this->_data_buffer;
+				return Parameter::Ptr(ptr);
 			}
 		};
 	}

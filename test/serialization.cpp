@@ -6,21 +6,24 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
+
+#include <fstream>
+
 using namespace Parameters;
 
 #define TYPED_TEST_CASE_(type) \
 { \
-	BOOST_TEST_CHECKPOINT("serialization and deserialization of " #type); \
-	TypedParameter<type> test(#type, __COUNTER__); params.push_back(&test); \
-	std::stringstream ss; \
-	Persistence::Text::Serialize(&ss, &test); \
-	std::string str = ss.str(); \
+    BOOST_TEST_CHECKPOINT("serialization and deserialization of " #type); \
+    TypedParameter<type> test(#type, __COUNTER__); params.push_back(&test); \
+    std::stringstream ss; \
+    Persistence::Text::Serialize(&ss, &test); \
+    std::string str = ss.str(); \
     BOOST_LOG_TRIVIAL(debug) << "Serialized value: " << str; \
-	auto deserialized_param = Persistence::Text::DeSerialize(&str); \
-	auto typed = std::dynamic_pointer_cast<TypedParameter<type>>(deserialized_param); \
-	BOOST_REQUIRE(typed); \
-	BOOST_REQUIRE(typed->Data()); \
-	BOOST_CHECK_EQUAL(*typed->Data() , *test.Data()); \
+    auto deserialized_param = Persistence::Text::DeSerialize(&str); \
+    auto typed = std::dynamic_pointer_cast<TypedParameter<type>>(deserialized_param); \
+    BOOST_REQUIRE(typed); \
+    BOOST_REQUIRE(typed->Data()); \
+    BOOST_CHECK_EQUAL(*typed->Data() , *test.Data()); \
 }
 #define TYPED_TEST_CASE(type) TYPED_TEST_CASE_(type); 
 
@@ -28,14 +31,35 @@ using namespace Parameters;
 BOOST_AUTO_TEST_SUITE(serialization)
 BOOST_AUTO_TEST_CASE(serialization_pod)
 {
-	std::vector<Parameter*> params;
-	TYPED_TEST_CASE(uchar);
-	TYPED_TEST_CASE(char);
-	TYPED_TEST_CASE(ushort);
-	TYPED_TEST_CASE(short);
-	TYPED_TEST_CASE(uint);
-	TYPED_TEST_CASE(int);
-	TYPED_TEST_CASE(float);
-	TYPED_TEST_CASE(double);
+    std::vector<Parameter*> params;
+    TYPED_TEST_CASE(uchar);
+    TYPED_TEST_CASE(char);
+    TYPED_TEST_CASE(ushort);
+    TYPED_TEST_CASE(short);
+    TYPED_TEST_CASE(uint);
+    TYPED_TEST_CASE(int);
+    TYPED_TEST_CASE(float);
+    TYPED_TEST_CASE(double);
 }
+
+BOOST_AUTO_TEST_CASE(CerealSerialization)
+{
+    {
+        Parameters::ParameteredObject obj;
+        obj.updateParameter("test", 5);
+        std::ofstream ofs("binary.bin", std::ios::binary);
+        cereal::BinaryOutputArchive ar(ofs);
+        ar(obj);
+    }
+    {
+        std::ifstream ifs("binary.bin", std::ios::binary);
+        cereal::BinaryInputArchive ar(ifs);
+        std::shared_ptr<Parameters::ParameteredObject> obj(new Parameters::ParameteredObject());
+        ar(obj);
+    }
+
+
+
+}
+
 BOOST_AUTO_TEST_SUITE_END()

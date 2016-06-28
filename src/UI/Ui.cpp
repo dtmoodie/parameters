@@ -31,19 +31,19 @@ qt::IParameterProxy::~IParameterProxy()
 
 void InvalidCallbacks::invalidate(void* sender)
 {
-	std::lock_guard<std::mutex> lock(mtx);
+    std::lock_guard<std::mutex> lock(mtx);
     invalid_senders.push_back(sender);
 }
 bool InvalidCallbacks::check_valid(void* sender)
 {
-	std::lock_guard<std::mutex> lock(mtx);
+    std::lock_guard<std::mutex> lock(mtx);
     if (std::find(invalid_senders.begin(), invalid_senders.end(), sender) == invalid_senders.end())
         return true;
     return false;
 }
 void InvalidCallbacks::clear()
 {
-	std::lock_guard<std::mutex> lock(mtx);
+    std::lock_guard<std::mutex> lock(mtx);
     invalid_senders.clear();
 }
         
@@ -52,8 +52,8 @@ std::mutex InvalidCallbacks::mtx;
 
 UiCallbackService * UiCallbackService::Instance()
 {
-	static UiCallbackService instance;
-	return &instance;   
+    static UiCallbackService instance;
+    return &instance;   
 }
 void UiCallbackService::post(std::function<void()> f, std::pair<void*, Loki::TypeInfo> source)
 {
@@ -62,8 +62,8 @@ void UiCallbackService::post(std::function<void()> f, std::pair<void*, Loki::Typ
         user_thread_callback_service(f, source);
         return;
     }
-	if (user_thread_callback_notifier)
-		user_thread_callback_notifier();
+    if (user_thread_callback_notifier)
+        user_thread_callback_notifier();
     io_queue.push(std::make_pair(source, f));
 }
 size_t UiCallbackService::queue_size()
@@ -77,12 +77,12 @@ void UiCallbackService::setCallback(std::function<void(std::function<void()>, st
 }
 void UiCallbackService::setCallback(std::function<void(void)>& f)
 {
-	Instance()->user_thread_callback_notifier = f;
+    Instance()->user_thread_callback_notifier = f;
 }
 
 void UiCallbackService::run()
 {
-	std::pair<std::pair<void*, Loki::TypeInfo>, std::function<void(void)>> data;
+    std::pair<std::pair<void*, Loki::TypeInfo>, std::function<void(void)>> data;
     auto inst = Instance();
     while (inst->io_queue.try_pop(data))
     {
@@ -96,19 +96,19 @@ void UiCallbackService::run()
 
 ProcessingThreadCallbackService* ProcessingThreadCallbackService::Instance()
 {
-	static ProcessingThreadCallbackService instance;
-	return &instance;
+    static ProcessingThreadCallbackService instance;
+    return &instance;
 }
 
 void ProcessingThreadCallbackService::setCallback(std::function<void(std::function<void(void)>, std::pair<void*, Loki::TypeInfo>)> f)
 {
-	Instance()->user_processing_thread_callback_function = f;
+    Instance()->user_processing_thread_callback_function = f;
 }
 
 
 void ProcessingThreadCallbackService::run()
 {
-	std::pair<std::pair<void*, Loki::TypeInfo>, std::function<void(void)>> data;
+    std::pair<std::pair<void*, Loki::TypeInfo>, std::function<void(void)>> data;
     auto inst = Instance();
     while (inst->io_queue.try_pop(data))
     {
@@ -121,11 +121,11 @@ void ProcessingThreadCallbackService::run()
 
 void ProcessingThreadCallbackService::post(std::function<void(void)> f, std::pair<void*, Loki::TypeInfo> source)
 {
-	auto instance = Instance();
-	if (instance->user_processing_thread_callback_function)
-	{
-		instance->user_processing_thread_callback_function(f, source);
-		return;
-	}
+    auto instance = Instance();
+    if (instance->user_processing_thread_callback_function)
+    {
+        instance->user_processing_thread_callback_function(f, source);
+        return;
+    }
     instance->io_queue.push(std::make_pair(source, f));
 }

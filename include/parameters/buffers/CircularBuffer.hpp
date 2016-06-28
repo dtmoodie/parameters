@@ -118,12 +118,12 @@ namespace Parameters
                 std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
 				_data_buffer.set_capacity(size);
 			}
-			virtual long long GetSize() const
+			virtual long long GetSize() 
 			{
                 std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
 				return _data_buffer.capacity();
 			}
-			virtual void GetTimestampRange(long long& start, long long& end) const
+			virtual void GetTimestampRange(long long& start, long long& end) 
 			{
 				if (_data_buffer.size())
 				{
@@ -134,7 +134,7 @@ namespace Parameters
 			}
 			virtual Parameter::Ptr DeepCopy() const
 			{
-				return Parameter::Ptr(new CircularBuffer<T>(*this));
+				return Parameter::Ptr(new CircularBuffer<T>(Parameter::name));
 			}
 		};
 	}

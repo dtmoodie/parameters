@@ -26,117 +26,117 @@ using namespace Parameters::UI::qt;
 
 SignalProxy::SignalProxy(IHandler* handler_)
 {
-	handler = handler_;
-	lastCallTime.start();
+    handler = handler_;
+    lastCallTime.start();
 }
 
 void SignalProxy::on_update()
 {
-	if (lastCallTime.elapsed() > 15)
-	{
-		
-		lastCallTime.start();
-		handler->OnUiUpdate(sender());
-	}
-	
+    if (lastCallTime.elapsed() > 15)
+    {
+        
+        lastCallTime.start();
+        handler->OnUiUpdate(sender());
+    }
+    
 }
 void SignalProxy::on_update(int val)
 {
-	if (lastCallTime.elapsed() > 15)
-	{
-		
-		lastCallTime.start();
-		handler->OnUiUpdate(sender(), val);
-	}
+    if (lastCallTime.elapsed() > 15)
+    {
+        
+        lastCallTime.start();
+        handler->OnUiUpdate(sender(), val);
+    }
 }
 void SignalProxy::on_update(double val)
 {
-	if (lastCallTime.elapsed() > 15)
-	{
-		
-		lastCallTime.start();
-		handler->OnUiUpdate(sender(), val);
-	}
+    if (lastCallTime.elapsed() > 15)
+    {
+        
+        lastCallTime.start();
+        handler->OnUiUpdate(sender(), val);
+    }
 }
 void SignalProxy::on_update(bool val)
 {
-	if (lastCallTime.elapsed() > 15)
-	{
-		
-		lastCallTime.start();
-		handler->OnUiUpdate(sender(), val);
-	}
+    if (lastCallTime.elapsed() > 15)
+    {
+        
+        lastCallTime.start();
+        handler->OnUiUpdate(sender(), val);
+    }
 }
 void SignalProxy::on_update(QString val)
 {
-	if (lastCallTime.elapsed() > 15)
-	{
-		
-		lastCallTime.start();
-		handler->OnUiUpdate(sender(), val);
-	}
+    if (lastCallTime.elapsed() > 15)
+    {
+        
+        lastCallTime.start();
+        handler->OnUiUpdate(sender(), val);
+    }
 }
 void SignalProxy::on_update(int row, int col)
 {
-	if (lastCallTime.elapsed() > 15)
-	{
-		
-		lastCallTime.start();
-		handler->OnUiUpdate(sender(), row, col);
-	}
+    if (lastCallTime.elapsed() > 15)
+    {
+        
+        lastCallTime.start();
+        handler->OnUiUpdate(sender(), row, col);
+    }
 }
 std::map<Loki::TypeInfo, WidgetFactory::HandlerCreator>& WidgetFactory::registry()
 {
-	static auto instance = std::map<Loki::TypeInfo, WidgetFactory::HandlerCreator>();
-	return instance;
+    static auto instance = std::map<Loki::TypeInfo, WidgetFactory::HandlerCreator>();
+    return instance;
 }
 
 void WidgetFactory::RegisterCreator(Loki::TypeInfo type, HandlerCreator f)
 {
-	LOG_TRIVIAL(trace) << "Registering type " << type.name();
-	WidgetFactory::registry()[type] = f;
+    LOG_TRIVIAL(trace) << "Registering type " << type.name();
+    WidgetFactory::registry()[type] = f;
 }
 
 std::shared_ptr<IParameterProxy> WidgetFactory::Createhandler(Parameters::Parameter* param)
 {
-	std::string typeName = param->GetTypeInfo().name();
-	std::string treeName = param->GetTreeName();
-	auto itr = registry().find(param->GetTypeInfo());
+    std::string typeName = param->GetTypeInfo().name();
+    std::string treeName = param->GetTreeName();
+    auto itr = registry().find(param->GetTypeInfo());
     if (itr == registry().end())
-	{
+    {
         
-		LOG_TRIVIAL(debug) << "No Widget Factory registered for type " << typeName << " unable to make widget for parameter: " << treeName;
-		return std::shared_ptr<IParameterProxy>(new DefaultProxy(param));
-	}
-	LOG_TRIVIAL(trace) << "Creating handler for " << typeName << " " << treeName;
-	return itr->second(param);
+        LOG_TRIVIAL(debug) << "No Widget Factory registered for type " << typeName << " unable to make widget for parameter: " << treeName;
+        return std::shared_ptr<IParameterProxy>(new DefaultProxy(param));
+    }
+    LOG_TRIVIAL(trace) << "Creating handler for " << typeName << " " << treeName;
+    return itr->second(param);
 }
 
 DefaultProxy::DefaultProxy(Parameters::Parameter* param)
 {
-	parameter = param;
-	delete_connection = param->RegisterDeleteNotifier(std::bind(&DefaultProxy::onParamDelete, this));
+    parameter = param;
+    delete_connection = param->RegisterDeleteNotifier(std::bind(&DefaultProxy::onParamDelete, this));
 }
 bool DefaultProxy::SetParameter(Parameters::Parameter* param)
 {
-	parameter = param;
-	return true;
+    parameter = param;
+    return true;
 }
 bool DefaultProxy::CheckParameter(Parameters::Parameter* param)
-{	
-	return param == parameter;
+{    
+    return param == parameter;
 }
 QWidget* DefaultProxy::GetParameterWidget(QWidget* parent)
 {
-	
-	QWidget* output = new QWidget(parent);
+    
+    QWidget* output = new QWidget(parent);
 
-	QGridLayout* layout = new QGridLayout(output);
-	QLabel* nameLbl = new QLabel(QString::fromStdString(parameter->GetName()), output);
-	nameLbl->setToolTip(QString::fromStdString(parameter->GetTypeInfo().name()));
+    QGridLayout* layout = new QGridLayout(output);
+    QLabel* nameLbl = new QLabel(QString::fromStdString(parameter->GetName()), output);
+    nameLbl->setToolTip(QString::fromStdString(parameter->GetTypeInfo().name()));
     layout->addWidget(nameLbl, 0, 0);
-	output->setLayout(layout);
-	return output;
+    output->setLayout(layout);
+    return output;
 }
 IHandler::IHandler() : paramMtx(nullptr), proxy(new SignalProxy(this)), _listener(nullptr) {}
 void IHandler::OnUiUpdate(QObject* sender) {}

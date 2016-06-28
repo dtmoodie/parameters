@@ -26,55 +26,55 @@ https://github.com/dtmoodie/parameters
 #define ENUM(value) value, #value
 namespace Parameters
 {
-	struct ReadFile : public boost::filesystem::path
-	{
+    struct ReadFile : public boost::filesystem::path
+    {
         ReadFile(const ::std::string& str = "") : boost::filesystem::path(str){}
-	};
-	struct WriteFile : public boost::filesystem::path
-	{
+    };
+    struct WriteFile : public boost::filesystem::path
+    {
         WriteFile(const ::std::string& file = "") : boost::filesystem::path(file){}
-	};
-	struct ReadDirectory : public boost::filesystem::path
-	{
+    };
+    struct ReadDirectory : public boost::filesystem::path
+    {
         ReadDirectory(const boost::filesystem::path& path = "") : boost::filesystem::path(path){}
-	};
-	struct WriteDirectory : public boost::filesystem::path
-	{
+    };
+    struct WriteDirectory : public boost::filesystem::path
+    {
         WriteDirectory(const ::std::string& str = "") : boost::filesystem::path(str){}
-	};
+    };
 
-	class EnumParameter
-	{
-	public:
-		EnumParameter()
-		{
-			currentSelection = 0;
-		}
+    class EnumParameter
+    {
+    public:
+        EnumParameter()
+        {
+            currentSelection = 0;
+        }
 
-		void addEnum(int value, const ::std::string& enumeration)
-		{
-			enumerations.push_back(enumeration);
-			values.push_back(value);
-		}
-		int getValue()
-		{
-			if (currentSelection >= values.size())
+        void addEnum(int value, const ::std::string& enumeration)
+        {
+            enumerations.push_back(enumeration);
+            values.push_back(value);
+        }
+        int getValue()
+        {
+            if (currentSelection >= values.size())
             {
                 throw std::range_error("currentSelection >= values.size()");
-			}
-			return values[currentSelection];
-		}
+            }
+            return values[currentSelection];
+        }
         std::string getEnum()
         {
             if (currentSelection >= values.size())
             {
                 throw std::range_error("currentSelection >= values.size()");
-			}
-			return enumerations[currentSelection];
+            }
+            return enumerations[currentSelection];
         }
 
-		::std::vector<::std::string> enumerations;
-		::std::vector<int>         values;
-		int currentSelection;
-	};
+        ::std::vector<::std::string> enumerations;
+        ::std::vector<int>         values;
+        int currentSelection;
+    };
 }

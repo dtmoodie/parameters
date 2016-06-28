@@ -33,10 +33,10 @@ std::string demangle(const char* name) {
 #ifdef _MSC_VER
 namespace TypeInfo
 {
-	std::string demangle(const char* name) 
-	{
-		return std::string(name);
-	}
+    std::string demangle(const char* name) 
+    {
+        return std::string(name);
+    }
 }
 
 #endif

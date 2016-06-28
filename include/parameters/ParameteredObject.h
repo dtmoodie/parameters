@@ -107,6 +107,11 @@ namespace Parameters
 			SIG_SEND(parameter_updated, ParameteredObject*);
 			SIG_SEND(parameter_added, ParameteredObject*);
 		SIGNALS_END
+
+		template<typename Archive> void serialize(Archive& archive)
+		{
+			archive(_implicit_parameters);
+		}
     protected:
 		std::shared_ptr<IVariableManager>						_variable_manager;
 		

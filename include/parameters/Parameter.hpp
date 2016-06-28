@@ -43,7 +43,7 @@ namespace Parameters
 			State = 4,
 			Control = 8
 		};
-		Parameter(const ::std::string& name, const ParameterType& type = ParameterType::Control, const ::std::string& tooltip = "");
+		Parameter(const ::std::string& name = "", const ParameterType& type = ParameterType::Control, const ::std::string& tooltip = "");
 		virtual ~Parameter();
 		typedef ::std::shared_ptr<Parameter> Ptr;
 		virtual Loki::TypeInfo GetTypeInfo() = 0;

@@ -23,31 +23,31 @@ https://github.com/dtmoodie/parameters
 #include "Qt.hpp"
 namespace Parameters
 {
-	namespace UI
-	{
-		template<typename T> class UiPolicy //: public qt::QtUiPolicy<T>
-		{
-		public:
+    namespace UI
+    {
+        template<typename T> class UiPolicy //: public qt::QtUiPolicy<T>
+        {
+        public:
             UiPolicy()
             {
                 static qt::QtUiPolicy<T> qt_policy;
             }
-		};
-	}
+        };
+    }
 }
 
 #else
 namespace Parameters
 {
-	namespace UI
-	{
-		class NoUiPolicy
-		{		};
-		template<typename T> class UiPolicy: public NoUiPolicy
-		{
-		public:
+    namespace UI
+    {
+        class NoUiPolicy
+        {        };
+        template<typename T> class UiPolicy: public NoUiPolicy
+        {
+        public:
 
-		};
-	}
+        };
+    }
 }
 #endif

@@ -38,6 +38,16 @@ static TypedParameter<long> long_("instance");
 static TypedParameter<unsigned long> ulong_("instance");
 static TypedParameter<long long> longlong_("instance");
 
+CEREAL_REGISTER_TYPE(TypedParameter<char>);
+CEREAL_REGISTER_TYPE(TypedParameter<unsigned char>);
+CEREAL_REGISTER_TYPE(TypedParameter<short>);
+CEREAL_REGISTER_TYPE(TypedParameter<unsigned short>);
+CEREAL_REGISTER_TYPE(TypedParameter<int>);
+CEREAL_REGISTER_TYPE(TypedParameter<unsigned int>);
+CEREAL_REGISTER_TYPE(TypedParameter<long>);
+CEREAL_REGISTER_TYPE(TypedParameter<unsigned long>);
+CEREAL_REGISTER_TYPE(TypedParameter<long long>);
+
 /*static TypedParameter<unsigned long long> ulonglong_("instance");
 static TypedParameter<float> float_("instance");
 static TypedParameter<double> double_("instance");

@@ -16,23 +16,26 @@ namespace Parameters
 		public:
 			Proxy(ITypedParameter<T>* input, Parameters::Parameter::Ptr buffer) :
 				_input_parameter(input),
-				_buffer(std::dynamic_ptr_cast<ITypedParameter>(buffer))
+				_buffer(std::dynamic_pointer_cast<ITypedParameter>(buffer)),
+				ITypedParameter<T>("proxy for " + (input ? input->GetName() : std::string("null")))
 			{
 				if (input)
 				{
-					_input_update_connection = _input_parameter->RegisterNotifier(std::bind(&ParameterBufferProxy::onInputUpdate, this, std::placeholders::_1));
-					_input_delete_connection = _input_parameter->RegisterDeleteNotifier(std::bind(&ParameterBufferProxy::onInputDelete, this));
+					_input_update_connection = _input_parameter->RegisterNotifier(std::bind(&Proxy::onInputUpdate, this, std::placeholders::_1));
+					_input_delete_connection = _input_parameter->RegisterDeleteNotifier(std::bind(&Proxy::onInputDelete, this));
 					_input_parameter->subscribers++;
 				}
 			}
 			Proxy(ITypedParameter<T>* input, ITypedParameter<T>* buffer) :
 				_input_parameter(input),
-				_buffer(buffer)
+				_buffer(buffer),
+				ITypedParameter<T>("proxy")
+
 			{
 				if (input)
 				{
-					_input_update_connection = _input_parameter->RegisterNotifier(std::bind(&ParameterBufferProxy::onInputUpdate, this, std::placeholders::_1));
-					_input_delete_connection = _input_parameter->RegisterDeleteNotifier(std::bind(&ParameterBufferProxy::onInputDelete, this));
+					_input_update_connection = _input_parameter->RegisterNotifier(std::bind(&Proxy::onInputUpdate, this, std::placeholders::_1));
+					_input_delete_connection = _input_parameter->RegisterDeleteNotifier(std::bind(&Proxy::onInputDelete, this));
 					_input_parameter->subscribers++;
 				}
 			}
@@ -48,8 +51,8 @@ namespace Parameters
 			{
 				if (_input_parameter = dynamic_cast<ITypedParameter<T>*>(param))
 				{
-					_input_update_connection = _input_parameter->RegisterNotifier(std::bind(&ParameterBufferProxy::onInputUpdate, this, std::placeholders::_1));
-					_input_delete_connection = _input_parameter->RegisterDeleteNotifier(std::bind(&ParameterBufferProxy::onInputDelete, this));
+					_input_update_connection = _input_parameter->RegisterNotifier(std::bind(&Proxy::onInputUpdate, this, std::placeholders::_1));
+					_input_delete_connection = _input_parameter->RegisterDeleteNotifier(std::bind(&Proxy::onInputDelete, this));
 				}
 			}
 			void onInputDelete()
@@ -71,7 +74,7 @@ namespace Parameters
 			}
 			virtual T* Data(long long timestamp)
 			{
-				return _buffer->Data(timestmap);
+				return _buffer->Data(timestamp);
 			}
 			virtual bool GetData(T& value, long long time_index = -1)
 			{
@@ -93,15 +96,15 @@ namespace Parameters
 			}
 			virtual void SetSize(long long size)
 			{
-				static_cast<IBuffer*>(_buffer.get())->SetSize(size);
+				dynamic_cast<IBuffer*>(_buffer.get())->SetSize(size);
 			}
-			virtual long long GetSize() const
+			virtual long long GetSize()
 			{
-				return static_cast<IBuffer*>(_buffer.get())->GetSize();
+				return dynamic_cast<IBuffer*>(_buffer.get())->GetSize();
 			}
-			virtual void GetTimestampRange(long long& start, long long& end) const
+			virtual void GetTimestampRange(long long& start, long long& end)
 			{
-				static_cast<IBuffer*>(_buffer.get())->GetTimestampRange(start, end);
+				dynamic_cast<IBuffer*>(_buffer.get())->GetTimestampRange(start, end);
 			}
 			virtual std::recursive_mutex& mtx()
 			{

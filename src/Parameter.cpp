@@ -25,70 +25,70 @@ name(name_), type(type_), tooltip(tooltip_), changed(false), subscribers(0), _cu
 }
 Parameter::~Parameter()
 {
-	delete_signal(this);
+    delete_signal(this);
 }
 const std::string& Parameter::GetName() const
 {
-	return name;
+    return name;
 }
 Parameter* Parameter::SetName(const std::string& name_)
 {
-	name = name_;
+    name = name_;
     return this;
 }
 const std::string& Parameter::GetTooltip() const
 {
-	return tooltip;
+    return tooltip;
 }
 Parameter* Parameter::SetTooltip(const std::string& tooltip_)
 {
-	tooltip = tooltip_;
+    tooltip = tooltip_;
     return this;
 }
 Parameter* Parameter::SetTreeRoot(const std::string& treeRoot_)
 {
-	treeRoot = treeRoot_;
+    treeRoot = treeRoot_;
     return this;
 }
 const std::string& Parameter::GetTreeRoot() const
 {
-	return treeRoot;
+    return treeRoot;
 }
 const std::string Parameter::GetTreeName() const
 {
-	return treeRoot + ":" + name;
+    return treeRoot + ":" + name;
 }
 Parameter* Parameter::SetTreeName(const std::string& treeName_)
 {
-	treeRoot = treeName_;
+    treeRoot = treeName_;
     return this;
 }
 std::shared_ptr<Signals::connection> Parameter::RegisterNotifier(std::function<void(cv::cuda::Stream*)> f)
 {
-	return update_signal.connect(f);
+    return update_signal.connect(f);
 }
 std::shared_ptr<Signals::connection> Parameter::RegisterDeleteNotifier(std::function<void(Parameter*)> f)
 {
-	return delete_signal.connect(f);
+    return delete_signal.connect(f);
 }
 bool Parameter::Update(Parameter* other)
 {
-	return false;
+    return false;
 }
 long long Parameter::GetTimeIndex() const
 {
-	return _current_time_index;
+    return _current_time_index;
 }
 void Parameter::SetTimeIndex(long long index)
 {
-	_current_time_index = index;
+    _current_time_index = index;
 }
 void Parameter::OnUpdate(cv::cuda::Stream* stream)
 {
-	changed = true;
-	update_signal(stream);
+    changed = true;
+    update_signal(stream);
 }
 std::recursive_mutex& Parameter::mtx()
 {
-	return _mtx;
+    return _mtx;
 }

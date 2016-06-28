@@ -25,21 +25,21 @@ https://github.com/dtmoodie/parameters
 #include <string>
 namespace Parameters
 {
-	class PARAMETER_EXPORTS InputParameter
-	{
-	protected:
-		std::function<bool(Parameter*)> qualifier;
-	public:
-		typedef std::shared_ptr<InputParameter> Ptr;
-		virtual bool SetInput(const std::string& name_) = 0;
-		virtual bool SetInput(Parameter*param) = 0;
-		virtual Parameter* GetInput() = 0;
-		virtual bool AcceptsInput(Parameter* param) = 0;
-		virtual bool AcceptsType(const Loki::TypeInfo& type) = 0;
-		virtual void SetQualifier(const std::function<bool(Parameter*)>& f)
-		{
-			qualifier = f;
-		}
-		virtual Loki::TypeInfo GetTypeInfo() = 0;
-	};
+    class PARAMETER_EXPORTS InputParameter
+    {
+    protected:
+        std::function<bool(Parameter*)> qualifier;
+    public:
+        typedef std::shared_ptr<InputParameter> Ptr;
+        virtual bool SetInput(const std::string& name_) = 0;
+        virtual bool SetInput(Parameter*param) = 0;
+        virtual Parameter* GetInput() = 0;
+        virtual bool AcceptsInput(Parameter* param) = 0;
+        virtual bool AcceptsType(const Loki::TypeInfo& type) = 0;
+        virtual void SetQualifier(const std::function<bool(Parameter*)>& f)
+        {
+            qualifier = f;
+        }
+        virtual Loki::TypeInfo GetTypeInfo() = 0;
+    };
 }

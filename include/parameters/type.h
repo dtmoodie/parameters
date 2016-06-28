@@ -7,7 +7,7 @@
 #include <typeinfo>
 namespace TypeInfo
 {
-	std::string PARAMETER_EXPORTS demangle(const char* name);
+    std::string PARAMETER_EXPORTS demangle(const char* name);
 
 template <class T>
 std::string type(const T& t) {
