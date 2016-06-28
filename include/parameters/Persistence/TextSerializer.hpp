@@ -41,7 +41,7 @@ namespace cv
 }
 namespace Parameters
 {
-	class Parameter;
+    class Parameter;
     template<typename T> class TypedParameter;
     namespace Persistence
     {
@@ -62,19 +62,19 @@ namespace Parameters
                 static bool Exists(Loki::TypeInfo type);
             private:
                 // Mapping from Loki::typeinfo to file writing functors
-				static std::map<Loki::TypeInfo, InterpreterSet>& registry();
-				static std::map<std::string, FactoryFunction>& factory();
-				friend PARAMETER_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::string* ss);
-				friend PARAMETER_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::stringstream* ss);
-				friend PARAMETER_EXPORTS bool DeSerialize(::std::string* ss, Parameters::Parameter* param);
-				friend PARAMETER_EXPORTS bool DeSerialize(::std::stringstream* ss, Parameters::Parameter* param);
-				friend PARAMETER_EXPORTS bool Serialize(::std::stringstream* ss, Parameters::Parameter* param);
+                static std::map<Loki::TypeInfo, InterpreterSet>& registry();
+                static std::map<std::string, FactoryFunction>& factory();
+                friend PARAMETER_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::string* ss);
+                friend PARAMETER_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::stringstream* ss);
+                friend PARAMETER_EXPORTS bool DeSerialize(::std::string* ss, Parameters::Parameter* param);
+                friend PARAMETER_EXPORTS bool DeSerialize(::std::stringstream* ss, Parameters::Parameter* param);
+                friend PARAMETER_EXPORTS bool Serialize(::std::stringstream* ss, Parameters::Parameter* param);
             };
             PARAMETER_EXPORTS bool Serialize(::std::stringstream* ss, Parameters::Parameter* param);
             PARAMETER_EXPORTS bool DeSerialize(::std::stringstream* ss, Parameters::Parameter* param);
             PARAMETER_EXPORTS bool DeSerialize(::std::string* ss, Parameters::Parameter* param);
-			PARAMETER_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::stringstream* ss);
-			PARAMETER_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::string* ss);
+            PARAMETER_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::stringstream* ss);
+            PARAMETER_EXPORTS Parameters::Parameter::Ptr DeSerialize(::std::string* ss);
             PARAMETER_EXPORTS bool SerializeValue(::std::stringstream* ss, Parameters::Parameter* param);
 
             template<typename T, typename Enable = void> struct Serializer
@@ -93,31 +93,31 @@ namespace Parameters
                 }
                 const static bool IS_DEFAULT = true;
             };
-			template<typename T> struct Serializer<T, typename std::enable_if<
-				std::is_same<T, Parameters::ReadDirectory>::value ||
-				std::is_same<T, Parameters::ReadFile>::value ||
-				std::is_same<T, Parameters::WriteDirectory>::value ||
-				std::is_same<T, Parameters::WriteFile>::value>::type>
-			{
-				static bool Serialize(::std::stringstream* ss, T* param)
-				{
-					(*ss) << param->string();
+            template<typename T> struct Serializer<T, typename std::enable_if<
+                std::is_same<T, Parameters::ReadDirectory>::value ||
+                std::is_same<T, Parameters::ReadFile>::value ||
+                std::is_same<T, Parameters::WriteDirectory>::value ||
+                std::is_same<T, Parameters::WriteFile>::value>::type>
+            {
+                static bool Serialize(::std::stringstream* ss, T* param)
+                {
+                    (*ss) << param->string();
                     return true;
-				}
-				static bool DeSerialize(::std::stringstream* ss, T* param)
-				{
-					std::string line;
-					std::getline(*ss, line);
-					*param = T(line);
+                }
+                static bool DeSerialize(::std::stringstream* ss, T* param)
+                {
+                    std::string line;
+                    std::getline(*ss, line);
+                    *param = T(line);
                     return true;
-				}
-				static bool DeSerialize(::std::string* str, T* param)
-				{
-					*param = T(*str);
-					return true;
-				}
+                }
+                static bool DeSerialize(::std::string* str, T* param)
+                {
+                    *param = T(*str);
+                    return true;
+                }
                 const static bool IS_DEFAULT = false;
-			};
+            };
             template<typename T> struct Serializer<T, typename std::enable_if<
                 std::is_floating_point<T>::value || 
                 std::is_integral<T>::value ||
@@ -133,27 +133,27 @@ namespace Parameters
                 static bool DeSerialize(::std::stringstream* ss, T* param)
                 {
                     std::string line;
-					std::getline(*ss, line);
-					try
-					{
-						*param = boost::lexical_cast<T>(line);
-					}catch(...)
-					{
-						return false;
-					}
+                    std::getline(*ss, line);
+                    try
+                    {
+                        *param = boost::lexical_cast<T>(line);
+                    }catch(...)
+                    {
+                        return false;
+                    }
                     return true;
                 }
-				static bool DeSerialize(::std::string* str, T* param)
-				{
+                static bool DeSerialize(::std::string* str, T* param)
+                {
                     try
                     {
                         *param = boost::lexical_cast<T>(*str);
                     }catch(...)
-					{
-						return false;
-					}
-					return true;
-				}
+                    {
+                        return false;
+                    }
+                    return true;
+                }
                 const static bool IS_DEFAULT = false;
             };
 
@@ -208,23 +208,23 @@ namespace Parameters
                 }
                 static bool DeSerialize(::std::stringstream* ss, std::vector<T>* param)
                 {
-					std::string len;
-					std::getline(*ss, len, '>');
-					const int size = boost::lexical_cast<size_t>(len.substr(1));
-					param->resize(size);
-					int i;
-					for (i = 0; i < size - 1; ++i)
-					{
-						std::getline(*ss, len, ',');
-						Serializer<T>::DeSerialize(&len, &(*param)[i]);
-					}
-					std::getline(*ss, len);
-					Serializer<T>::DeSerialize(&len, &(*param)[i]);
+                    std::string len;
+                    std::getline(*ss, len, '>');
+                    const int size = boost::lexical_cast<size_t>(len.substr(1));
+                    param->resize(size);
+                    int i;
+                    for (i = 0; i < size - 1; ++i)
+                    {
+                        std::getline(*ss, len, ',');
+                        Serializer<T>::DeSerialize(&len, &(*param)[i]);
+                    }
+                    std::getline(*ss, len);
+                    Serializer<T>::DeSerialize(&len, &(*param)[i]);
                     return true;
                 }
                 static bool DeSerialize(::std::string* ss, std::vector<T>* param)
                 {
-					return true;
+                    return true;
                 }
                 const static bool IS_DEFAULT = false;
             };
@@ -240,7 +240,7 @@ namespace Parameters
                     if (typedParam && typedParam->Data())
                     {
                         (*ss) << "[" << param->GetTypeInfo().name() << "]";
-						(*ss) << param->GetTreeName() << "#";
+                        (*ss) << param->GetTreeName() << "#";
                         if(!Serializer<T>::Serialize(ss, typedParam->Data()))
                             return false;
                         (*ss) << "\n";
@@ -259,66 +259,65 @@ namespace Parameters
                 }
                 static bool ssRead(::std::stringstream* ss, Parameter* param)
                 {
-					LOG_TRIVIAL(trace) << "Reading parameter with name " << param->GetName();
+                    LOG_TRIVIAL(trace) << "Reading parameter with name " << param->GetName();
                     ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
                     if (typedParam && typedParam->Data())
                     {
-						if(Serializer<T>::DeSerialize(ss, typedParam->Data()))
+                        if(Serializer<T>::DeSerialize(ss, typedParam->Data()))
                         {
                             typedParam->changed = true;
                             typedParam->OnUpdate(nullptr);
-							return true;
+                            return true;
                         }
                     }
-					return false;
+                    return false;
                 }
                 static bool Read(::std::string* ss, Parameter* param)
                 {
-					LOG_TRIVIAL(trace) << "Reading parameter with name " << param->GetName();
+                    LOG_TRIVIAL(trace) << "Reading parameter with name " << param->GetName();
                     ITypedParameter<T>* typedParam = dynamic_cast<ITypedParameter<T>*>(param);
                     if (typedParam)
                     {
-						if(Serializer<T>::DeSerialize(ss, typedParam->Data()))
+                        if(Serializer<T>::DeSerialize(ss, typedParam->Data()))
                         {
                             typedParam->changed = true;
                             typedParam->OnUpdate(nullptr);
-							return true;
+                            return true;
                         }
                     }
-					return false;
+                    return false;
                 }
                 const static bool IS_DEFAULT = Serializer<T>::IS_DEFAULT;
             };
 
             template<typename T> struct ParameterFactory
             {
-				ParameterFactory()
-				{
-					InterpreterRegistry::RegisterFunction(Loki::TypeInfo(typeid(T)),
-						std::bind(SerializeWrapper<T>::Write, std::placeholders::_1, std::placeholders::_2),
+                ParameterFactory()
+                {
+                    InterpreterRegistry::RegisterFunction(Loki::TypeInfo(typeid(T)),
+                        std::bind(SerializeWrapper<T>::Write, std::placeholders::_1, std::placeholders::_2),
                         std::bind(SerializeWrapper<T>::WriteValue, std::placeholders::_1, std::placeholders::_2),
-						std::bind(SerializeWrapper<T>::ssRead, std::placeholders::_1, std::placeholders::_2),
-						std::bind(SerializeWrapper<T>::Read, std::placeholders::_1, std::placeholders::_2),
-						std::bind(ParameterFactory<T>::create, std::placeholders::_1),
+                        std::bind(SerializeWrapper<T>::ssRead, std::placeholders::_1, std::placeholders::_2),
+                        std::bind(SerializeWrapper<T>::Read, std::placeholders::_1, std::placeholders::_2),
+                        std::bind(ParameterFactory<T>::create, std::placeholders::_1),
                         SerializeWrapper<T>::IS_DEFAULT);
-				}
+                }
                 static Parameters::Parameter::Ptr create(const std::string& name)
                 {
-                    //return Parameters::Parameter::Ptr(new Parameters::TypedParameter<T>(name));
                     return Parameters::Parameter::Ptr(new TypedParameter<T>(name));
                 }
             };
 
             template<typename T> class PersistencePolicy
             {
-				static ParameterFactory<T> factory;
+                static ParameterFactory<T> factory;
             public:
                 PersistencePolicy()
                 {
-					(void)&factory;
+                    (void)&factory;
                 }
             };
-			template<typename T> ParameterFactory<T> PersistencePolicy<T>::factory;
+            template<typename T> ParameterFactory<T> PersistencePolicy<T>::factory;
         }
     }
 }

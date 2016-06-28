@@ -12,8 +12,8 @@ CEREAL_REGISTER_TYPE(ParameteredObject);
 
 ParameteredObject::ParameteredObject()
 {
-	//_sig_parameter_updated = nullptr;
-	//_sig_parameter_added = nullptr;
+    //_sig_parameter_updated = nullptr;
+    //_sig_parameter_added = nullptr;
     _variable_manager = nullptr;
 }
 
@@ -33,13 +33,13 @@ ParameteredObject::~ParameteredObject()
 void ParameteredObject::SetupVariableManager(std::shared_ptr<IVariableManager> manager)
 {
     _variable_manager = manager;
-	if (_variable_manager)
-	{
-		for (auto param : _parameters)
-		{
-			_variable_manager->AddParameter(param);
-		}
-	}
+    if (_variable_manager)
+    {
+        for (auto param : _parameters)
+        {
+            _variable_manager->AddParameter(param);
+        }
+    }
 }
 
 std::shared_ptr<Parameters::IVariableManager> ParameteredObject::GetVariableManager()
@@ -49,48 +49,48 @@ std::shared_ptr<Parameters::IVariableManager> ParameteredObject::GetVariableMana
 
 Parameter* ParameteredObject::addParameter(Parameter::Ptr param)
 {
-	std::lock_guard<std::recursive_mutex> lock(mtx);
-	//DOIF_LOG_FAIL(_sig_parameter_added, (*_sig_parameter_updated)(this), warning);
-	sig_parameter_added(this);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
+    //DOIF_LOG_FAIL(_sig_parameter_added, (*_sig_parameter_updated)(this), warning);
+    sig_parameter_added(this);
     DOIF_LOG_FAIL(_variable_manager, _variable_manager->AddParameter(param.get()), debug);
-	_callback_connections.push_back(param->RegisterNotifier(std::bind(&ParameteredObject::onUpdate, this, param.get(), std::placeholders::_1)));
+    _callback_connections.push_back(param->RegisterNotifier(std::bind(&ParameteredObject::onUpdate, this, param.get(), std::placeholders::_1)));
     _parameters.push_back(param.get());
-	_implicit_parameters.push_back(param);
+    _implicit_parameters.push_back(param);
     return param.get();
 }
 
 Parameter* ParameteredObject::addParameter(Parameter* param)
 {
-	std::lock_guard<std::recursive_mutex> lock(mtx);
-	// Check if it already exists
-	auto itr = std::find(_explicit_parameters.begin(), _explicit_parameters.end(), param);
-	if (itr != _explicit_parameters.end())
-	{
-		// an implicit parameter already exists with this exact pointer, do nothing
-		return param;
-	}
-	auto existing_param = getParameterOptional(param->GetName());
-	if (existing_param != nullptr)
-	{
-		// Parameter has already been added, either implicitly or explicitly, do nothing
-		LOG(debug) << "Parameter with name " << param->GetName() << " already exists but not as an explicitly defined parameter";
-		return param;
-	}
-	//DOIF_LOG_FAIL(_sig_parameter_added, (*_sig_parameter_updated)(this), debug);
-	sig_parameter_added(this);
-	DOIF_LOG_FAIL(_variable_manager, _variable_manager->AddParameter(param), debug);
-	
-	_callback_connections.push_back(param->RegisterNotifier(std::bind(&ParameteredObject::onUpdate, this, param, std::placeholders::_1)));
-	_parameters.push_back(param);
-	_explicit_parameters.push_back(param);
-	return param;
+    std::lock_guard<std::recursive_mutex> lock(mtx);
+    // Check if it already exists
+    auto itr = std::find(_explicit_parameters.begin(), _explicit_parameters.end(), param);
+    if (itr != _explicit_parameters.end())
+    {
+        // an implicit parameter already exists with this exact pointer, do nothing
+        return param;
+    }
+    auto existing_param = getParameterOptional(param->GetName());
+    if (existing_param != nullptr)
+    {
+        // Parameter has already been added, either implicitly or explicitly, do nothing
+        LOG(debug) << "Parameter with name " << param->GetName() << " already exists but not as an explicitly defined parameter";
+        return param;
+    }
+    //DOIF_LOG_FAIL(_sig_parameter_added, (*_sig_parameter_updated)(this), debug);
+    sig_parameter_added(this);
+    DOIF_LOG_FAIL(_variable_manager, _variable_manager->AddParameter(param), debug);
+    
+    _callback_connections.push_back(param->RegisterNotifier(std::bind(&ParameteredObject::onUpdate, this, param, std::placeholders::_1)));
+    _parameters.push_back(param);
+    _explicit_parameters.push_back(param);
+    return param;
 }
 
 
 Parameter* updateParameter(std::shared_ptr<Parameter> parameter)
 {
 
-	return parameter.get();
+    return parameter.get();
 }
 void ParameteredObject::RemoveParameter(std::string name)
 {
@@ -127,7 +127,7 @@ Parameter* ParameteredObject::getParameter(const std::string& name)
         {
             return itr;
         }
-    }	
+    }    
     throw std::string("Unable to find parameter by name: " + name);
 }
 
@@ -135,8 +135,8 @@ Parameter* ParameteredObject::getParameterOptional(int idx)
 {
     if (idx < 0 || idx >= _parameters.size())
     {
-		LOG(debug) << "Requested index " << idx << " out of bounds " << _parameters.size();
-		return nullptr;
+        LOG(debug) << "Requested index " << idx << " out of bounds " << _parameters.size();
+        return nullptr;
     }
     return _parameters[idx];
 }
@@ -150,22 +150,22 @@ Parameter* ParameteredObject::getParameterOptional(const std::string& name)
             return itr;
         }
     }
-	for(auto& itr : _explicit_parameters)
-	{
-		if(itr->GetName() == name)
-		{
-			return itr;
-		}
-	}
-	for(auto& itr : _implicit_parameters)
-	{
-		if(itr->GetName() == name)
-		{
-			return itr.get();
-		}
-	}
+    for(auto& itr : _explicit_parameters)
+    {
+        if(itr->GetName() == name)
+        {
+            return itr;
+        }
+    }
+    for(auto& itr : _implicit_parameters)
+    {
+        if(itr->GetName() == name)
+        {
+            return itr.get();
+        }
+    }
     LOG(trace) << "Unable to find parameter by name: " << name;
-	return nullptr;
+    return nullptr;
 }
 
 void ParameteredObject::RegisterAllParams()
@@ -179,7 +179,7 @@ std::vector<Parameter*> ParameteredObject::getParameters()
 
 std::vector<Parameter*> ParameteredObject::getDisplayParameters()
 {
-	return getParameters();
+    return getParameters();
 }
 
 void ParameteredObject::RegisterParameterCallback(int idx, const std::function<void(cv::cuda::Stream*)>& callback, bool lock_param, bool lock_object)
@@ -201,40 +201,40 @@ void ParameteredObject::RegisterParameterCallback(Parameter* param, const std::f
     }
     if (lock_object && !lock_param)
     {
-		_callback_connections.push_back(param->RegisterNotifier(std::bind(&ParameteredObject::RunCallbackLockObject, this, std::placeholders::_1, callback)));
+        _callback_connections.push_back(param->RegisterNotifier(std::bind(&ParameteredObject::RunCallbackLockObject, this, std::placeholders::_1, callback)));
         return;
     }
     if (lock_object && lock_param)
     {
 
-		_callback_connections.push_back(param->RegisterNotifier(std::bind(&ParameteredObject::RunCallbackLockBoth, this, std::placeholders::_1, callback, &param->mtx())));
+        _callback_connections.push_back(param->RegisterNotifier(std::bind(&ParameteredObject::RunCallbackLockBoth, this, std::placeholders::_1, callback, &param->mtx())));
         return;
     }
-	_callback_connections.push_back(param->RegisterNotifier(callback));    
+    _callback_connections.push_back(param->RegisterNotifier(callback));    
 }
 
 void ParameteredObject::onUpdate(Parameters::Parameter* param, cv::cuda::Stream* stream)
 {
-	//DOIF_LOG_FAIL(_sig_parameter_updated != nullptr, (*_sig_parameter_updated)(this), debug);
-	sig_parameter_updated(this);
+    //DOIF_LOG_FAIL(_sig_parameter_updated != nullptr, (*_sig_parameter_updated)(this), debug);
+    sig_parameter_updated(this);
 }
 
 void ParameteredObject::RunCallbackLockObject(cv::cuda::Stream* stream, const std::function<void(cv::cuda::Stream*)>& callback)
 {
-	std::lock_guard<std::recursive_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     callback(stream);
 }
 
 void ParameteredObject::RunCallbackLockParameter(cv::cuda::Stream* stream, const std::function<void(cv::cuda::Stream*)>& callback, std::recursive_mutex* paramMtx)
 {
-	std::lock_guard<std::recursive_mutex> lock(*paramMtx);
+    std::lock_guard<std::recursive_mutex> lock(*paramMtx);
     callback(stream);
 }
 
 void ParameteredObject::RunCallbackLockBoth(cv::cuda::Stream* stream, const std::function<void(cv::cuda::Stream*)>& callback, std::recursive_mutex* paramMtx)
 {
-	std::lock_guard<std::recursive_mutex> lock(mtx);
-	std::lock_guard<std::recursive_mutex> lock_(*paramMtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock_(*paramMtx);
     callback(stream);
 }
 

@@ -25,24 +25,24 @@ https://github.com/dtmoodie/parameters
 
 namespace Parameters
 {
-	namespace Persistence
-	{
-		template<typename T> class PersistencePolicy :
-			public Parameters::Persistence::Text::PersistencePolicy<T>
-			, public Parameters::Persistence::cv::PersistencePolicy<T>
-			, public Parameters::Persistence::Protobuf::ProtoPolicy<T>
-		{	
-		};
-	}
+    namespace Persistence
+    {
+        template<typename T> class PersistencePolicy :
+            public Parameters::Persistence::Text::PersistencePolicy<T>
+            , public Parameters::Persistence::cv::PersistencePolicy<T>
+            , public Parameters::Persistence::Protobuf::ProtoPolicy<T>
+        {    
+        };
+    }
 }
 #else
 namespace Parameters
 {
-	namespace Persistence
-	{
-		template<typename T> class PersistencePolicy
-		{
-		};
-	}
+    namespace Persistence
+    {
+        template<typename T> class PersistencePolicy
+        {
+        };
+    }
 }
 #endif

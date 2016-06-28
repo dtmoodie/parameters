@@ -96,30 +96,30 @@ namespace cereal
         int channels, rows, cols, depth;
         ar(rows, cols, channels, depth);
         mat.create(rows, cols, CV_MAKETYPE(depth, channels));
-		ar.loadBinaryValue(mat.data, mat.dataend - mat.datastart);
+        ar.loadBinaryValue(mat.data, mat.dataend - mat.datastart);
     }
-	inline void load(cereal::BinaryInputArchive& ar, cv::Mat& mat)
-	{
-		int channels, rows, cols, depth;
-		ar(rows, cols, channels, depth);
-		mat.create(rows, cols, CV_MAKETYPE(depth, channels));
-		ar.loadBinary(mat.data, mat.dataend - mat.datastart);
-	}
+    inline void load(cereal::BinaryInputArchive& ar, cv::Mat& mat)
+    {
+        int channels, rows, cols, depth;
+        ar(rows, cols, channels, depth);
+        mat.create(rows, cols, CV_MAKETYPE(depth, channels));
+        ar.loadBinary(mat.data, mat.dataend - mat.datastart);
+    }
     template<class A> void save(A& ar, cv::Mat const& mat)
     {
         int channels = mat.channels();
         int depth = mat.depth();
         ar(mat.rows, mat.cols, channels, depth);
-		ar.saveBinaryValue(mat.data, mat.dataend - mat.datastart);
+        ar.saveBinaryValue(mat.data, mat.dataend - mat.datastart);
     }
-	inline void save(cereal::BinaryOutputArchive ar, cv::Mat const & mat)
-	{
-		int channels = mat.channels();
-		int depth = mat.depth();
-		ar(mat.rows, mat.cols, channels, depth);
-		ar.saveBinary(mat.data, mat.dataend - mat.datastart);
-	}
-	
+    inline void save(cereal::BinaryOutputArchive ar, cv::Mat const & mat)
+    {
+        int channels = mat.channels();
+        int depth = mat.depth();
+        ar(mat.rows, mat.cols, channels, depth);
+        ar.saveBinary(mat.data, mat.dataend - mat.datastart);
+    }
+    
     template<class A> void load(A& ar, cv::cuda::HostMem& mat)
     {
         int channels, rows, cols, depth;
@@ -127,14 +127,14 @@ namespace cereal
         mat.create(rows, cols, CV_MAKETYPE(depth, channels));
         ar.loadBinaryValue(mat.data, mat.dataend - mat.datastart);
     }
-	inline void load(cereal::BinaryInputArchive& ar, cv::cuda::HostMem& mat)
-	{
-		int channels, rows, cols, depth;
-		ar(rows, cols, channels, depth);
-		mat.create(rows, cols, CV_MAKETYPE(depth, channels));
-		ar.loadBinary(mat.data, mat.dataend - mat.datastart);
-		//ar.loadBinaryValue(mat.data, mat.dataend - mat.datastart);
-	}
+    inline void load(cereal::BinaryInputArchive& ar, cv::cuda::HostMem& mat)
+    {
+        int channels, rows, cols, depth;
+        ar(rows, cols, channels, depth);
+        mat.create(rows, cols, CV_MAKETYPE(depth, channels));
+        ar.loadBinary(mat.data, mat.dataend - mat.datastart);
+        //ar.loadBinaryValue(mat.data, mat.dataend - mat.datastart);
+    }
     template<class A> void save(A& ar, cv::cuda::HostMem const& mat)
     {
         ar(mat.createMatHeader());

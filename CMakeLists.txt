@@ -8,10 +8,10 @@ if(${USE_PYTHON})
     list(APPEND Boost_REQUIRED_COMPONENTS python)
 endif(${USE_PYTHON})
 
-IF(NOT WIN32)	    
+IF(NOT WIN32)        
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fpermissive")
 else()
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
 ENDIF(NOT WIN32)
 FIND_PACKAGE(Boost REQUIRED COMPONENTS ${Boost_REQUIRED_COMPONENTS})
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
@@ -61,7 +61,7 @@ IF(Parameters_UI)
       SOURCE_GROUP("MOC"  FILES ${MOC})
       INCLUDE_DIRECTORIES(${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS})
       LIST(APPEND UI_INCLUDES_ "${Qt5Gui_INCLUDE_DIRS};${Qt5Widgets_INCLUDE_DIRS};${Qt5Core_INCLUDE_DIRS}")
-			
+            
       GET_TARGET_PROPERTY(qt_gui_rel Qt5::Gui IMPORTED_IMPLIB_RELEASE)
       IF(${qt_gui_rel} MATCHES "NOTFOUND")
         GET_TARGET_PROPERTY(qt_gui_rel Qt5::Gui LOCATION)
@@ -86,7 +86,7 @@ IF(Parameters_UI)
       IF(${qt_core_rel} MATCHES "NOTFOUND")
         GET_TARGET_PROPERTY(qt_core_rel Qt5::Core LOCATION)
       ENDIF()
-			
+            
       # Directories
       GET_FILENAME_COMPONENT(qt_gui_dir_rel ${qt_gui_rel} DIRECTORY)
       GET_FILENAME_COMPONENT(qt_gui_dir_deb ${qt_gui_deb} DIRECTORY)
@@ -94,28 +94,28 @@ IF(Parameters_UI)
       GET_FILENAME_COMPONENT(qt_widgets_dir_deb ${qt_widgets_deb} DIRECTORY)
       GET_FILENAME_COMPONENT(qt_core_dir_rel ${qt_core_rel} DIRECTORY)
       GET_FILENAME_COMPONENT(qt_core_dir_deb ${qt_core_deb} DIRECTORY)
-			
+            
       LIST(APPEND UI_LIB_DIR_REL_ ${qt_widgets_dir_rel})
       LIST(APPEND UI_LIB_DIR_REL_ ${qt_gui_dir_rel})
       LIST(APPEND UI_LIB_DIR_DEB_ ${qt_widgets_dir_deb})
       LIST(APPEND UI_LIB_DIR_DEB_ ${qt_widgets_dir_reb})
       LIST(APPEND UI_LIB_DIR_DEB_ ${qt_core_dir_deb})
       LIST(APPEND UI_LIB_DIR_DEB_ ${qt_core_dir_rel})
-			
+            
       IF(WIN32)
         GET_FILENAME_COMPONENT(qt_gui_rel ${qt_gui_rel} NAME)
         GET_FILENAME_COMPONENT(qt_gui_deb ${qt_gui_deb} NAME)
-			
+            
         GET_FILENAME_COMPONENT(qt_widgets_rel ${qt_widgets_rel} NAME)
         GET_FILENAME_COMPONENT(qt_widgets_deb ${qt_widgets_deb} NAME)
-			
+            
         GET_FILENAME_COMPONENT(qt_core_rel ${qt_core_rel} NAME)
         GET_FILENAME_COMPONENT(qt_core_deb ${qt_core_deb} NAME)
       ENDIF()
-			
+            
       LIST(APPEND UI_LIBS Qt5::Gui)
       LIST(APPEND UI_LIBS Qt5::Widgets)
-      LIST(APPEND UI_LIBS Qt5::Core)			
+      LIST(APPEND UI_LIBS Qt5::Core)            
       ELSE(Qt5_FOUND)
 
       ENDIF(Qt5_FOUND)
@@ -144,7 +144,7 @@ IF(${Parameters_persistence})
   IF(${OpenCV_FOUND})
     ADD_DEFINITIONS(-DHAVE_OPENCV)
     INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
-		
+        
     GET_TARGET_PROPERTY(cv_core_lib_deb opencv_core IMPORTED_IMPLIB_DEBUG)
     IF(${cv_core_lib_deb} MATCHES "NOTFOUND")
       GET_TARGET_PROPERTY(cv_core_lib_deb opencv_core LOCATION)
@@ -156,7 +156,7 @@ IF(${Parameters_persistence})
 
     GET_FILENAME_COMPONENT(cv_core_lib_dir_rel_ ${cv_core_lib_rel} DIRECTORY)
     GET_FILENAME_COMPONENT(cv_core_lib_dir_deb_ ${cv_core_lib_deb} DIRECTORY)
-		
+        
     LIST(APPEND PERSISTENCE_LIB_DIR_REL_ ${cv_core_lib_dir_rel_})
     LIST(APPEND PERSISTENCE_LIB_DIR_DEB_ ${cv_core_lib_dir_deb_})
     IF(WIN32)
@@ -169,22 +169,22 @@ IF(${Parameters_persistence})
   find_package(Protobuf QUIET)
   if(Protobuf_FOUND)
     include_directories(${PROTOBUF_INCLUDE_DIRS})
-	file(GLOB_RECURSE proto_files "protobuf/*.proto")
-	PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${proto_files})
-	message("Creating protobuf serialization routines\n Input proto files: ${proto_files} \n Generated headers: ${PROTO_HDRS} \n Generated Source: ${PROTO_SRCS}")
-	file(COPY 
-	    ${PROTO_HDRS} 
-		DESTINATION ${CMAKE_CURRENT_LIST_DIR}/include/parameters/Persistence/)
+    file(GLOB_RECURSE proto_files "protobuf/*.proto")
+    PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${proto_files})
+    message("Creating protobuf serialization routines\n Input proto files: ${proto_files} \n Generated headers: ${PROTO_HDRS} \n Generated Source: ${PROTO_SRCS}")
+    file(COPY 
+        ${PROTO_HDRS} 
+        DESTINATION ${CMAKE_CURRENT_LIST_DIR}/include/parameters/Persistence/)
     list(APPEND src ${PROTO_SRCS})
-	list(APPEND hdr ${PROTO_HDRS})
-	add_definitions(-DHAVE_PROTOBUF)
-	LIST(APPEND PERSISTENCE_LIBS optimized;${PROTOBUF_LIBRARY};debug;${PROTOBUF_LIBRARY_DEBUG})
+    list(APPEND hdr ${PROTO_HDRS})
+    add_definitions(-DHAVE_PROTOBUF)
+    LIST(APPEND PERSISTENCE_LIBS optimized;${PROTOBUF_LIBRARY};debug;${PROTOBUF_LIBRARY_DEBUG})
   endif() # Protobuf
   
   find_package(cereal REQUIRED)
   if(cereal_FOUND)
       include_directories(${cereal_INCLUDE_DIRS})
-	  add_definitions(-DHAVE_CEREAL)
+      add_definitions(-DHAVE_CEREAL)
 
   endif()
 
@@ -241,8 +241,8 @@ LINK_DIRECTORIES(${Parameters_LIB_DIRS_DEBUG})
 add_library(parameters SHARED ${hdr} ${src} ${MOC})
 add_dependencies(parameters signals)
 TARGET_LINK_LIBRARIES(parameters 
-	${Parameters_LIBRARIES}
-	signals
+    ${Parameters_LIBRARIES}
+    signals
 )
 LIST(APPEND Parameters_LIBRARIES parameters)
 

@@ -122,9 +122,13 @@ namespace Parameters
     template<typename T>
     Parameters::TypedInputParameter<T>* ParameteredObject::addInputParameter(const std::string& name)
     {
-        auto input_param = new Parameters::TypedInputParameter<T>(name);
-        addParameter(typename Parameters::TypedInputParameter<T>::Ptr(input_param));
-        return input_param;
+        if(!exists(name))
+        {
+            auto input_param = new Parameters::TypedInputParameter<T>(name);
+            addParameter(typename Parameters::TypedInputParameter<T>::Ptr(input_param));
+            return input_param;
+        }
+        return dynamic_cast<TypedInputParameter<T>*>(getParameterOptional<T>(name));
     }
 
     template<typename T>

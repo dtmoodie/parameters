@@ -21,46 +21,46 @@ https://github.com/dtmoodie/parameters
 #include "Parameter.hpp"
 namespace cv
 {
-	namespace cuda
-	{
-		class Stream;
-	}
+    namespace cuda
+    {
+        class Stream;
+    }
 }
 namespace Parameters
 {
-	template<typename T> class PARAMETER_EXPORTS ITypedParameter : public Parameter
-	{
-		
-	public:
-		typedef std::shared_ptr<ITypedParameter<T>> Ptr;
-		
-		ITypedParameter(const std::string& name, const ParameterType& type = Parameter::Control, const std::string& tooltip = "") :
-			Parameter(name, type, tooltip) {}
-		virtual ~ITypedParameter()
-		{
+    template<typename T> class PARAMETER_EXPORTS ITypedParameter : public Parameter
+    {
+        
+    public:
+        typedef std::shared_ptr<ITypedParameter<T>> Ptr;
+        
+        ITypedParameter(const std::string& name, const ParameterType& type = Parameter::Control, const std::string& tooltip = "") :
+            Parameter(name, type, tooltip) {}
+        virtual ~ITypedParameter()
+        {
 
-		}
+        }
 
-		virtual T* Data(long long time_index = -1) = 0;
-		virtual bool GetData(T& value, long long time_index = -1) = 0;
-		virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr) = 0;
-		virtual void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr) = 0;
-		virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr) = 0;
-		
-		virtual Loki::TypeInfo GetTypeInfo()
-		{
-			return Loki::TypeInfo(typeid(T));
-		}
-		virtual bool Update(Parameter::Ptr other, cv::cuda::Stream* stream = nullptr)
-		{
+        virtual T* Data(long long time_index = -1) = 0;
+        virtual bool GetData(T& value, long long time_index = -1) = 0;
+        virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr) = 0;
+        virtual void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr) = 0;
+        virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr) = 0;
+        
+        virtual Loki::TypeInfo GetTypeInfo()
+        {
+            return Loki::TypeInfo(typeid(T));
+        }
+        virtual bool Update(Parameter::Ptr other, cv::cuda::Stream* stream = nullptr)
+        {
             auto typedParameter = std::dynamic_pointer_cast<ITypedParameter<T>>(other);
-			if (typedParameter)
-			{
-				auto ptr = typedParameter->Data();
-				*Data() = *ptr;
-				OnUpdate(stream);
-			}
-			return false;
-		}
-	};
+            if (typedParameter)
+            {
+                auto ptr = typedParameter->Data();
+                *Data() = *ptr;
+                OnUpdate(stream);
+            }
+            return false;
+        }
+    };
 }

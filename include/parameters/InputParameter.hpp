@@ -27,9 +27,8 @@ namespace Parameters
 {
     class PARAMETER_EXPORTS InputParameter
     {
-    protected:
-        std::function<bool(Parameter*)> qualifier;
     public:
+        typedef std::function<bool(Parameter*)> qualifier_f;
         typedef std::shared_ptr<InputParameter> Ptr;
         virtual bool SetInput(const std::string& name_) = 0;
         virtual bool SetInput(Parameter*param) = 0;
@@ -41,5 +40,7 @@ namespace Parameters
             qualifier = f;
         }
         virtual Loki::TypeInfo GetTypeInfo() = 0;
+    protected:
+        qualifier_f qualifier;
     };
 }
