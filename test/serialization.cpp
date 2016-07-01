@@ -44,22 +44,14 @@ BOOST_AUTO_TEST_CASE(serialization_pod)
 
 BOOST_AUTO_TEST_CASE(CerealSerialization)
 {
+    TypedParameter<int> test;
+    test.UpdateData(5);
     {
-        Parameters::ParameteredObject obj;
-        obj.updateParameter("test", 5);
-        std::ofstream ofs("binary.bin", std::ios::binary);
-        cereal::BinaryOutputArchive ar(ofs);
-        ar(obj);
+        std::ofstream ofs("test.xml");
+        cereal::XMLOutputArchive ar(ofs);
+        Parameters::Cereal::Serializer::instance()->Serialize(ar, &test);
     }
-    {
-        std::ifstream ifs("binary.bin", std::ios::binary);
-        cereal::BinaryInputArchive ar(ifs);
-        std::shared_ptr<Parameters::ParameteredObject> obj(new Parameters::ParameteredObject());
-        ar(obj);
-    }
-
-
-
+    
 }
 
 BOOST_AUTO_TEST_SUITE_END()

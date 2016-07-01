@@ -2,7 +2,7 @@
 
 #include "IRangedParameter.hpp"
 #include "TypedParameter.hpp"
-
+#include "ParameterFactory.hpp"
 namespace Parameters
 {
     template<typename T> class TypedParameterPtr;
@@ -114,18 +114,19 @@ namespace Parameters
     // -----------------------------------------------------------------------------------------------------
     template<typename T> class RangedParameter: public TypedParameter<T>, public ITypedRangedParameter<T>
     {
+        static FactoryRegisterer<RangedParameter<T>, T, RangedParameter_c> _constructor;
     public:
         typedef std::shared_ptr<RangedParameter<T>> Ptr;
-        RangedParameter(const T& min_value_,
-                        const T& max_value_,
-                        const std::string& name,
+        RangedParameter(const T& min_value_ = T(),
+                        const T& max_value_ = T(),
+                        const std::string& name = "",
                         const T& init = T(),
                         const Parameter::ParameterType& type = Parameter::ParameterType::Control,
                         const std::string& tooltip = "") : 
             TypedParameter<T>(name, init, type, tooltip),
             ITypedRangedParameter<T>(min_value_, max_value_)
         {
-        
+            (void)&_constructor;
         }
         virtual T* Data(long long time_index = -1)
         {
@@ -174,19 +175,23 @@ namespace Parameters
             rail(TypedParameter<T>::data, ITypedRangedParameter<T>::min_value, ITypedRangedParameter<T>::max_value);
         }
     }; // class RangedParameter
+    template<typename T> FactoryRegisterer<RangedParameter<T>, T, RangedParameter_c> RangedParameter<T>::_constructor;
+
     template<typename T> class RangedParameter<std::vector<T>>: public TypedParameter<std::vector<T>>, public ITypedRangedParameter<std::vector<T>>
     {
+        static FactoryRegisterer<RangedParameter, T, RangedParameter_c> _constructor;
     public:
         typedef std::shared_ptr<RangedParameter<std::vector<T>>> Ptr;
-        RangedParameter(const T& min_value_,
-            const T& max_value_,
-            const std::string& name,
+        RangedParameter(const T& min_value_ = T(),
+            const T& max_value_ = T(),
+            const std::string& name = "",
             const std::vector<T>& init = std::vector<T>(),
             const Parameter::ParameterType& type = Parameter::ParameterType::Control,
             const std::string& tooltip = "") : 
             TypedParameter<std::vector<T>>(name, init, type, tooltip),
             ITypedRangedParameter<std::vector<T>>(min_value_, max_value_)
         {
+            (void)&_constructor;
         }
         virtual std::vector<T>* Data(long long time_index = -1)
         {
@@ -229,6 +234,7 @@ namespace Parameters
             rail(TypedParameter<std::vector<T>>::data, ITypedRangedParameter<std::vector<T>>::min_value, ITypedRangedParameter<std::vector<T>>::max_value);
         }
     }; // class RangedParameter
+    template<typename T> FactoryRegisterer<RangedParameter<std::vector<T>>, std::vector<T>, RangedParameter_c> RangedParameter<std::vector<T>>::_constructor;
     // -----------------------------------------------------------------------------------------------------
     template<typename T> class RangedParameterPtr: public TypedParameterPtr<T>, public ITypedRangedParameter<T>
     {

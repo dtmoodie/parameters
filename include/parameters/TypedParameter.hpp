@@ -18,10 +18,13 @@ https://github.com/dtmoodie/parameters
 */
 #pragma once
 #include "MetaParameter.hpp"
+#include "ParameterFactory.hpp"
+#include "parameters/Persistence/cereal.hpp"
 namespace Parameters
 {
-    template<typename T> class PARAMETER_EXPORTS TypedParameter : public MetaTypedParameter < T >
+    template<typename T> class PARAMETER_EXPORTS TypedParameter : public MetaTypedParameter < T >, public Cereal::policy<TypedParameter<T>>
     {
+        static FactoryRegisterer<TypedParameter<T>, T, TypedParameter_c> _constructor;
     protected:
         T data;
     public:
@@ -35,7 +38,9 @@ namespace Parameters
             const Parameter::ParameterType& type = Parameter::ParameterType::Control, 
             const std::string& tooltip = "") :
             MetaTypedParameter<T>(name, type, tooltip), data(init) 
-        {}
+        {
+            (void)&_constructor;
+        }
         virtual ~TypedParameter()
         {
 
@@ -100,6 +105,7 @@ namespace Parameters
             ar(data);
         }
     };
+    template<typename T> FactoryRegisterer<TypedParameter<T>, T, TypedParameter_c> TypedParameter<T>::_constructor;
 
     template<typename T> class TypedParameterPtr : public MetaTypedParameter < T >
     {

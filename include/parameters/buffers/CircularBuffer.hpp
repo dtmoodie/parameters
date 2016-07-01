@@ -19,6 +19,7 @@ https://github.com/dtmoodie/parameters
 #pragma once
 
 #include "parameters/ITypedParameter.hpp"
+#include "parameters/ParameterFactory.hpp"
 #include "IBuffer.hpp"
 #include <boost/circular_buffer.hpp>
 
@@ -28,14 +29,16 @@ namespace Parameters
     {
         template<typename T> class CircularBuffer: public ITypedParameter<T>, public IBuffer
         {
+            static FactoryRegisterer<CircularBuffer<T>, T, CircularBuffer_c> _constructor;
             boost::circular_buffer<std::pair<long long, T>> _data_buffer;
         public:
-            CircularBuffer(const std::string& name,
+            CircularBuffer(const std::string& name = "",
                 const T& init = T(), long long time_index = -1,
                 const Parameter::ParameterType& type = Parameter::ParameterType::Control,
                 const std::string& tooltip = ""):
                 ITypedParameter<T>(name)
             {
+                (void)&_constructor;
                 _data_buffer.set_capacity(10);
                 _data_buffer.push_back(std::make_pair(time_index, init));
             }
@@ -137,5 +140,6 @@ namespace Parameters
                 return Parameter::Ptr(new CircularBuffer<T>(Parameter::name));
             }
         };
+        template<typename T> FactoryRegisterer<CircularBuffer<T>, T, CircularBuffer_c> CircularBuffer<T>::_constructor;
     }
 }

@@ -9,13 +9,15 @@ namespace Parameters
         template<typename T> class ConstMap: public Map<T>
         {
             int _size;
+            static FactoryRegisterer<ConstMap<T>, T, ConstMap_c> _constructor;
         public:
-            ConstMap(const std::string& name,
+            ConstMap(const std::string& name = "",
                 const T& init = T(), long long time_index = -1,
                 const Parameter::ParameterType& type = Parameter::ParameterType::Control,
                 const std::string& tooltip = "") :
                 Map<T>(name, init, time_index, type, tooltip)
             {
+                (void)&_constructor;
                 _size = 10;
             }
             virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
@@ -44,7 +46,7 @@ namespace Parameters
             {
                 _size = size;
             }
-
         };
+        template<typename T> FactoryRegisterer<ConstMap<T>, T, ConstMap_c> ConstMap<T>::_constructor;
     }
 }

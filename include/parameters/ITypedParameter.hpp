@@ -62,5 +62,12 @@ namespace Parameters
             }
             return false;
         }
+        template<class Archive>
+        void serialize(Archive& archive)
+        {
+            Parameter::serialize(archive);
+            if(T* data = Data())
+                archive(*data);
+        }
     };
 }

@@ -25,6 +25,7 @@ https://github.com/dtmoodie/parameters
 #include <parameters/buffers/BufferProxy.hpp>
 #include "Converters/ConverterPolicy.hpp"
 
+
 namespace Parameters
 {
     template<typename T, template<typename> class Policy1 = Persistence::PersistencePolicy, template<typename> class Policy2 = UI::UiPolicy, template<typename> class Policy3 = Converters::ConverterPolicy, template<typename> class Policy4 = Buffer::ParameterBufferPolicy>
