@@ -237,7 +237,7 @@ namespace Parameters
                 {
                     if(_currently_updating)
                         return;
-                    if (sender == chkBox)
+                    if (sender == chkBox && IHandler::GetParamMtx())
                     {
                         std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
                         if (boolData)
@@ -252,10 +252,13 @@ namespace Parameters
                 }
                 virtual void SetData(bool* data_)
                 {    
-                    std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
-                    boolData = data_;
-                    if (chkBox)
-                        UpdateUi(data_);
+                    if(IHandler::GetParamMtx())
+                    {
+                        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+                        boolData = data_;
+                        if (chkBox)
+                            UpdateUi(data_);
+                    }
                 }
                 bool* GetData()
                 {
@@ -296,7 +299,7 @@ namespace Parameters
                 Handler(): btn(nullptr), parent(nullptr), _currently_updating(false){}
                 virtual void UpdateUi( T* data)
                 {
-                    if(data)
+                    if(data && IHandler::GetParamMtx())
                     {
                         std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
                         _currently_updating = true;
@@ -308,7 +311,7 @@ namespace Parameters
                 {
                     if(_currently_updating)
                         return;
-                    if (sender == btn)
+                    if (sender == btn && IHandler::GetParamMtx())
                     {
                         std::lock_guard<std::recursive_mutex>lock(*IHandler::GetParamMtx());
                         QString filename;
@@ -431,7 +434,7 @@ namespace Parameters
                 {
                     if(_currently_updating)
                         return;
-                    if (sender == table)
+                    if (sender == table && IHandler::GetParamMtx())
                     {
                         std::lock_guard<std::recursive_mutex>lock(*IHandler::GetParamMtx());
                         if (matData)
@@ -521,7 +524,7 @@ namespace Parameters
                 }
                 virtual void OnUiUpdate(QObject* sender, int row = -1, int col = -1)
                 {
-                    if(_currently_updating)
+                    if(_currently_updating || !IHandler::GetParamMtx())
                         return;
                     std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
                     if (ptData == nullptr)
@@ -620,7 +623,7 @@ namespace Parameters
                 }
                 virtual void OnUiUpdate(QObject* sender, int row = -1, int col = -1)
                 {
-                    if(_updating)
+                    if(_updating || !IHandler::GetParamMtx())
                         return;
                     std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
                     if (ptData == nullptr)
@@ -701,7 +704,7 @@ namespace Parameters
                 }
                 virtual void OnUiUpdate(QObject* sender, int idx)
                 {
-                    if(_updating)
+                    if(_updating || !IHandler::GetParamMtx())
                         return;
                     std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
                     if (idx != -1 && sender == enumCombo && enumData)
@@ -762,7 +765,7 @@ namespace Parameters
                 }
                 virtual void OnUiUpdate(QObject* sender)
                 {
-                    if(_currently_updating)
+                    if(_currently_updating || !IHandler::GetParamMtx())
                         return;
                     if (sender == lineEdit && strData)
                     {    
@@ -818,7 +821,7 @@ namespace Parameters
                 }
                 virtual void OnUiUpdate(QObject* sender)
                 {
-                    if (sender == btn)
+                    if (sender == btn && IHandler::GetParamMtx())
                     {
                         std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
                         if (funcData)
@@ -880,7 +883,7 @@ namespace Parameters
                 }
                 virtual void OnUiUpdate(QObject* sender, double val = 0)
                 {
-                    if(_currently_updating)
+                    if(_currently_updating || !IHandler::GetParamMtx())
                         return;
                     std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
                     if (sender == box && floatData)
@@ -953,7 +956,7 @@ namespace Parameters
                 }
                 virtual void OnUiUpdate(QObject* sender, int val = -1)
                 {
-                    if(_currently_updating)
+                    if(_currently_updating || !IHandler::GetParamMtx())
                         return;
                     std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
                     if (sender == box && intData)
@@ -1046,7 +1049,7 @@ namespace Parameters
                 }
                 virtual void OnUiUpdate(QObject* sender)
                 {
-                    if(_currently_updating)
+                    if(_currently_updating || !IHandler::GetParamMtx())
                         return;
                     std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
                     _handler1.OnUiUpdate(sender);
@@ -1099,9 +1102,12 @@ namespace Parameters
                 }
                 virtual void OnUiUpdate(QObject* sender)
                 {
-                    std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
-                    Handler<T1>::OnUiUpdate(sender);
-                    Handler<T2>::OnUiUpdate(sender);
+                    if(IHandler::GetParamMtx())
+                    {
+                        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+                        Handler<T1>::OnUiUpdate(sender);
+                        Handler<T2>::OnUiUpdate(sender);
+                    }
                 }
                 virtual void SetData(std::pair<T1, T2>* data_)
                 {
@@ -1153,7 +1159,7 @@ namespace Parameters
                 }
                 virtual void OnUiUpdate(QObject* sender, int idx = 0)
                 {
-                    if(_currently_updating)
+                    if(_currently_updating || !IHandler::GetParamMtx())
                         return;
                     if (sender == index && vectorData )
                     {
