@@ -15,13 +15,21 @@ public:
     {
 
     }
-    BEGIN_PARAMS
+    BEGIN_PARAMS(test_paramed_object)
         PARAM(int, test, 1)
         PARAM(int, test2, 0, 5)
         PARAM(double, test3, 0, 5, 3)
         PARAM(std::vector<float>, test4, 0, 10)
         PARAM_TOOLTIP(test4, "asdflkjasldkfjaldksjf");
         PARAM_DESCRIPTION(test4, "detailed description")
+    END_PARAMS;
+};
+
+class test_derived_object : public test_paramed_object
+{
+public:
+    BEGIN_PARAMS(test_derived_object, test_paramed_object)
+        PARAM(int, derived_1, 1);
     END_PARAMS;
 };
 
@@ -33,15 +41,18 @@ BOOST_AUTO_TEST_CASE(explicit_parameters)
     auto info = test_obj.getParameterInfo();
     test_obj.setup_signals(Signals::signal_manager::get_instance());
     test_obj.InitializeExplicitParams();
-
-    
+    test_derived_object derived_obj;
+    derived_obj.InitializeExplicitParams();
     // ----------------------------------------------------
     // Test basic access update and ranging
     BOOST_TEST_CHECKPOINT("raw access");
     BOOST_TEST_MESSAGE("testing basic parameter access");
-    BOOST_CHECK(test_obj.test == 1);
-    BOOST_CHECK(test_obj.test3 == 3);
+    BOOST_CHECK_EQUAL(test_obj.test, 1);
+    BOOST_CHECK_EQUAL(test_obj.test3, 3);
     BOOST_CHECK(test_obj.test4.empty());
+    BOOST_CHECK_EQUAL(derived_obj.test, 1);
+    BOOST_CHECK_EQUAL(derived_obj.derived_1, 1);
+        
     test_obj.test2_param.UpdateData(3);
     BOOST_CHECK(test_obj.test2 == 3);
     test_obj.test2_param.UpdateData(100);

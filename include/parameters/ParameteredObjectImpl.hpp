@@ -8,7 +8,7 @@
 #include "parameters/type.h"
 #include <boost/lexical_cast.hpp>
 
-#define BEGIN_PARAMS_(BASE, N_) \
+#define BEGIN_PARAMS_1(BASE, N_) \
 void InitParentParams(){} \
 void WrapParentParams() {} \
 template<int N> void InitParams_(Signals::_counter_<N> dummy) \
@@ -25,15 +25,15 @@ template<int N> void WrapParams_(Signals::_counter_<N> dummy) \
 void WrapParams_(Signals::_counter_<N_> dummy) \
 { \
 } \
-template<int N> static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_counter_<N> dummy) \
+template<int N> static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N> dummy) \
 { \
    return getParameterInfo_(info, --dummy);  \
 } \
-static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_counter_<N_> dummy) \
+static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N_> dummy) \
 { \
 }
 
-#define BEGIN_PARAMS_(DERIVED, BASE, N_) \
+#define BEGIN_PARAMS_2(DERIVED, BASE, N_) \
 void InitParentParams(){ BASE::InitializeExplicitParamsToDefault();} \
 void WrapParentParams() {BASE::WrapExplicitParams();} \
 template<int N> void InitParams_(Signals::_counter_<N> dummy) \
@@ -70,9 +70,9 @@ void WrapParams_(Signals::_counter_<N> dummy) \
     ParameteredObject::addParameter(&name##_param); \
     WrapParams_(--dummy); \
 } \
-static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_counter_<N> dummy) \
+static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N> dummy) \
 { \
-    static ParameterInfo s_info{Loki::TypeInfo(typeid(type)), #name}; \
+    static Parameters::ParameterInfo s_info{Loki::TypeInfo(typeid(type)), #name}; \
     info.push_back(&s_info); \
     getParameterInfo_(info, --dummy); \
 }
@@ -90,9 +90,9 @@ void WrapParams_(Signals::_counter_<N> dummy) \
     ParameteredObject::addParameter(&name##_param); \
     WrapParams_(--dummy); \
 } \
-static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_counter_<N> dummy) \
+static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N> dummy) \
 { \
-    static ParameterInfo s_info{Loki::TypeInfo(typeid(type)), #name}; \
+    static Parameters::ParameterInfo s_info{Loki::TypeInfo(typeid(type)), #name}; \
     info.push_back(&s_info); \
     getParameterInfo_(info, --dummy); \
 }
@@ -110,9 +110,9 @@ void WrapParams_(Signals::_counter_<N> dummy) \
     ParameteredObject::addParameter(&name##_param); \
     WrapParams_(--dummy); \
 } \
-static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_counter_<N> dummy) \
+static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N> dummy) \
 { \
-    static ParameterInfo s_info{Loki::TypeInfo(typeid(type)), #name}; \
+    static Parameters::ParameterInfo s_info{Loki::TypeInfo(typeid(type)), #name}; \
     info.push_back(&s_info); \
     getParameterInfo_(info, --dummy); \
 }
@@ -131,9 +131,9 @@ void WrapParams_(Signals::_counter_<N> dummy) \
     ParameteredObject::addParameter(&name##_param); \
     WrapParams_(--dummy); \
 } \
-static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_counter_<N> dummy) \
+static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N> dummy) \
 { \
-    static ParameterInfo s_info{Loki::TypeInfo(typeid(type)), #name}; \
+    static Parameters::ParameterInfo s_info{Loki::TypeInfo(typeid(type)), #name}; \
     info.push_back(&s_info); \
     getParameterInfo_(info, --dummy); \
 }
@@ -145,7 +145,7 @@ static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_count
 
 
 #define PARAM_TOOLTIP_(NAME, TOOLTIP, N) \
-static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_counter_<N> dummy) \
+static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N> dummy) \
 { \
     getParameterInfo_(info, --dummy); \
     for(auto& ptr : info) \
@@ -158,7 +158,7 @@ static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_count
 }
 
 #define PARAM_DESCRIPTION_(NAME, DESCRIPTION, N) \
-static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_counter_<N> dummy) \
+static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N> dummy) \
 { \
     getParameterInfo_(info, --dummy); \
     for(auto& ptr : info) \
@@ -181,13 +181,13 @@ virtual void WrapExplicitParams() \
     WrapParentParams(); \
     WrapParams_(Signals::_counter_<N-1>()); \
 } \
-static std::vector<ParameterInfo*> getParameterInfoStatic() \
+static std::vector<Parameters::ParameterInfo*> getParameterInfoStatic() \
 { \
-    std::vector<ParameterInfo*> output; \
+    std::vector<Parameters::ParameterInfo*> output; \
     getParameterInfo_(output, Signals::_counter_<N-1>()); \
     return output; \
 } \
-virtual std::vector<ParameterInfo*> getParameterInfo() const \
+virtual std::vector<Parameters::ParameterInfo*> getParameterInfo() const \
 { \
     return getParameterInfoStatic(); \
 }

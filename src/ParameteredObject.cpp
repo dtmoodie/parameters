@@ -225,8 +225,8 @@ void ParameteredObject::RegisterParameterCallback(Parameter* param, const std::f
 
 void ParameteredObject::onUpdate(Parameters::Parameter* param, cv::cuda::Stream* stream)
 {
-    //DOIF_LOG_FAIL(_sig_parameter_updated != nullptr, (*_sig_parameter_updated)(this), debug);
-    sig_parameter_updated(this);
+    if(!(param->type & Parameters::Parameter::Output))
+        sig_parameter_updated(this);
 }
 
 void ParameteredObject::RunCallbackLockObject(cv::cuda::Stream* stream, const std::function<void(cv::cuda::Stream*)>& callback)
