@@ -32,6 +32,7 @@ namespace cv
 }
 namespace Parameters
 {
+
     class PARAMETER_EXPORTS Parameter
     {
     public:
@@ -88,5 +89,13 @@ namespace Parameters
         std::string treeRoot;
         long long _current_time_index;
         std::recursive_mutex _mtx;
+    };
+    struct ParameterInfo
+    {
+        Loki::TypeInfo dataType;
+        std::string name;
+        std::string tooltip;
+        std::string description;
+        Parameter::ParameterType typeFlags;
     };
 }

@@ -20,6 +20,8 @@ public:
         PARAM(int, test2, 0, 5)
         PARAM(double, test3, 0, 5, 3)
         PARAM(std::vector<float>, test4, 0, 10)
+        PARAM_TOOLTIP(test4, "asdflkjasldkfjaldksjf");
+        PARAM_DESCRIPTION(test4, "detailed description")
     END_PARAMS;
 };
 
@@ -28,8 +30,10 @@ BOOST_AUTO_TEST_SUITE(parametered_object)
 BOOST_AUTO_TEST_CASE(explicit_parameters)
 {
     test_paramed_object test_obj;
+    auto info = test_obj.getParameterInfo();
     test_obj.setup_signals(Signals::signal_manager::get_instance());
-    test_obj.RegisterAllParams();
+    test_obj.InitializeExplicitParams();
+
     
     // ----------------------------------------------------
     // Test basic access update and ranging

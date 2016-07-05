@@ -168,7 +168,17 @@ Parameter* ParameteredObject::getParameterOptional(const std::string& name)
     return nullptr;
 }
 
-void ParameteredObject::RegisterAllParams()
+void ParameteredObject::InitializeExplicitParams()
+{
+    InitializeExplicitParamsToDefault();
+    WrapExplicitParams();
+}
+
+void ParameteredObject::InitializeExplicitParamsToDefault()
+{
+}
+
+void ParameteredObject::WrapExplicitParams()
 {
 }
 
@@ -246,4 +256,8 @@ bool ParameteredObject::exists(const std::string& name)
 bool ParameteredObject::exists(size_t index)
 {
     return index < _parameters.size();
+}
+std::vector<ParameterInfo*> ParameteredObject::getParameterInfo() const
+{
+    return std::vector<ParameterInfo*>();
 }

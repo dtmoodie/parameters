@@ -41,6 +41,7 @@ SET(Parameters_UI TRUE CACHE BOOL "Enable UI generators")
 SET(Parameters_persistence TRUE CACHE BOOL "Enable Persistence")
 SET(Parameters_persistence_CV TRUE CACHE BOOL "Enable opencv Persistence")
 SET(Parameters_UI_qt TRUE CACHE BOOL "Enable qt UI generators")
+SET(Parameters_persistence_PROTOBUF FALSE CACHE BOOL "Enable protobuf")
 
 SET(definitions_)
 SET(USING_UI_ FALSE)
@@ -167,7 +168,7 @@ IF(${Parameters_persistence})
   ENDIF() #opencv
   
   find_package(Protobuf QUIET)
-  if(Protobuf_FOUND)
+  if(Protobuf_FOUND AND Parameters_persistence_PROTOBUF)
     include_directories(${PROTOBUF_INCLUDE_DIRS})
     file(GLOB_RECURSE proto_files "protobuf/*.proto")
     PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${proto_files})

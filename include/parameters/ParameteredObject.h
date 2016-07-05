@@ -13,6 +13,8 @@ namespace Parameters
     class Parameter;
     template<typename T> class ITypedParameter;
     template<typename T> class TypedInputParameter;
+    class IVariableManager;
+    struct ParameterInfo;
 }
 namespace Signals
 {
@@ -29,17 +31,13 @@ namespace cv
 }
 namespace Parameters
 {
-    class IVariableManager;
-    
     class PARAMETER_EXPORTS ParameteredObject: public Signals::signaler
     {
     public:
         ParameteredObject();
         virtual ~ParameteredObject();
-        //virtual void setup_signals(Signals::signal_manager* manager);
         virtual void SetupVariableManager(std::shared_ptr<IVariableManager> manager);
         virtual std::shared_ptr<IVariableManager> GetVariableManager();
-
 
         virtual Parameter* addParameter(Parameter* param);
         virtual Parameter* addParameter(std::shared_ptr<Parameter> param);
@@ -99,6 +97,7 @@ namespace Parameters
         template<typename T> ITypedParameter<T>* getParameterOptional(std::string name);
         template<typename T> ITypedParameter<T>* getParameterOptional(int idx);
 
+        virtual std::vector<ParameterInfo*> getParameterInfo() const;
         
         // Mutex for blocking processing of a object during update
         std::recursive_mutex                                                                mtx;
@@ -112,6 +111,12 @@ namespace Parameters
         {
             archive(_implicit_parameters);
         }
+        // Calls InitializeExplicitParamsToDefault and WrapExplicitParams
+        virtual void InitializeExplicitParams();
+
+        virtual void InitializeExplicitParamsToDefault();
+        // Sets up all explicit parameter wrappers
+        virtual void WrapExplicitParams();
     protected:
         std::shared_ptr<IVariableManager>                        _variable_manager;
         
@@ -131,7 +136,7 @@ namespace Parameters
         // Do not serialize, will be repopulated during initialization
         std::vector<Parameter*>                                    _parameters;
         // This function initializes any parameters created the PARAM_BEGIN macro to 
-        virtual void RegisterAllParams();
+        
         // This is called by each parameter when the parameter is updated
         virtual void onUpdate(Parameters::Parameter* param = nullptr, cv::cuda::Stream* stream = nullptr);
     private:

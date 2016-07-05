@@ -4,8 +4,10 @@ using namespace Parameters;
 
 ParameterFactory* ParameterFactory::instance()
 {
-    static ParameterFactory inst;
-    return &inst;
+    static ParameterFactory* inst = nullptr;
+    if(inst == nullptr)
+        inst = new ParameterFactory();
+    return inst;
 }
 
 void ParameterFactory::RegisterConstructor(Loki::TypeInfo data_type, create_f function, int parameter_type)

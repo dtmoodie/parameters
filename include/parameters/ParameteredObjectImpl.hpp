@@ -8,79 +8,204 @@
 #include "parameters/type.h"
 #include <boost/lexical_cast.hpp>
 
-#define BEGIN_PARAMS \
-template<int N, class DUMMY> struct ParamRegisterer \
+#define BEGIN_PARAMS_(BASE, N_) \
+void InitParentParams(){} \
+void WrapParentParams() {} \
+template<int N> void InitParams_(Signals::_counter_<N> dummy) \
 { \
-    template<class C> static void Register(C* obj){} \
-}; \
-template<class DUMMY> struct ParamRegisterer<__COUNTER__, DUMMY> \
+    InitParams_(Signals::_counter_<N-1>()); \
+} \
+void InitParams_(Signals::_counter_<N_> dummy) \
 { \
-    template<class C> static void Register(C* obj){} \
-};
+} \
+template<int N> void WrapParams_(Signals::_counter_<N> dummy) \
+{ \
+    WrapParams_(--dummy); \
+} \
+void WrapParams_(Signals::_counter_<N_> dummy) \
+{ \
+} \
+template<int N> static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_counter_<N> dummy) \
+{ \
+   return getParameterInfo_(info, --dummy);  \
+} \
+static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_counter_<N_> dummy) \
+{ \
+}
+
+#define BEGIN_PARAMS_(DERIVED, BASE, N_) \
+void InitParentParams(){ BASE::InitializeExplicitParamsToDefault();} \
+void WrapParentParams() {BASE::WrapExplicitParams();} \
+template<int N> void InitParams_(Signals::_counter_<N> dummy) \
+{ \
+    InitParams_(Signals::_counter_<N-1>()); \
+} \
+void InitParams_(Signals::_counter_<N_> dummy) \
+{ \
+} \
+template<int N> void WrapParams_(Signals::_counter_<N> dummy) \
+{ \
+    WrapParams_(--dummy); \
+} \
+void WrapParams_(Signals::_counter_<N_> dummy) \
+{ \
+} \
+template<int N> static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_counter_<N> dummy) \
+{ \
+   return getParameterInfo_(info, --dummy);  \
+} \
+static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_counter_<N_> dummy) \
+{ \
+}
 
 #define DEFINE_PARAM_3(type, name, N) \
-template<class DUMMY> struct ParamRegisterer<N, DUMMY> \
+void InitParams_(Signals::_counter_<N> dummy) \
 { \
-    template<class C> static void Register(C* obj) { \
-        obj->##name##_param.SetName(#name); \
-        obj->##name##_param.UpdateData(&obj->name); \
-        obj->ParameteredObject::addParameter(&obj->##name##_param); \
-        ParamRegisterer<N-1, DUMMY>::Register(obj); \
-    } \
-};
+    InitParams_(--dummy); \
+} \
+void WrapParams_(Signals::_counter_<N> dummy) \
+{ \
+    name##_param.SetName(#name); \
+    name##_param.UpdateData(&name); \
+    ParameteredObject::addParameter(&name##_param); \
+    WrapParams_(--dummy); \
+} \
+static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_counter_<N> dummy) \
+{ \
+    static ParameterInfo s_info{Loki::TypeInfo(typeid(type)), #name}; \
+    info.push_back(&s_info); \
+    getParameterInfo_(info, --dummy); \
+}
 
 #define DEFINE_PARAM_4(type, name, initial_value, N) \
-template<class DUMMY> struct ParamRegisterer<N, DUMMY> \
+void InitParams_(Signals::_counter_<N> dummy) \
 { \
-    template<class C> static void Register(C* obj) { \
-        obj->name = initial_value; \
-        obj->name##_param.SetName(#name); \
-        obj->name##_param.UpdateData(&obj->name); \
-        obj->ParameteredObject::addParameter(&obj->name##_param); \
-        ParamRegisterer<N-1, DUMMY>::Register(obj); \
-    } \
-};
+    name = initial_value; \
+    InitParams_(--dummy); \
+} \
+void WrapParams_(Signals::_counter_<N> dummy) \
+{ \
+    name##_param.SetName(#name); \
+    name##_param.UpdateData(&name); \
+    ParameteredObject::addParameter(&name##_param); \
+    WrapParams_(--dummy); \
+} \
+static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_counter_<N> dummy) \
+{ \
+    static ParameterInfo s_info{Loki::TypeInfo(typeid(type)), #name}; \
+    info.push_back(&s_info); \
+    getParameterInfo_(info, --dummy); \
+}
 
 #define DEFINE_PARAM_5(type, name, min, max, N) \
-template<class DUMMY> struct ParamRegisterer<N, DUMMY> \
+void InitParams_(Signals::_counter_<N> dummy) \
 { \
-    template<class C> static void Register(C* obj) { \
-        obj->name##_param.SetName(#name); \
-        obj->name##_param.SetRange(min, max); \
-        obj->name##_param.UpdateData(&obj->name); \
-        obj->ParameteredObject::addParameter(&obj->name##_param); \
-        ParamRegisterer<N-1, DUMMY>::Register(obj); \
-    } \
-};
+    InitParams_(Signals::_counter_<N-1>()); \
+} \
+void WrapParams_(Signals::_counter_<N> dummy) \
+{ \
+    name##_param.SetName(#name); \
+    name##_param.UpdateData(&name); \
+    name##_param.SetRange(min, max); \
+    ParameteredObject::addParameter(&name##_param); \
+    WrapParams_(--dummy); \
+} \
+static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_counter_<N> dummy) \
+{ \
+    static ParameterInfo s_info{Loki::TypeInfo(typeid(type)), #name}; \
+    info.push_back(&s_info); \
+    getParameterInfo_(info, --dummy); \
+}
 
 #define DEFINE_PARAM_6(type, name, min, max, initial_value, N) \
-template<class DUMMY> struct ParamRegisterer<N, DUMMY> \
+void InitParams_(Signals::_counter_<N> dummy) \
 { \
-    template<class C> static void Register(C* obj) { \
-        obj->name = initial_value; \
-        obj->name##_param.SetName(#name); \
-        obj->name##_param.SetRange(min, max); \
-        obj->name##_param.UpdateData(&obj->name); \
-        obj->ParameteredObject::addParameter(&obj->name##_param); \
-        ParamRegisterer<N-1, DUMMY>::Register(obj); \
-    } \
-};
+    name = initial_value; \
+    InitParams_(Signals::_counter_<N-1>()); \
+} \
+void WrapParams_(Signals::_counter_<N> dummy) \
+{ \
+    name##_param.SetName(#name); \
+    name##_param.UpdateData(&name); \
+    name##_param.SetRange(min, max); \
+    ParameteredObject::addParameter(&name##_param); \
+    WrapParams_(--dummy); \
+} \
+static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_counter_<N> dummy) \
+{ \
+    static ParameterInfo s_info{Loki::TypeInfo(typeid(type)), #name}; \
+    info.push_back(&s_info); \
+    getParameterInfo_(info, --dummy); \
+}
 
 #define PARAM_2(type, name) DEFINE_PARAM_3(type, name, __COUNTER__); type name; Parameters::TypedParameterPtr<type> name##_param;
 #define PARAM_3(type, name, initial_value) DEFINE_PARAM_4(type, name, initial_value, __COUNTER__); type name; Parameters::TypedParameterPtr<type> name##_param;
 #define PARAM_4(type, name, min, max) DEFINE_PARAM_5(type, name, min, max, __COUNTER__); type name; Parameters::RangedParameterPtr<type> name##_param;
 #define PARAM_5(type, name, min, max, initial_value) DEFINE_PARAM_6(type, name, min, max, initial_value, __COUNTER__); type name; Parameters::RangedParameterPtr<type> name##_param;
 
+
+#define PARAM_TOOLTIP_(NAME, TOOLTIP, N) \
+static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_counter_<N> dummy) \
+{ \
+    getParameterInfo_(info, --dummy); \
+    for(auto& ptr : info) \
+    { \
+        if(ptr->name == #NAME && ptr->tooltip.size() == 0) \
+        { \
+            ptr->tooltip = TOOLTIP; \
+        } \
+    } \
+}
+
+#define PARAM_DESCRIPTION_(NAME, DESCRIPTION, N) \
+static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_counter_<N> dummy) \
+{ \
+    getParameterInfo_(info, --dummy); \
+    for(auto& ptr : info) \
+    { \
+        if(ptr->name == #NAME && ptr->description.size() == 0) \
+        { \
+            ptr->description = DESCRIPTION; \
+        } \
+    } \
+}
+
+#define END_PARAMS_(N) \
+virtual void InitializeExplicitParamsToDefault() \
+{  \
+    InitParentParams(); \
+    InitParams_<N-1>(Signals::_counter_<N-1>()); \
+} \
+virtual void WrapExplicitParams() \
+{ \
+    WrapParentParams(); \
+    WrapParams_(Signals::_counter_<N-1>()); \
+} \
+static std::vector<ParameterInfo*> getParameterInfoStatic() \
+{ \
+    std::vector<ParameterInfo*> output; \
+    getParameterInfo_(output, Signals::_counter_<N-1>()); \
+    return output; \
+} \
+virtual std::vector<ParameterInfo*> getParameterInfo() const \
+{ \
+    return getParameterInfoStatic(); \
+}
+
+
+#define PARAM_TOOLTIP(NAME, TOOLTIP) PARAM_TOOLTIP_(NAME, TOOLTIP, __COUNTER__)
+#define PARAM_DESCRIPTION(NAME, DESCRIPTION) PARAM_DESCRIPTION_(NAME, DESCRIPTION, __COUNTER__)
+
 #ifdef _MSC_VER
 #define PARAM(...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(PARAM_, __VA_ARGS__ )(__VA_ARGS__), BOOST_PP_EMPTY() )
+#define BEGIN_PARAMS(...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(BEGIN_PARAMS_, __VA_ARGS__ )(__VA_ARGS__, __COUNTER__), BOOST_PP_EMPTY() )
 #else
 #define PARAM(...) BOOST_PP_OVERLOAD(PARAM_, __VA_ARGS__ )(__VA_ARGS__)
+#define BEGIN_PARAMS(...) BOOST_PP_OVERLOAD(BEGIN_PARAMS_, __VA_ARGS__ )(__VA_ARGS__, __COUNTER__)
 #endif
 
-#define END_PARAMS_(N) virtual void RegisterAllParams(){ ParamRegisterer<N- 1, int>::Register(this);}
-
 #define END_PARAMS END_PARAMS_(__COUNTER__);
-
+//#define BEGIN_PARAMS BEGIN_PARAMS_(__COUNTER__);
 namespace Parameters
 {
     template<typename T>
