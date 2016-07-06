@@ -139,6 +139,11 @@ QWidget* DefaultProxy::GetParameterWidget(QWidget* parent)
     return output;
 }
 IHandler::IHandler() : paramMtx(nullptr), proxy(new SignalProxy(this)), _listener(nullptr) {}
+IHandler::~IHandler()
+{
+    if(proxy)
+        delete proxy;
+}
 void IHandler::OnUiUpdate(QObject* sender) {}
 void IHandler::OnUiUpdate(QObject* sender, double val) {}
 void IHandler::OnUiUpdate(QObject* sender, int val) {}

@@ -151,6 +151,7 @@ namespace Parameters
                 std::function<void(void)> onUpdate;
             public:
                 IHandler();
+                ~IHandler();
                 virtual void OnUiUpdate(QObject* sender);
                 virtual void OnUiUpdate(QObject* sender, double val);
                 virtual void OnUiUpdate(QObject* sender, int val);
@@ -358,7 +359,92 @@ namespace Parameters
                 }
             };
 
-#if defined(OPENCV_FOUND) || defined(CV_EXPORTS) || defined(CVAPI_EXPORTS)
+#if defined(HAVE_OPENCV) || defined(CV_EXPORTS) || defined(CVAPI_EXPORTS)
+            // **********************************************************************************
+            // *************************** cv::Rect *********************************************
+            // **********************************************************************************
+            template<typename T> class Handler<typename ::cv::Rect_<T>, void> : public UiUpdateHandler
+            {
+                bool _currently_updating;
+                Handler<T> _x_handler;
+                Handler<T> _y_handler;
+                Handler<T> _width_handler;
+                Handler<T> _height_handler;
+                ::cv::Rect_<T>* _data;
+                Handler() {}
+
+                virtual void UpdateUi( ::cv::Rect_<T>* data)
+                {
+                    _currently_updating = true;
+                    if(data)
+                    {
+                        _x_handler.UpdateUi(&data->x);
+                        _y_handler.UpdateUi(&data->y);
+                        _width_handler.UpdateUi(&data->width);
+                        _height_handler.UpdateUi(&data->height);
+                    }else
+                    {
+                        _x_handler.UpdateUi(nullptr);
+                        _y_handler.UpdateUi(nullptr);
+                        _width_handler.UpdateUi(nullptr);
+                        _height_handler.UpdateUi(nullptr);
+                    }
+                    _currently_updating = false;
+                }
+                virtual void OnUiUpdate(QObject* sender)
+                {
+                    if(_currently_updating || !IHandler::GetParamMtx())
+                        return;
+                    std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+                    _x_handler.OnUiUpdate(sender);
+                    _y_handler.OnUiUpdate(sender);
+                    _width_handler.OnUiUpdate(sender);
+                    _height_handler.OnUiUpdate(sender);
+                    if(_listener)
+                        _listener->OnUpdate(this);
+                }
+                virtual void SetData(::cv::Rect_<T>* data_)
+                {
+                    _data = data_;
+                    if(data_)
+                    {
+                        _x_handler.SetData(&data_->x);
+                        _y_handler.SetData(&data_->y);
+                        _width_handler.SetData(&data_->width);
+                        _height_handler.SetData(&data_->height);
+                    }
+                }
+                ::cv::Rect_<T>* GetData()
+                {
+                    return _data;;
+                }
+                virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
+                {
+                    std::vector<QWidget*> output;
+                    output.push_back(_x_handler.GetUiWidgets(parent));
+                    output.push_back(_y_handler.GetUiWidgets(parent));
+                    output.push_back(_width_handler.GetUiWidgets(parent));
+                    output.push_back(_height_handler.GetUiWidgets(parent));
+                    return out2;
+                }
+                virtual void SetParamMtx(std::recursive_mutex* mtx)
+                {
+                    IHandler::SetParamMtx(mtx);
+                    _x_handler.SetParamMtx(mtx);
+                    _x_handler.SetParamMtx(mtx);
+                    _width_handler.SetParamMtx(mtx);
+                    _height_handler.SetParamMtx(mtx);
+                }
+                virtual void SetUpdateListener(UiUpdateListener* listener)
+                {
+                    _x_handler.SetUpdateListener(listener);
+                    _x_handler.SetUpdateListener(listener);
+                    _width_handler.SetUpdateListener(listener);
+                    _height_handler.SetUpdateListener(listener);
+                }
+            };
+
+
             // **********************************************************************************
             // *************************** cv::Matx *********************************************
             // **********************************************************************************

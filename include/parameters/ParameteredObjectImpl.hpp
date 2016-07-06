@@ -50,11 +50,11 @@ template<int N> void WrapParams_(Signals::_counter_<N> dummy) \
 void WrapParams_(Signals::_counter_<N_> dummy) \
 { \
 } \
-template<int N> static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_counter_<N> dummy) \
+template<int N> static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N> dummy) \
 { \
    return getParameterInfo_(info, --dummy);  \
 } \
-static void getParameterInfo_(std::vector<ParameterInfo*>& info, Signals::_counter_<N_> dummy) \
+static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N_> dummy) \
 { \
 }
 
@@ -67,7 +67,7 @@ void WrapParams_(Signals::_counter_<N> dummy) \
 { \
     name##_param.SetName(#name); \
     name##_param.UpdateData(&name); \
-    ParameteredObject::addParameter(&name##_param); \
+    this->addParameter(&name##_param); \
     WrapParams_(--dummy); \
 } \
 static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N> dummy) \
@@ -87,7 +87,7 @@ void WrapParams_(Signals::_counter_<N> dummy) \
 { \
     name##_param.SetName(#name); \
     name##_param.UpdateData(&name); \
-    ParameteredObject::addParameter(&name##_param); \
+    this->addParameter(&name##_param); \
     WrapParams_(--dummy); \
 } \
 static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N> dummy) \
@@ -107,7 +107,7 @@ void WrapParams_(Signals::_counter_<N> dummy) \
     name##_param.SetName(#name); \
     name##_param.UpdateData(&name); \
     name##_param.SetRange(min, max); \
-    ParameteredObject::addParameter(&name##_param); \
+    this->addParameter(&name##_param); \
     WrapParams_(--dummy); \
 } \
 static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N> dummy) \
@@ -128,7 +128,7 @@ void WrapParams_(Signals::_counter_<N> dummy) \
     name##_param.SetName(#name); \
     name##_param.UpdateData(&name); \
     name##_param.SetRange(min, max); \
-    ParameteredObject::addParameter(&name##_param); \
+    this->addParameter(&name##_param); \
     WrapParams_(--dummy); \
 } \
 static void getParameterInfo_(std::vector<Parameters::ParameterInfo*>& info, Signals::_counter_<N> dummy) \
