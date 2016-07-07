@@ -19,28 +19,27 @@ https://github.com/dtmoodie/parameters
 #pragma once
 
 #ifdef PARAMETERS_GENERATE_UI
-
+#ifdef Qt5_FOUND
 #include "Qt.hpp"
+#endif
+#endif
+
 namespace Parameters
 {
     namespace UI
     {
-        template<typename T> class UiPolicy //: public qt::QtUiPolicy<T>
+#ifdef PARAMETERS_GENERATE_UI
+        template<typename T> class UiPolicy
         {
         public:
             UiPolicy()
             {
+#ifdef Qt5_FOUND
                 static qt::QtUiPolicy<T> qt_policy;
+#endif
             }
         };
-    }
-}
-
 #else
-namespace Parameters
-{
-    namespace UI
-    {
         class NoUiPolicy
         {        };
         template<typename T> class UiPolicy: public NoUiPolicy
@@ -48,6 +47,7 @@ namespace Parameters
         public:
 
         };
+#endif
+
     }
 }
-#endif

@@ -42,6 +42,14 @@ static TypedParameter<cv::Vec2i> vec2i_("instance");
 static TypedParameter<cv::Vec3d> vec3d_("instance");
 static TypedParameter<cv::Vec3f> vec3f_("instance");
 static TypedParameter<cv::Vec3i> vec3i_("instance");
+static TypedParameter<cv::Range> range_("instance");
+static TypedParameter<cv::Rect_<int>> recti("instance");
+static TypedParameter<cv::Rect_<double>> rectd("instance");
+static TypedParameter<cv::Rect_<float>> rectf("instance");
+static TypedParameter<cv::Mat> mat("instance");
+static TypedParameter<cv::cuda::GpuMat> dmat("instance");
+static TypedParameter<cv::cuda::HostMem> hmat("instance");
+
 
 CEREAL_REGISTER_TYPE(TypedParameter<cv::Point>);
 CEREAL_REGISTER_TYPE(TypedParameter<cv::Point2d>);

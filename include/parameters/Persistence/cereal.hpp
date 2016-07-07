@@ -2,6 +2,8 @@
 #include "parameters/Parameter_def.hpp"
 #include "parameters/LokiTypeInfo.h"
 #include "parameters/Types.hpp"
+#include "Signals/signaler.h"
+
 #ifdef HAVE_CEREAL
 #include <cereal/types/polymorphic.hpp>
 #include <cereal/archives/binary.hpp>
@@ -28,6 +30,22 @@ namespace cereal
     class BinaryOutputArchive;
     class JSONOutputArchive;
     // A bunch of specialized load and save functions
+    
+    template<typename A, typename ... T> void serialize_helper(A& ar, std::tuple<T...>& tuple, Signals::_counter_<0> dummy)
+    {
+        ar(std::get<0>(tuple));
+    }
+    template<typename A, int N, typename ... T> void serialize_helper(A& ar, std::tuple<T...>& tuple, Signals::_counter_<N> dummy)
+    {
+        ar(std::get<N>(tuple));
+        serialize_helper(ar, tuple, dummy--);
+    }
+    template<typename A, typename ...T> void serialize(A& ar, std::tuple<T...>& tuple)
+    {
+        //serialize_helper(ar, tuple, Signals::_counter_<std::tuple_size<std::tuple<T...>>-1>());
+    }
+
+
     template<class T, class A> void save(A& ar, std::vector<T> const& m)
     {
         size_t size;
@@ -87,6 +105,18 @@ namespace cereal
         }
     }
 #ifdef HAVE_OPENCV
+    template<class A> void serialize(A& ar, cv::Range& range)
+    {
+        ar(range.start);
+        ar(range.end);
+    }
+    template<class A, class T> void serialize(A& ar, cv::Rect_<T>& rect)
+    {
+        ar(rect.x);
+        ar(rect.y);
+        ar(rect.width);
+        ar(rect.height);
+    }
     template<class A, class T> void serialize(A& ar, cv::Point_<T>& pt)
     {
         ar(pt.x);
@@ -148,6 +178,7 @@ namespace cereal
         mat.download(h_mat);
         save(ar, h_mat);
     }
+
 #endif
     
 } // namespace cereal

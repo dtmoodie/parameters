@@ -371,6 +371,7 @@ namespace Parameters
                 Handler<T> _width_handler;
                 Handler<T> _height_handler;
                 ::cv::Rect_<T>* _data;
+            public:
                 Handler() {}
 
                 virtual void UpdateUi( ::cv::Rect_<T>* data)
@@ -421,10 +422,15 @@ namespace Parameters
                 virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
                 {
                     std::vector<QWidget*> output;
-                    output.push_back(_x_handler.GetUiWidgets(parent));
-                    output.push_back(_y_handler.GetUiWidgets(parent));
-                    output.push_back(_width_handler.GetUiWidgets(parent));
-                    output.push_back(_height_handler.GetUiWidgets(parent));
+                    auto out1 = _x_handler.GetUiWidgets(parent);
+                    auto out2 = _y_handler.GetUiWidgets(parent);
+                    auto out3 = _width_handler.GetUiWidgets(parent);
+                    auto out4 = _height_handler.GetUiWidgets(parent);
+                    output.insert(output.end(), out1.begin(), out1.end());
+                    output.insert(output.end(), out2.begin(), out2.end());
+                    output.insert(output.end(), out3.begin(), out3.end());
+                    output.insert(output.end(), out4.begin(), out4.end());
+
                     return out2;
                 }
                 virtual void SetParamMtx(std::recursive_mutex* mtx)
@@ -443,7 +449,71 @@ namespace Parameters
                     _height_handler.SetUpdateListener(listener);
                 }
             };
+            
+            // **********************************************************************************
+            // *************************** cv::Range *********************************************
+            // **********************************************************************************
 
+            template<> class Handler<cv::Range, void> : public UiUpdateHandler
+            {
+                Handler<int> _start_handler;
+                Handler<int> _end_handler;
+                cv::Range* _data;
+                bool _currently_updating;
+            public:
+                Handler() : 
+                    _data(nullptr), 
+                    _currently_updating(false) 
+                {}
+
+                virtual void UpdateUi( cv::Range* data)
+                {
+                    if(data)
+                    {
+                        _currently_updating = true;
+                        _start_handler.UpdateUi(&data->start);
+                        _end_handler.UpdateUi(&data->end);
+                        _currently_updating = false;
+                    }
+                }
+                virtual void OnUiUpdate(QObject* sender, int val)
+                {
+                    if(_currently_updating)
+                        return;
+                    _start_handler.OnUiUpdate(sender);
+                    _end_handler.OnUiUpdate(sender);
+                }
+                virtual void SetData(cv::Range* data_)
+                {    
+                    if(IHandler::GetParamMtx())
+                    {
+                        if(data_)
+                        {
+                            _data = data_;
+                            _start_handler.SetData(&_data->start);
+                            _end_handler.SetData(&_data->end);
+                        }
+                    }
+                }
+                cv::Range* GetData()
+                {
+                    return _data;
+                }
+                virtual std::vector < QWidget*> GetUiWidgets(QWidget* parent_)
+                {
+                    
+                    std::vector<QWidget*> output;
+                    auto out1 = _start_handler.GetUiWidgets(parent_);
+                    auto out2 = _end_handler.GetUiWidgets(parent_);
+                    output.insert(output.end(), out1.begin(), out1.end());
+                    output.insert(output.end(), out2.begin(), out2.end());
+                    return output;
+                }
+                static bool UiUpdateRequired()
+                {
+                    return true;
+                }
+            };
 
             // **********************************************************************************
             // *************************** cv::Matx *********************************************
@@ -1448,7 +1518,6 @@ namespace Parameters
                 QtUiPolicy()
                 {
                     (void)&factory;
-                    //WidgetFactory::RegisterCreator(Loki::TypeInfo(typeid(T)), std::bind(&Factory<T>::Create, std::placeholders::_1));
                 }
             };
             template<typename T> Factory<T> QtUiPolicy<T>::factory = Factory<T>();
