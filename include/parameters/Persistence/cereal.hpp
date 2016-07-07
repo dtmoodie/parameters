@@ -9,6 +9,9 @@
 #include <cereal/archives/binary.hpp>
 #include <cereal/archives/xml.hpp>
 #include <cereal/archives/json.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/tuple.hpp>
+#include <cereal/types/map.hpp>
 #endif
 
 #ifdef HAVE_OPENCV
@@ -29,43 +32,7 @@ namespace cereal
     class XMLOutputArchive;
     class BinaryOutputArchive;
     class JSONOutputArchive;
-    // A bunch of specialized load and save functions
-    
-    template<typename A, typename ... T> void serialize_helper(A& ar, std::tuple<T...>& tuple, Signals::_counter_<0> dummy)
-    {
-        ar(std::get<0>(tuple));
-    }
-    template<typename A, int N, typename ... T> void serialize_helper(A& ar, std::tuple<T...>& tuple, Signals::_counter_<N> dummy)
-    {
-        ar(std::get<N>(tuple));
-        serialize_helper(ar, tuple, dummy--);
-    }
-    template<typename A, typename ...T> void serialize(A& ar, std::tuple<T...>& tuple)
-    {
-        //serialize_helper(ar, tuple, Signals::_counter_<std::tuple_size<std::tuple<T...>>-1>());
-    }
 
-
-    template<class T, class A> void save(A& ar, std::vector<T> const& m)
-    {
-        size_t size;
-        size = m.size();
-        ar(size);
-        for(auto& itr : m)
-        {
-            ar(itr);
-        }
-    }
-    template<class T, class A> void load(A& ar, std::vector<T>& m)
-    {
-        size_t size;
-        ar(size);
-        m.resize(size);
-        for(auto& itr : m)
-        {
-            ar(itr);
-        }
-    }
     template<class A> void serialize(A& ar, Parameters::ReadDirectory& m)
     {
         ar(m);

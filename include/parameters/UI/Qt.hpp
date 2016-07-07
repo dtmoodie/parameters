@@ -841,6 +841,10 @@ namespace Parameters
                 bool _updating;
             public:
                 Handler() : enumCombo(nullptr), _updating(false){}
+                ~Handler()
+                {
+                
+                }
                 virtual void UpdateUi( Parameters::EnumParameter* data)
                 {
                     if(_updating)
