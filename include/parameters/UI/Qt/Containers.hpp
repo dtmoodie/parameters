@@ -18,6 +18,7 @@ namespace Parameters
                 Handler<T1> _handler2;
                 bool _currently_updating;
             public:
+                static const bool IS_DEFAULT = false;
                 Handler() : pairData(nullptr), _currently_updating(false) {}
 
                 virtual void UpdateUi( std::pair<T1, T1>* data)
@@ -81,6 +82,7 @@ namespace Parameters
             {
                 std::pair<T1,T2>* pairData;
             public:
+                static const bool IS_DEFAULT = false;
                 Handler() : pairData(nullptr) {}
 
                 virtual void UpdateUi( std::pair<T1, T2>* data)
@@ -126,6 +128,7 @@ namespace Parameters
                 QSpinBox* index;
                 bool _currently_updating;
             public:
+                static const bool IS_DEFAULT = false;
                 Handler(): index(new QSpinBox()), vectorData(nullptr), _currently_updating(false) 
                 {
                     Handler<T>::SetUpdateListener(this);

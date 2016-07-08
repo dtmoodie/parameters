@@ -58,7 +58,7 @@ IF(Parameters_UI)
     IF(Qt5_FOUND)
       SET(USING_UI_ "QT")
       ADD_DEFINITIONS("-DQt5_FOUND")
-      QT5_WRAP_CPP(MOC ${hdr})
+      QT5_WRAP_CPP(MOC "include/parameters/UI/Qt/SignalProxy.hpp")
       SOURCE_GROUP("MOC"  FILES ${MOC})
       INCLUDE_DIRECTORIES(${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS})
       LIST(APPEND UI_INCLUDES_ "${Qt5Gui_INCLUDE_DIRS};${Qt5Widgets_INCLUDE_DIRS};${Qt5Core_INCLUDE_DIRS}")
@@ -128,7 +128,17 @@ ELSE(Parameters_UI)
 ENDIF(Parameters_UI)
 
 
-
+macro(GroupSources curdir)
+file(GLOB children RELATIVE ${PROJECT_SOURCE_DIR}/${curdir} ${PROJECT_SOURCE_DIR}/${curdir}/*)
+    foreach(child ${children})
+        if(IS_DIRECTORY ${PROJECT_SOURCE_DIR}/${curdir}/${child})
+            GroupSources(${curdir}/${child})
+        else()
+            string(REPLACE "/" "\\" groupname ${curdir})
+            source_group(${groupname} FILES ${PROJECT_SOURCE_DIR}/${curdir}/${child})
+        endif()
+   endforeach()
+endmacro()
 
 SET(PERSISTENCE_INCLUDES_ "")
 SET(PERSITENCE_LIBS)
@@ -239,6 +249,10 @@ message(STATUS
 LINK_DIRECTORIES(${Parameters_LIB_DIRS_RELEASE})
 LINK_DIRECTORIES(${Parameters_LIB_DIRS_DEBUG})
 
+GroupSources(include)
+GroupSources(src)
+GroupSources(MOC)
+
 add_library(parameters SHARED ${hdr} ${src} ${MOC})
 add_dependencies(parameters signals)
 TARGET_LINK_LIBRARIES(parameters 
@@ -281,6 +295,9 @@ IF(${Qt5_FOUND})
   add_executable(test_param_qt ${MOC_qt} ${UIS} ${qt_src} ${qt_hdr})
   set_target_properties(test_param_qt PROPERTIES FOLDER examples)
   set_target_properties(test_param_qt PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/tests)
+  if(MSVC)
+      CONFIGURE_FILE("test/Test.vcxproj.user.in" ${CMAKE_BINARY_DIR}/EagleLib/parameters/test_param_qt.vcxproj.user @ONLY)
+  endif()
   TARGET_LINK_LIBRARIES(test_param_qt 
     Qt5::Core
     Qt5::Gui

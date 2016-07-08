@@ -20,8 +20,10 @@ https://github.com/dtmoodie/parameters
 #define PARAMTERS_USE_UI
 #endif
 
+#include "parameters/UI/Qt/POD.hpp"
 #include "parameters/Parameters.hpp"
 #include "parameters/Types.hpp"
+#include "parameters/RangedParameter.hpp"
 #include <vector>
 #include <string>
 #include <type_traits>

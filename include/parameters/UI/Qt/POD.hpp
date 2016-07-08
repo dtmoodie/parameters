@@ -1,51 +1,25 @@
 #pragma once
 #include "IHandler.hpp"
-#include "UIUpdateHandler.hpp"
+#include "UiUpdateHandler.hpp"
+#include "DefaultHandler.hpp"
+#include "SignalProxy.hpp"
+#include "parameters/Types.hpp"
+
+#include <qcheckbox.h>
+#include <qlineedit.h>
+#include <qpushbutton.h>
+#include <qcombobox.h>
+#include <qspinbox.h>
+
+#include <mutex>
 
 namespace Parameters
 {
+    class EnumParameter;
     namespace UI
     {
         namespace qt
         {
-            // *****************************************************************************
-            //                                Default Handler
-            // *****************************************************************************
-            template<typename T, typename Enable = void> class Handler : public IHandler
-            {
-                T* currentData;
-                
-            public:
-                Handler() :currentData(nullptr)
-                {
-                    
-                    BOOST_LOG_TRIVIAL(debug) << "Creating handler for default unspecialized parameter " << typeid(T).name();
-                }
-                virtual void UpdateUi( T* data)
-                {}
-                virtual void OnUiUpdate(QObject* sender)
-                {}
-                virtual void SetData(T* data)
-                {
-                    currentData = data;
-                }
-                T* GetData()
-                {
-                    return currentData;
-                }
-                virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
-                {
-                    
-                    BOOST_LOG_TRIVIAL(debug) << "Creating widget for default unspecialized parameter " << typeid(T).name();
-                    return std::vector<QWidget*>();
-                }
-                static bool UiUpdateRequired()
-                {
-                    return false;
-                }
-                //static const bool UiUpdateRequired = false;
-            };
-
             // **********************************************************************************
             // *************************** Bool ************************************************
             // **********************************************************************************
@@ -55,6 +29,7 @@ namespace Parameters
                 bool* boolData;
                 bool _currently_updating;
             public:
+                static const bool IS_DEFAULT = false;
                 Handler() : chkBox(nullptr), boolData(nullptr), _currently_updating(false) {}
                 virtual void UpdateUi( bool* data)
                 {
@@ -124,6 +99,7 @@ namespace Parameters
                 QLineEdit* lineEdit;
                 bool _currently_updating = false;
             public:
+                static const bool IS_DEFAULT = false;
                 Handler() : strData(nullptr), lineEdit(nullptr) {}
                 virtual void UpdateUi( std::string* data)
                 {
@@ -186,6 +162,7 @@ namespace Parameters
                 std::function<void(void)>* funcData;
                 QPushButton* btn;
             public:
+                static const bool IS_DEFAULT = false;
                 Handler() : funcData(nullptr), btn(nullptr) {}
                 void UpdateUi(std::function<void(void)>* data)
                 {
@@ -242,6 +219,7 @@ namespace Parameters
                 QDoubleSpinBox* box;
                 bool _currently_updating;
             public:
+                static const bool IS_DEFAULT = false;
                 typedef T min_max_type;
                 Handler() : box(nullptr), floatData(nullptr), _currently_updating(false) {}
                 virtual void UpdateUi( T* data)
@@ -314,6 +292,7 @@ namespace Parameters
                 QSpinBox* box;
                 bool _currently_updating;
             public:
+                static const bool IS_DEFAULT = false;
                 typedef T min_max_type;
                 Handler() : box(nullptr), intData(nullptr), _currently_updating(false){}
                 virtual void UpdateUi( T* data)
@@ -400,6 +379,7 @@ namespace Parameters
                 Parameters::EnumParameter* enumData;
                 bool _updating;
             public:
+                static const bool IS_DEFAULT = false;
                 Handler() : enumCombo(nullptr), _updating(false){}
                 ~Handler()
                 {
@@ -477,6 +457,7 @@ namespace Parameters
                 T* fileData;
                 bool _currently_updating;
             public:
+                static const bool IS_DEFAULT = false;
                 Handler(): btn(nullptr), parent(nullptr), _currently_updating(false){}
                 virtual void UpdateUi( T* data)
                 {
@@ -538,7 +519,6 @@ namespace Parameters
                     return output;
                 }
             };
-
         }
     }
 }

@@ -1,11 +1,26 @@
 #pragma once
-#include "Parameter_def.h"
+#include "parameters/Parameter_def.hpp"
+
+#include <qstring.h>
+
+#include <functional>
+#include <vector>
+
+namespace std
+{
+    class recursive_mutex;
+}
+class QObject;
+class QWidget;
+
 namespace Parameters
 {
     namespace UI
     {
         namespace qt
         {
+            class SignalProxy;
+            class IHandler;
             struct PARAMETER_EXPORTS UiUpdateListener
             {
                 virtual void OnUpdate(IHandler* handler) = 0;
@@ -23,7 +38,7 @@ namespace Parameters
                 std::function<void(void)> onUpdate;
             public:
                 IHandler();
-                ~IHandler();
+                virtual ~IHandler();
                 virtual void OnUiUpdate(QObject* sender);
                 virtual void OnUiUpdate(QObject* sender, double val);
                 virtual void OnUiUpdate(QObject* sender, int val);

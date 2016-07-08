@@ -19,7 +19,7 @@ https://github.com/dtmoodie/parameters
 #ifndef PARAMTERS_USE_UI
 #define PARAMTERS_USE_UI
 #endif
-
+#include "parameters/UI/Qt/OpenCV.hpp"
 #include "parameters/Parameters.hpp"
 #include "parameters/Types.hpp"
 #include <vector>

@@ -1,4 +1,7 @@
 #pragma once
+#include "parameters/Parameter_def.hpp"
+#include <qobject.h>
+#include <qdatetime.h>
 
 namespace Parameters
 {

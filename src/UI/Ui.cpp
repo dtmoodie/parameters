@@ -20,14 +20,7 @@ https://github.com/dtmoodie/parameters
 #include "parameters/UI/InterThread.hpp"
 using namespace Parameters::UI;
 
-qt::IParameterProxy::IParameterProxy()
-{
 
-}
-qt::IParameterProxy::~IParameterProxy()
-{
-
-}
 
 void InvalidCallbacks::invalidate(void* sender)
 {

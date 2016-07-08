@@ -19,163 +19,53 @@ https://github.com/dtmoodie/parameters
 #ifdef Qt5_FOUND
 #include "parameters/UI/Qt.hpp"
 #include "parameters/Parameter.hpp"
-#include <boost/log/trivial.hpp>
-#include <boost/log/attributes/named_scope.hpp>
+#include "parameters/UI/Qt/DefaultProxy.hpp"
+
+#include <signals/logging.hpp>
+
 
 using namespace Parameters::UI::qt;
+WidgetFactory::WidgetFactory()
+{
 
-SignalProxy::SignalProxy(IHandler* handler_)
-{
-    handler = handler_;
-    lastCallTime.start();
 }
-
-void SignalProxy::on_update()
+WidgetFactory* WidgetFactory::Instance()
 {
-    if (lastCallTime.elapsed() > 15)
-    {
-        
-        lastCallTime.start();
-        handler->OnUiUpdate(sender());
-    }
-    
-}
-void SignalProxy::on_update(int val)
-{
-    if (lastCallTime.elapsed() > 15)
-    {
-        
-        lastCallTime.start();
-        handler->OnUiUpdate(sender(), val);
-    }
-}
-void SignalProxy::on_update(double val)
-{
-    if (lastCallTime.elapsed() > 15)
-    {
-        
-        lastCallTime.start();
-        handler->OnUiUpdate(sender(), val);
-    }
-}
-void SignalProxy::on_update(bool val)
-{
-    if (lastCallTime.elapsed() > 15)
-    {
-        
-        lastCallTime.start();
-        handler->OnUiUpdate(sender(), val);
-    }
-}
-void SignalProxy::on_update(QString val)
-{
-    if (lastCallTime.elapsed() > 15)
-    {
-        
-        lastCallTime.start();
-        handler->OnUiUpdate(sender(), val);
-    }
-}
-void SignalProxy::on_update(int row, int col)
-{
-    if (lastCallTime.elapsed() > 15)
-    {
-        
-        lastCallTime.start();
-        handler->OnUiUpdate(sender(), row, col);
-    }
-}
-std::map<Loki::TypeInfo, WidgetFactory::HandlerCreator>& WidgetFactory::registry()
-{
-    static auto instance = std::map<Loki::TypeInfo, WidgetFactory::HandlerCreator>();
-    return instance;
+    static WidgetFactory inst;
+    return &inst;
 }
 
 void WidgetFactory::RegisterCreator(Loki::TypeInfo type, HandlerCreator f)
 {
-    LOG_TRIVIAL(trace) << "Registering type " << type.name();
-    WidgetFactory::registry()[type] = f;
+    LOG(trace) << "Registering type " << type.name();
+    registry[type] = f;
 }
-
+std::string print_types(std::map<Loki::TypeInfo, WidgetFactory::HandlerCreator>& registry)
+{
+    std::stringstream ss;
+    for(auto& item : registry)
+    {
+        ss << item.first.name() << ", ";
+    }
+    return ss.str();
+}
 std::shared_ptr<IParameterProxy> WidgetFactory::Createhandler(Parameters::Parameter* param)
 {
     std::string typeName = param->GetTypeInfo().name();
     std::string treeName = param->GetTreeName();
-    auto itr = registry().find(param->GetTypeInfo());
-    if (itr == registry().end())
+    auto itr = registry.find(param->GetTypeInfo());
+    if (itr == registry.end())
     {
-        
-        LOG_TRIVIAL(debug) << "No Widget Factory registered for type " << typeName << " unable to make widget for parameter: " << treeName;
+        LOG(debug) << "No Widget Factory registered for type " << typeName 
+            << " unable to make widget for parameter: " << treeName 
+            << ".  Known types: " << print_types(registry);
+            
         return std::shared_ptr<IParameterProxy>(new DefaultProxy(param));
     }
-    LOG_TRIVIAL(trace) << "Creating handler for " << typeName << " " << treeName;
+    LOG(trace) << "Creating handler for " << typeName << " " << treeName;
     return itr->second(param);
 }
 
-DefaultProxy::DefaultProxy(Parameters::Parameter* param)
-{
-    parameter = param;
-    delete_connection = param->RegisterDeleteNotifier(std::bind(&DefaultProxy::onParamDelete, this));
-}
-bool DefaultProxy::SetParameter(Parameters::Parameter* param)
-{
-    parameter = param;
-    return true;
-}
-bool DefaultProxy::CheckParameter(Parameters::Parameter* param)
-{    
-    return param == parameter;
-}
-QWidget* DefaultProxy::GetParameterWidget(QWidget* parent)
-{
-    
-    QWidget* output = new QWidget(parent);
 
-    QGridLayout* layout = new QGridLayout(output);
-    QLabel* nameLbl = new QLabel(QString::fromStdString(parameter->GetName()), output);
-    nameLbl->setToolTip(QString::fromStdString(parameter->GetTypeInfo().name()));
-    layout->addWidget(nameLbl, 0, 0);
-    output->setLayout(layout);
-    return output;
-}
-IHandler::IHandler() : paramMtx(nullptr), proxy(new SignalProxy(this)), _listener(nullptr) {}
-IHandler::~IHandler()
-{
-    if(proxy)
-        delete proxy;
-}
-void IHandler::OnUiUpdate(QObject* sender) {}
-void IHandler::OnUiUpdate(QObject* sender, double val) {}
-void IHandler::OnUiUpdate(QObject* sender, int val) {}
-void IHandler::OnUiUpdate(QObject* sender, bool val) {}
-void IHandler::OnUiUpdate(QObject* sender, QString val) {}
-void IHandler::OnUiUpdate(QObject* sender, int row, int col) {}
-void IHandler::SetUpdateListener(UiUpdateListener* listener)
-{
-    _listener = listener;
-}
 
-std::function<void(void)>& IHandler::GetOnUpdate()
-{
-
-    return onUpdate;
-}
-std::vector<QWidget*> IHandler::GetUiWidgets(QWidget* parent)
-{
-
-    return std::vector<QWidget*>();
-}
-void IHandler::SetParamMtx(std::recursive_mutex* mtx)
-{
-    paramMtx = mtx;
-}
-std::recursive_mutex* IHandler::GetParamMtx()
-{
-    return paramMtx;
-}
-
-bool IHandler::UiUpdateRequired()
-{
-    return false;
-}
 #endif // Qt5_FOUND

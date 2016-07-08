@@ -1,5 +1,6 @@
 #pragma once
 #include "IParameterProxy.hpp"
+#include <signals/connection.h>
 namespace Parameters
 {
     namespace UI

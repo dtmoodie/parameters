@@ -24,7 +24,7 @@ namespace Parameters
 {
     template<typename T> class PARAMETER_EXPORTS TypedParameter : public MetaTypedParameter < T >, public Cereal::policy<TypedParameter<T>>
     {
-        static FactoryRegisterer<TypedParameter<T>, T, TypedParameter_c> _constructor;
+        static FactoryRegisterer<TypedParameter<T>, T, TypedParameter_c> _typed_parameter_constructor;
     protected:
         T data;
     public:
@@ -39,7 +39,7 @@ namespace Parameters
             const std::string& tooltip = "") :
             MetaTypedParameter<T>(name, type, tooltip), data(init) 
         {
-            (void)&_constructor;
+            (void)&_typed_parameter_constructor;
         }
         virtual ~TypedParameter()
         {
@@ -105,7 +105,7 @@ namespace Parameters
             ar(data);
         }
     };
-    template<typename T> FactoryRegisterer<TypedParameter<T>, T, TypedParameter_c> TypedParameter<T>::_constructor;
+    template<typename T> FactoryRegisterer<TypedParameter<T>, T, TypedParameter_c> TypedParameter<T>::_typed_parameter_constructor;
 
     template<typename T> class TypedParameterPtr : public MetaTypedParameter < T >
     {

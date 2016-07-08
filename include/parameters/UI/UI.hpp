@@ -20,7 +20,7 @@ https://github.com/dtmoodie/parameters
 
 #ifdef PARAMETERS_GENERATE_UI
 #ifdef Qt5_FOUND
-#include "Qt.hpp"
+#include "parameters/UI/Qt/ParameterProxy.hpp"
 #endif
 #endif
 

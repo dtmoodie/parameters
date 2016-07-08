@@ -1,6 +1,12 @@
 #pragma once
 
 #include "POD.hpp"
+
+#include <opencv2/core/types.hpp>
+#include <opencv2/core/matx.hpp>
+
+#include <qtablewidget.h>
+
 namespace Parameters
 {
     namespace UI
@@ -19,6 +25,7 @@ namespace Parameters
                 Handler<T> _height_handler;
                 ::cv::Rect_<T>* _data;
             public:
+                static const bool IS_DEFAULT = false;
                 Handler(): _currently_updating(false), _data(nullptr)
                 {}
 
@@ -109,6 +116,7 @@ namespace Parameters
                 cv::Range* _data;
                 bool _currently_updating;
             public:
+                static const bool IS_DEFAULT = false;
                 Handler() : 
                     _data(nullptr), 
                     _currently_updating(false) 
@@ -172,6 +180,7 @@ namespace Parameters
                 ::cv::Matx<T, ROW, COL>* matData;
                 bool _currently_updating;
             public:
+                static const bool IS_DEFAULT = false;
                 Handler() : table(nullptr), matData(nullptr), _currently_updating(false), UiUpdateHandler()
                 {
                     
@@ -288,6 +297,7 @@ namespace Parameters
                 ::cv::Point_<T>* ptData;
                 bool _currently_updating;
             public:
+                static const bool IS_DEFAULT = false;
                 Handler():ptData(nullptr), _currently_updating(false)
                 {
                     
@@ -384,6 +394,7 @@ namespace Parameters
                 ::cv::Point3_<T>* ptData;
                 bool _updating;
             public:
+                static const bool IS_DEFAULT = false;
                 Handler():ptData(nullptr)
                 {
                     

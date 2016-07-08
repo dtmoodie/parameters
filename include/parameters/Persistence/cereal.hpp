@@ -32,7 +32,11 @@ namespace cereal
     class XMLOutputArchive;
     class BinaryOutputArchive;
     class JSONOutputArchive;
-
+    template<class A, class T1, class T2> void serialize(A& ar, std::pair<T1, T2>& pair)
+    {
+        ar(pair.first);
+        ar(pair.second);
+    }
     template<class A> void serialize(A& ar, Parameters::ReadDirectory& m)
     {
         ar(m);
@@ -222,14 +226,14 @@ namespace Parameters
         };
         template<class T> class policy
         {
-            static constructor<T> _constructor;
+            static constructor<T> _cereal_constructor;
         public:
             policy()
             {
-                (void)&_constructor;
+                (void)&_cereal_constructor;
             }
             };
-        template<class T> constructor<T> policy<T>::_constructor;
+        template<class T> constructor<T> policy<T>::_cereal_constructor;
 #else
         template<class T> class policy {};
 #endif

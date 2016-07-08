@@ -1,9 +1,27 @@
 #pragma once
 
+#include <parameters/UI/Qt.hpp>
 #include "IParameterProxy.hpp"
+#include "DefaultHandler.hpp"
+
+#include <signals/connection.h>
+
+namespace cv
+{
+    namespace cuda
+    {
+        class Stream;
+    }
+}
+
+class QWidget;
+
 
 namespace Parameters
 {
+    class Parameter;
+    template<typename T> class ITypedParameter;
+    template<typename T> class ITypedRangedParameter;
     namespace UI
     {
         namespace qt
@@ -49,6 +67,7 @@ namespace Parameters
                 std::shared_ptr<Signals::connection> connection;
                 std::shared_ptr<Signals::connection> delete_connection;
             public:
+                static const bool IS_DEFAULT = Handler<T>::IS_DEFAULT;
                 ~ParameterProxy()
                 {
                     InvalidCallbacks::invalidate((void*)&paramHandler);
@@ -78,7 +97,6 @@ namespace Parameters
                     delete_connection.reset();
                     paramHandler.SetParamMtx(nullptr);
                 }
-            public:
                 ParameterProxy(Parameters::Parameter* param)
                 {
                     SetParameter(param);
@@ -143,7 +161,8 @@ namespace Parameters
             public:
                 Factory()
                 {
-                    WidgetFactory::RegisterCreator(Loki::TypeInfo(typeid(T)), std::bind(&Factory<T>::Create, std::placeholders::_1));
+                    if(!ParameterProxy<T>::IS_DEFAULT)
+                        WidgetFactory::Instance()->RegisterCreator(Loki::TypeInfo(typeid(T)), std::bind(&Factory<T>::Create, std::placeholders::_1));
                 }
                 static std::shared_ptr<IParameterProxy> Create(Parameters::Parameter* param)
                 {

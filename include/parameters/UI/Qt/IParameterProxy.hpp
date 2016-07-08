@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Parameter_def.hpp"
+#include "parameters/Parameter_def.hpp"
 
 class QWidget;
 

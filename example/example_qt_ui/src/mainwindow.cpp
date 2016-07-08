@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-
+#include "parameters/UI/Qt/OpenCV.hpp"
+#include "parameters/UI/Qt/Containers.hpp"
+#include "parameters/RangedParameter.hpp"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -80,7 +82,7 @@ MainWindow::MainWindow(QWidget *parent) :
     }
     for (int i = 0; i < parameters.size(); ++i)
     {
-        auto proxy = Parameters::UI::qt::WidgetFactory::Createhandler(parameters[i].get());
+        auto proxy = Parameters::UI::qt::WidgetFactory::Instance()->Createhandler(parameters[i].get());
         ui->widgetLayout->addWidget(proxy->GetParameterWidget(this));
         proxies.push_back(proxy);
     }

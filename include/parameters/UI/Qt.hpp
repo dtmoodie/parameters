@@ -70,11 +70,13 @@ namespace Parameters
             {
             public:
                 typedef std::function<std::shared_ptr<IParameterProxy>(Parameter*)> HandlerCreator;
-                static void RegisterCreator(Loki::TypeInfo type, HandlerCreator f);
-                static std::shared_ptr<IParameterProxy> Createhandler(Parameters::Parameter* param);
-
+                void RegisterCreator(Loki::TypeInfo type, HandlerCreator f);
+                std::shared_ptr<IParameterProxy> Createhandler(Parameters::Parameter* param);
+                
+                static WidgetFactory* Instance();
             private:
-                static std::map<Loki::TypeInfo, HandlerCreator>& registry();
+                WidgetFactory();
+                std::map<Loki::TypeInfo, HandlerCreator> registry;
             };
         } /* namespace qt */
     } /* namespace UI */

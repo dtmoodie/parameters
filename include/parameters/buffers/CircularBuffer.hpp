@@ -29,7 +29,7 @@ namespace Parameters
     {
         template<typename T> class CircularBuffer: public ITypedParameter<T>, public IBuffer
         {
-            static FactoryRegisterer<CircularBuffer<T>, T, CircularBuffer_c> _constructor;
+            static FactoryRegisterer<CircularBuffer<T>, T, CircularBuffer_c> _circular_buffer_constructor;
             boost::circular_buffer<std::pair<long long, T>> _data_buffer;
         public:
             CircularBuffer(const std::string& name = "",
@@ -38,7 +38,7 @@ namespace Parameters
                 const std::string& tooltip = ""):
                 ITypedParameter<T>(name)
             {
-                (void)&_constructor;
+                (void)&_circular_buffer_constructor;
                 _data_buffer.set_capacity(10);
                 _data_buffer.push_back(std::make_pair(time_index, init));
             }
@@ -140,6 +140,6 @@ namespace Parameters
                 return Parameter::Ptr(new CircularBuffer<T>(Parameter::name));
             }
         };
-        template<typename T> FactoryRegisterer<CircularBuffer<T>, T, CircularBuffer_c> CircularBuffer<T>::_constructor;
+        template<typename T> FactoryRegisterer<CircularBuffer<T>, T, CircularBuffer_c> CircularBuffer<T>::_circular_buffer_constructor;
     }
 }
