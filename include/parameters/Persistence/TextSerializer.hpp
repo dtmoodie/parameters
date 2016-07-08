@@ -93,6 +93,25 @@ namespace Parameters
                 }
                 const static bool IS_DEFAULT = true;
             };
+            /*
+            template<typename T> auto Serialize(std::ostream* os, T* param, int) ->decltype((*os) << *param, bool())
+            {
+                os << *param;
+                return true;
+            }
+            template<typename T> auto DeSerialize(std::istream* is, T* param, int) ->decltype((*is) >> *param, bool())
+            {
+                is >> *param;
+                return true;
+            }
+
+            template<typename T> auto Serialize(std::ostream* os, T* param, long) ->decltype((*os) << param->string(), bool())
+            {
+                os << param->string();
+                return true;
+            }
+            */
+
             template<typename T> struct Serializer<T, typename std::enable_if<
                 std::is_same<T, Parameters::ReadDirectory>::value ||
                 std::is_same<T, Parameters::ReadFile>::value ||
