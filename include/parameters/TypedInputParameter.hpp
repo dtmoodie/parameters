@@ -168,7 +168,7 @@ namespace Parameters
             return Ptr(new TypedInputParameterCopy(userVar_));
         }
         TypedInputParameterCopy(const std::string& name, T* userVar_,
-            const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "") :
+            ParameterType type = kControl) :
             MetaTypedParameter<T>(name, type, tooltip), userVar(userVar_) 
         {
             input = nullptr;
@@ -279,16 +279,12 @@ namespace Parameters
         {
             return Ptr(new TypedInputParameterPtr(userVar_));
         }
-        TypedInputParameterPtr(const std::string& name, T** userVar_,
-            const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "") :
-            MetaTypedParameter<T>(name, type, tooltip), userVar(userVar_)
+        TypedInputParameterPtr(const std::string& name, T** userVar_, ParameterType type = kControl) :
+            userVar(userVar_)
         {
             input = nullptr;
         }
-        ~TypedInputParameterPtr()
-        {
-            inputConnection.reset();
-        }
+        
         virtual bool SetInput(const std::string& name_)
         {
             return false;

@@ -20,7 +20,7 @@ std::vector<Parameters::Parameter*> VariableManager::GetOutputParameters(Loki::T
     std::vector<Parameters::Parameter*> valid_outputs;
     for(auto itr = _parameters.begin(); itr != _parameters.end(); ++itr)
     {
-        if(itr->second->GetTypeInfo() == type && itr->second->type & Parameters::Parameter::Output)
+        if(itr->second->GetTypeInfo() == type && itr->second->flags & kOutput)
         {
             valid_outputs.push_back(itr->second);
         }
@@ -41,7 +41,7 @@ std::vector<Parameters::Parameter*> VariableManager::GetAllOutputParmaeters()
     std::vector<Parameters::Parameter*> output;
     for(auto& itr : _parameters)
     {
-        if(itr.second->type & Parameters::Parameter::Output)
+        if(itr.second->flags & kOutput)
         {
             output.push_back(itr.second);
         }

@@ -13,7 +13,7 @@ namespace Parameters
         public:
             ConstMap(const std::string& name = "",
                 const T& init = T(), long long time_index = -1,
-                const Parameter::ParameterType& type = Parameter::ParameterType::Control,
+                ParameterType& type = kControl,
                 const std::string& tooltip = "") :
                 Map<T>(name, init, time_index, type, tooltip)
             {

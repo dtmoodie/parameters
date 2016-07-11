@@ -1,7 +1,7 @@
 #include "parameters/Persistence/cereal.hpp"
-
+#include "parameters/Persistence/CerealPolicy.hpp"
 using namespace Parameters;
-using namespace Parameters::Cereal;
+using namespace Parameters::Persistence::Cereal;
 using namespace cereal;
 
 Serializer::Serializer()

@@ -18,26 +18,39 @@ https://github.com/dtmoodie/parameters
 */
 #pragma once
 #include "Persistence/Persistence.hpp"
-#include "ITypedParameter.hpp"
-//#include "RangedParameter.hpp"
 #include "UI/UI.hpp"
-#include <parameters/Parameter.hpp>
 #include <parameters/buffers/BufferProxy.hpp>
 #include "Converters/ConverterPolicy.hpp"
+#include "parameters/Demangle.hpp"
 
 
 namespace Parameters
 {
-    template<typename T, template<typename> class Policy1 = Persistence::PersistencePolicy, template<typename> class Policy2 = UI::UiPolicy, template<typename> class Policy3 = Converters::ConverterPolicy, template<typename> class Policy4 = Buffer::ParameterBufferPolicy>
-    class MetaTypedParameter :
-        public ITypedParameter<T>, public Policy1<T>, public Policy2 < T >, public Policy3<T>, public Policy4<T>
+    template<typename T> class MetaTypedParameter
     {
     public:
-        MetaTypedParameter(const std::string& name, const Parameter::ParameterType& type = Parameter::Control, const std::string& tooltip = "") :
-            ITypedParameter<T>(name, type, tooltip){}
-        virtual ~MetaTypedParameter()
+        MetaTypedParameter()
         {
-
+            static Persistence::PersistencePolicy<T> persistence;
+            static UI::UiPolicy<T> ui;
+            static Buffer::ParameterBufferPolicy<T> buffers;
+            static Converters::ConverterPolicy<T> converters;
         }
     };
+    template<typename T> struct RegisterDemangledName
+    {
+        RegisterDemangledName(const char* name)
+        {
+            Demangle::RegisterName(Loki::TypeInfo(typeid(T)), name);
+        }
+    };
+    
 }
+#define COMBINE1(X,Y) X##Y  // helper macro
+#define COMBINE(X,Y) COMBINE1(X,Y)
+
+#define REGISTER_META_PARAMETER_(TYPE, N) \
+static Parameters::MetaTypedParameter<TYPE> COMBINE(inst, N)\
+static Parameters::RegisterDemangledName<T> COMBINE(demangle_inst, N)(#TYPE)
+
+#define REGISTER_META_PARAMETER(TYPE) REGISTER_META_PARAMETER_(TYPE, __LINE__)

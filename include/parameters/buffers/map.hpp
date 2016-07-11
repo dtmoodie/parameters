@@ -33,12 +33,11 @@ namespace Parameters
         public:
             Map(const std::string& name,
                 const T& init = T(), long long time_index = -1,
-                const Parameter::ParameterType& type = Parameter::ParameterType::Control,
-                const std::string& tooltip = "") :
-                ITypedParameter<T>(name)
+                ParameterType type = Buffer) :
+                ITypedParameter<T>(name, type)
             {
             }
-            virtual T* Data(long long time_index = -1)
+            virtual T* GetData(long long time_index = -1, Signals::context* ctx = nullptr)
             {
                 std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
                 if (time_index == -1 && _data_buffer.size())
@@ -55,7 +54,7 @@ namespace Parameters
                 }
                 return nullptr;
             }
-            virtual bool GetData(T& value, long long time_index = -1)
+            virtual bool GetData(T& value, long long time_index = -1, Signals::context* ctx = nullptr)
             {
                 std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
                 if (time_index == -1 && _data_buffer.size())
@@ -70,21 +69,21 @@ namespace Parameters
                 }
                 return false;
             }
-            virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
+            virtual ITypedParameter<T>* UpdateData(T& data_, long long time_index = -1, Signals::context* ctx = nullptr)
             {
                 std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
                 _data_buffer[time_index] = data_;
                 Parameter::changed = true;
                 Parameter::OnUpdate(stream);
             }
-            virtual void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
+            virtual ITypedParameter<T>* UpdateData(const T& data_, long long time_index = -1, Signals::context* ctx = nullptr)
             {
                 std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
                 _data_buffer[time_index] = data_;
                 Parameter::changed = true;
                 Parameter::OnUpdate(stream);
             }
-            virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
+            virtual ITypedParameter<T>* UpdateData(T* data_, long long time_index = -1, Signals::context* ctx = nullptr)
             {
                 std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
                 _data_buffer[time_index] = *data_;
@@ -92,13 +91,13 @@ namespace Parameters
                 Parameter::OnUpdate(stream);
             }
 
-            virtual Loki::TypeInfo GetTypeInfo()
+            virtual Loki::TypeInfo GetTypeInfo() const
             {
                 return Loki::TypeInfo(typeid(T));
             }
-            virtual bool Update(Parameter::Ptr other, cv::cuda::Stream* stream = nullptr)
+            virtual bool Update(Parameter* other, Signals::context* ctx = nullptr)
             {
-                auto typedParameter = std::dynamic_pointer_cast<ITypedParameter<T>>(other);
+                auto typedParameter = std::dynamic_pointer_cast<ITypedParameter<T>*>(other);
                 if (typedParameter)
                 {
                     auto ptr = typedParameter->Data();
@@ -130,7 +129,7 @@ namespace Parameters
                     end = _data_buffer.rbegin()->first;
                 }
             }
-            virtual Parameter::Ptr DeepCopy() const
+            virtual Parameter* DeepCopy() const
             {
                 auto ptr = new Map<T>(Parameter::name);
                 ptr->_data_buffer = this->_data_buffer;

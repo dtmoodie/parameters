@@ -53,7 +53,7 @@ Parameter* ParameteredObject::addParameter(Parameter::Ptr param)
     //DOIF_LOG_FAIL(_sig_parameter_added, (*_sig_parameter_updated)(this), warning);
     sig_parameter_added(this);
     DOIF_LOG_FAIL(_variable_manager, _variable_manager->AddParameter(param.get()), debug);
-    _callback_connections.push_back(param->RegisterNotifier(std::bind(&ParameteredObject::onUpdate, this, param.get(), std::placeholders::_1)));
+    _callback_connections.push_back(param->RegisterUpdateNotifier(std::bind(&ParameteredObject::onUpdate, this, param.get(), std::placeholders::_1)));
     _parameters.push_back(param.get());
     _implicit_parameters.push_back(param);
     return param.get();
@@ -80,7 +80,7 @@ Parameter* ParameteredObject::addParameter(Parameter* param)
     sig_parameter_added(this);
     DOIF_LOG_FAIL(_variable_manager, _variable_manager->AddParameter(param), debug);
     
-    _callback_connections.push_back(param->RegisterNotifier(std::bind(&ParameteredObject::onUpdate, this, param, std::placeholders::_1)));
+    _callback_connections.push_back(param->RegisterUpdateNotifier(std::bind(&ParameteredObject::onUpdate, this, param, std::placeholders::_1)));
     _parameters.push_back(param);
     _explicit_parameters.push_back(param);
     return param;
@@ -192,60 +192,60 @@ std::vector<Parameter*> ParameteredObject::getDisplayParameters()
     return getParameters();
 }
 
-void ParameteredObject::RegisterParameterCallback(int idx, const std::function<void(cv::cuda::Stream*)>& callback, bool lock_param, bool lock_object)
+void ParameteredObject::RegisterParameterCallback(int idx, const Parameter::update_f& callback, bool lock_param, bool lock_object)
 {
     RegisterParameterCallback(getParameter(idx), callback, lock_param, lock_object);
 }
 
-void ParameteredObject::RegisterParameterCallback(const std::string& name, const std::function<void(cv::cuda::Stream*)>& callback, bool lock_param, bool lock_object)
+void ParameteredObject::RegisterParameterCallback(const std::string& name, const Parameter::update_f& callback, bool lock_param, bool lock_object)
 {
     RegisterParameterCallback(getParameter(name), callback, lock_param, lock_object);
 }
 
-void ParameteredObject::RegisterParameterCallback(Parameter* param, const std::function<void(cv::cuda::Stream*)>& callback, bool lock_param, bool lock_object)
+void ParameteredObject::RegisterParameterCallback(Parameter* param, const Parameter::update_f& callback, bool lock_param, bool lock_object)
 {
     if (lock_param && !lock_object)
     {
-        _callback_connections.push_back(param->RegisterNotifier(std::bind(&ParameteredObject::RunCallbackLockParameter, this, std::placeholders::_1, callback, &param->mtx())));
+        _callback_connections.push_back(param->RegisterUpdateNotifier(std::bind(&ParameteredObject::RunCallbackLockParameter, this, std::placeholders::_1, callback, &param->mtx())));
         return;
     }
     if (lock_object && !lock_param)
     {
-        _callback_connections.push_back(param->RegisterNotifier(std::bind(&ParameteredObject::RunCallbackLockObject, this, std::placeholders::_1, callback)));
+        _callback_connections.push_back(param->RegisterUpdateNotifier(std::bind(&ParameteredObject::RunCallbackLockObject, this, std::placeholders::_1, callback)));
         return;
     }
     if (lock_object && lock_param)
     {
 
-        _callback_connections.push_back(param->RegisterNotifier(std::bind(&ParameteredObject::RunCallbackLockBoth, this, std::placeholders::_1, callback, &param->mtx())));
+        _callback_connections.push_back(param->RegisterUpdateNotifier(std::bind(&ParameteredObject::RunCallbackLockBoth, this, std::placeholders::_1, callback, &param->mtx())));
         return;
     }
-    _callback_connections.push_back(param->RegisterNotifier(callback));    
+    _callback_connections.push_back(param->RegisterUpdateNotifier(callback));    
 }
 
 void ParameteredObject::onUpdate(Parameters::Parameter* param, cv::cuda::Stream* stream)
 {
-    if(!(param->type & Parameters::Parameter::Output))
+    if(!(param->flags & kOutput))
         sig_parameter_updated(this);
 }
 
-void ParameteredObject::RunCallbackLockObject(cv::cuda::Stream* stream, const std::function<void(cv::cuda::Stream*)>& callback)
+void ParameteredObject::RunCallbackLockObject(Signals::context* ctx, const Parameter::update_f& callback)
 {
     std::lock_guard<std::recursive_mutex> lock(mtx);
-    callback(stream);
+    callback(ctx);
 }
 
-void ParameteredObject::RunCallbackLockParameter(cv::cuda::Stream* stream, const std::function<void(cv::cuda::Stream*)>& callback, std::recursive_mutex* paramMtx)
+void ParameteredObject::RunCallbackLockParameter(Signals::context* ctx, const Parameter::update_f& callback, std::recursive_mutex* paramMtx)
 {
     std::lock_guard<std::recursive_mutex> lock(*paramMtx);
-    callback(stream);
+    callback(ctx);
 }
 
-void ParameteredObject::RunCallbackLockBoth(cv::cuda::Stream* stream, const std::function<void(cv::cuda::Stream*)>& callback, std::recursive_mutex* paramMtx)
+void ParameteredObject::RunCallbackLockBoth(Signals::context* ctx, const Parameter::update_f& callback, std::recursive_mutex* paramMtx)
 {
     std::lock_guard<std::recursive_mutex> lock(mtx);
     std::lock_guard<std::recursive_mutex> lock_(*paramMtx);
-    callback(stream);
+    callback(ctx);
 }
 
 bool ParameteredObject::exists(const std::string& name)

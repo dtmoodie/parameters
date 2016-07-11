@@ -121,9 +121,8 @@ namespace Parameters
                         const T& max_value_ = T(),
                         const std::string& name = "",
                         const T& init = T(),
-                        const Parameter::ParameterType& type = Parameter::ParameterType::Control,
-                        const std::string& tooltip = "") : 
-            TypedParameter<T>(name, init, type, tooltip),
+                        ParameterType type = kControl) : 
+            TypedParameter<T>(name, init, type),
             ITypedRangedParameter<T>(min_value_, max_value_)
         {
             (void)&_ranged_constructor;
@@ -186,9 +185,8 @@ namespace Parameters
             const T& max_value_ = T(),
             const std::string& name = "",
             const std::vector<T>& init = std::vector<T>(),
-            const Parameter::ParameterType& type = Parameter::ParameterType::Control,
-            const std::string& tooltip = "") : 
-            TypedParameter<std::vector<T>>(name, init, type, tooltip),
+            ParameterType type = kControl) : 
+            TypedParameter<std::vector<T>>(name, init, type),
             ITypedRangedParameter<std::vector<T>>(min_value_, max_value_)
         {
             (void)&_vector_ranged_constructor;
@@ -244,9 +242,8 @@ namespace Parameters
             const T& max_value_,
             const std::string& name,
             T* init = nullptr,
-            const Parameter::ParameterType& type = Parameter::ParameterType::Control,
-            const std::string& tooltip = "") :
-            TypedParameterPtr<T>(name, init, type, tooltip),
+            ParameterType type = kControl) :
+            TypedParameterPtr<T>(name, init, type),
             ITypedRangedParameter<T>(min_value_, max_value_)
         {
 
@@ -339,9 +336,8 @@ namespace Parameters
             const T& max_value_,
             const std::string& name,
             std::vector<T>* init = nullptr,
-            const Parameter::ParameterType& type = Parameter::ParameterType::Control,
-            const std::string& tooltip = "") :
-            TypedParameterPtr<std::vector<T>>(name, init, type, tooltip),
+            ParameterType type = kControl) :
+            TypedParameterPtr<std::vector<T>>(name, init, type),
             ITypedRangedParameter<std::vector<T>>(min_value_, max_value_)
         {
 

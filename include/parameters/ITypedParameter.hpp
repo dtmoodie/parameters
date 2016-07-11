@@ -30,44 +30,51 @@ namespace Parameters
 {
     template<typename T> class PARAMETER_EXPORTS ITypedParameter : public Parameter
     {
-        
     public:
         typedef std::shared_ptr<ITypedParameter<T>> Ptr;
         
-        ITypedParameter(const std::string& name, const ParameterType& type = Parameter::Control, const std::string& tooltip = "") :
-            Parameter(name, type, tooltip) {}
-        virtual ~ITypedParameter()
-        {
+        ITypedParameter(const std::string& name, ParameterType flags = kControl);
 
-        }
-
-        virtual T* Data(long long time_index = -1) = 0;
-        virtual bool GetData(T& value, long long time_index = -1) = 0;
-        virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr) = 0;
-        virtual void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr) = 0;
-        virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr) = 0;
+        // The call is thread safe but the returned pointer may be modified by a different thread
+        // Time index is the index for which you are requesting data
+        // ctx is the context of the data request, such as the thread of the object requesting the data
+        virtual T*   GetData(long long time_index = -1, Signals::context* ctx = nullptr) = 0;
+        // Copies data into value
+        // Time index is the index for which you are requesting data
+        // ctx is the context of the data request, such as the thread of the object requesting the data
+        virtual bool GetData(T& value, long long time_index = -1, Signals::context* ctx = nullptr) = 0;
         
-        virtual Loki::TypeInfo GetTypeInfo()
-        {
-            return Loki::TypeInfo(typeid(T));
-        }
-        virtual bool Update(Parameter::Ptr other, cv::cuda::Stream* stream = nullptr)
-        {
-            auto typedParameter = std::dynamic_pointer_cast<ITypedParameter<T>>(other);
-            if (typedParameter)
-            {
-                auto ptr = typedParameter->Data();
-                *Data() = *ptr;
-                OnUpdate(stream);
-            }
-            return false;
-        }
-        template<class Archive>
-        void serialize(Archive& archive)
-        {
-            Parameter::serialize(archive);
-            if(T* data = Data())
-                archive(*data);
-        }
+        // Update data, will call update_signal and set changed to true
+        virtual ITypedParameter<T>* UpdateData(T& data_,       long long time_index = -1, Signals::context* ctx = nullptr) = 0;
+        virtual ITypedParameter<T>* UpdateData(const T& data_, long long time_index = -1, Signals::context* ctx = nullptr) = 0;
+        virtual ITypedParameter<T>* UpdateData(T* data_,       long long time_index = -1, Signals::context* ctx = nullptr) = 0;
+
+        virtual Loki::TypeInfo GetTypeInfo() const;
+
+        virtual bool Update(Parameter* other, Signals::context* other_ctx = nullptr);
+
     };
+
+    template<typename T> ITypedParameter<T>::ITypedParameter(const std::string& name, ParameterType flags) :
+            Parameter(name, flags) 
+    {
+    }
+
+    template<typename T> Loki::TypeInfo ITypedParameter<T>::GetTypeInfo() const
+    {
+        return Loki::TypeInfo(typeid(T));
+    }
+
+    template<typename T> bool ITypedParameter<T>::Update(Parameter* other, Signals::context* other_ctx)
+    {
+        auto typedParameter = dynamic_cast<ITypedParameter<T>*>(other);
+        if (typedParameter)
+        {
+            std::lock_guard<std::recursive_mutex> lock(typedParameter->mtx());
+            UpdateData(typedParameter->GetData(), other->GetTimeIndex(), other_ctx);
+            OnUpdate(other_ctx);
+            return true;
+        }
+        return false;
+    }
 }

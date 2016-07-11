@@ -64,9 +64,9 @@ namespace Parameters
         // Mutexes will be locked according to the flags passed into the registration function.
         // lock_param will lock just the underlying parameter object during callback execution
         // lock_object will lock this whole object during the callback execution
-        virtual void RegisterParameterCallback(int idx, const std::function<void(cv::cuda::Stream*)>& callback, bool lock_param = false, bool lock_object = false);
-        virtual void RegisterParameterCallback(const std::string& name, const std::function<void(cv::cuda::Stream*)>& callback, bool lock_param = false, bool lock_object = false);
-        virtual void RegisterParameterCallback(Parameters::Parameter* param, const std::function<void(cv::cuda::Stream*)>& callback, bool lock_param = false, bool lock_object = false);
+        virtual void RegisterParameterCallback(int idx, const Parameter::update_f& callback, bool lock_param = false, bool lock_object = false);
+        virtual void RegisterParameterCallback(const std::string& name, const Parameter::update_f& callback, bool lock_param = false, bool lock_object = false);
+        virtual void RegisterParameterCallback(Parameters::Parameter* param, const Parameter::update_f& callback, bool lock_param = false, bool lock_object = false);
 
         // Add a new implicit parameter with name that references user space data
         template<typename T> Parameters::ITypedParameter<T>* registerParameter(const std::string& name, T* data);
@@ -140,8 +140,8 @@ namespace Parameters
         // This is called by each parameter when the parameter is updated
         virtual void onUpdate(Parameters::Parameter* param = nullptr, cv::cuda::Stream* stream = nullptr);
     private:
-        void RunCallbackLockObject(cv::cuda::Stream* stream, const std::function<void(cv::cuda::Stream*)>& callback);
-        void RunCallbackLockParameter(cv::cuda::Stream* stream, const std::function<void(cv::cuda::Stream*)>& callback, std::recursive_mutex* paramMtx);
-        void RunCallbackLockBoth(cv::cuda::Stream* stream, const std::function<void(cv::cuda::Stream*)>& callback, std::recursive_mutex* paramMtx);
+        void RunCallbackLockObject(Signals::context* ctx, const Parameter::update_f& callback);
+        void RunCallbackLockParameter(Signals::context* ctx, const Parameter::update_f& callback, std::recursive_mutex* paramMtx);
+        void RunCallbackLockBoth(Signals::context* ctx, const Parameter::update_f& callback, std::recursive_mutex* paramMtx);
     };
 }

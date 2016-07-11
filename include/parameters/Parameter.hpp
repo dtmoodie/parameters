@@ -30,72 +30,93 @@ namespace cv
         class Stream;
     }
 }
+namespace Signals
+{
+    class context;
+    class connection;
+}
 namespace Parameters
 {
-
+    enum ParameterType
+    {
+        kNone = 0,
+        kInput = 1,
+        kOutput = 2,
+        kState = 4,
+        kControl = 8,
+        kBuffer = 16
+    };
     class PARAMETER_EXPORTS Parameter
     {
     public:
-        enum ParameterType
-        {
-            None = 0,
-            Input = 1,
-            Output = 2,
-            State = 4,
-            Control = 8
-        };
-        Parameter(const ::std::string& name = "", const ParameterType& type = ParameterType::Control, const ::std::string& tooltip = "");
+        typedef std::shared_ptr<Parameter> Ptr;
+        typedef std::function<void(Signals::context*, Parameter*)> update_f;
+        typedef std::function<void(Parameter*)> delete_f;
+        Parameter(const std::string& name_ = "", ParameterType flags_ = kControl);
         virtual ~Parameter();
-        typedef ::std::shared_ptr<Parameter> Ptr;
-        virtual Loki::TypeInfo GetTypeInfo() = 0;
+        
+        Parameter*         SetName(const std::string& name_);
+        Parameter*         SetTreeRoot(const std::string& tree_root_);
+        Parameter*         SetContext(Signals::context* ctx);
+        virtual Parameter* SetTimeIndex(long long index_ = -1);
 
-        virtual Parameter* SetName(const std::string& name_);
-        virtual Parameter* SetTooltip(const std::string& tooltip_);
-        virtual Parameter* SetTreeName(const std::string& treeName_);
-        virtual Parameter* SetTreeRoot(const std::string& treeRoot_);
-        virtual const ::std::string& GetName() const;
-        virtual const ::std::string& GetTooltip() const;
-        virtual const ::std::string GetTreeName() const;
-        virtual const ::std::string& GetTreeRoot() const;
-        virtual long long GetTimeIndex() const;
-        virtual void SetTimeIndex(long long index = -1);
+        const std::string& GetName() const;
+        const std::string  GetTreeName() const;
+        const std::string& GetTreeRoot() const;
+        long long          GetTimeIndex() const;
+        Signals::context*  GetContext() const;
+
+        // Implemented in concrete type
+        virtual Loki::TypeInfo     GetTypeInfo() const = 0;
+
         // Update with the values from another parameter
-        virtual bool Update(Parameter* other);
-        virtual Ptr DeepCopy() const = 0;
+        virtual bool        Update(Parameter* other, Signals::context* ctx = nullptr);
+        virtual Parameter*  DeepCopy() const = 0;
 
-        virtual std::shared_ptr<Signals::connection> RegisterNotifier(std::function<void(cv::cuda::Stream*)> f);
-        virtual std::shared_ptr<Signals::connection> RegisterDeleteNotifier(std::function<void(Parameter*)> f);
+        std::shared_ptr<Signals::connection> RegisterUpdateNotifier(update_f f);
+        std::shared_ptr<Signals::connection> RegisterDeleteNotifier(delete_f f);
+
+        // Sets changed to true and emits update signal
+        void OnUpdate(Signals::context* ctx = nullptr);
+        Parameter* Commit(long long index_ = -1, Signals::context* ctx = nullptr);
+        
+        template<class Archive> void serialize(Archive& ar);
+        template<typename T> T* GetData(long long time_index_ = -1);
 
         virtual std::recursive_mutex& mtx();
-        
-        ParameterType type;
+
+        ParameterType flags;
         bool changed;
         unsigned short subscribers;
-        // Sets changed to true and emits update signal
-        void OnUpdate(cv::cuda::Stream* stream = nullptr);
-        Signals::typed_signal_base<void(cv::cuda::Stream*)> update_signal;
+        Signals::typed_signal_base<void(Signals::context*, Parameter*)> update_signal;
         Signals::typed_signal_base<void(Parameter*)> delete_signal;
-        template<class Archive>
-        void serialize(Archive& ar)
-        {
-            ar(name);
-            ar(treeRoot);
-            ar(_current_time_index);
-            ar(type);
-        }
     protected:
-        std::string name;
-        std::string tooltip;
-        std::string treeRoot;
-        long long _current_time_index;
+        std::string          _name;
+        std::string          _tree_root;
+        long long            _current_time_index;
         std::recursive_mutex _mtx;
+        Signals::context*    _ctx; // Context of object that owns this parameter
     };
+
     struct ParameterInfo
     {
-        Loki::TypeInfo dataType;
+        Loki::TypeInfo data_type;
         std::string name;
         std::string tooltip;
         std::string description;
-        Parameter::ParameterType typeFlags;
+        ParameterType type_flags;
     };
+
+    template<typename Archive> void Parameter::serialize(Archive& ar)
+    {
+        ar(_name);
+        ar(_tree_root);
+        ar(_current_time_index);
+        ar(flags);
+    }
+    template<typename T> class ITypedParameter;
+    template<typename T> T* Parameter::GetData(long long time_index_)
+    {
+        return static_cast<ITypedParameter<T>*>(this)->GetData(time_index_);
+    }
 }

@@ -34,8 +34,7 @@ namespace Parameters
         public:
             CircularBuffer(const std::string& name = "",
                 const T& init = T(), long long time_index = -1,
-                const Parameter::ParameterType& type = Parameter::ParameterType::Control,
-                const std::string& tooltip = ""):
+                ParameterType type = Buffer):
                 ITypedParameter<T>(name)
             {
                 (void)&_circular_buffer_constructor;

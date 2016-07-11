@@ -17,180 +17,200 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 https://github.com/dtmoodie/parameters
 */
 #pragma once
+#include "ITypedParameter.hpp"
 #include "MetaParameter.hpp"
 #include "ParameterFactory.hpp"
-#include "parameters/Persistence/cereal.hpp"
+#include "parameters/Persistence/CerealPolicy.hpp"
 namespace Parameters
 {
-    template<typename T> class PARAMETER_EXPORTS TypedParameter : public MetaTypedParameter < T >, public Cereal::policy<TypedParameter<T>>
+    template<typename T> class PARAMETER_EXPORTS TypedParameter : 
+        public ITypedParameter<T>
+#ifdef AUTO_REGISTER_META_PARAMETER
+        , public MetaTypedParameter < T >
+#endif
+        , public Persistence::Cereal::policy<TypedParameter<T>>
     {
-        static FactoryRegisterer<TypedParameter<T>, T, TypedParameter_c> _typed_parameter_constructor;
+    public:
+        TypedParameter(const std::string& name = "", const T& init = T(), ParameterType type = kControl);
+        
+        virtual T*   GetData(long long time_index = -1, Signals::context* ctx = nullptr);
+        virtual bool GetData(T& value, long long time_index = -1, Signals::context* ctx = nullptr);
+
+        virtual ITypedParameter<T>* UpdateData(T& data_,       long long time_index = -1, Signals::context* ctx = nullptr);
+        virtual ITypedParameter<T>* UpdateData(const T& data_, long long time_index = -1, Signals::context* ctx = nullptr);
+        virtual ITypedParameter<T>* UpdateData(T* data_,       long long time_index = -1, Signals::context* ctx = nullptr);
+
+        virtual Parameter* DeepCopy() const;
+        virtual bool Update(Parameter* other, Signals::context* ctx = nullptr);
+        template<class Archive> void serialize(Archive& ar);
+
     protected:
         T data;
-    public:
-        typedef std::shared_ptr<TypedParameter<T>> Ptr;
-        static std::shared_ptr<TypedParameter<T>> create(const T& init, const std::string& name, const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "")
-        {
-            return std::shared_ptr<TypedParameter<T>>(new TypedParameter<T>(name, init, type, tooltip));
-        }
-        TypedParameter(const std::string& name = "", 
-            const T& init = T(), 
-            const Parameter::ParameterType& type = Parameter::ParameterType::Control, 
-            const std::string& tooltip = "") :
-            MetaTypedParameter<T>(name, type, tooltip), data(init) 
-        {
-            (void)&_typed_parameter_constructor;
-        }
-        virtual ~TypedParameter()
-        {
-
-        }
-        virtual T* Data(long long time_index = -1)
-        {
-            if(time_index != -1)
-                LOGIF_NEQ(time_index, Parameter::_current_time_index, trace);
-            return &data;
-        }
-        virtual bool GetData(T& value, long long time_index = -1)
-        {
-            T* ptr = Data(time_index);
-            if (ptr)
-            {
-                value = *ptr;
-                return true;
-            }
-            return false;
-        }
-        virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
-        {
-            Parameter::_current_time_index = time_index;
-            data = data_;
-            Parameter::changed = true;
-            Parameter::OnUpdate(stream);
-        }
-        virtual void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
-        {
-            Parameter::_current_time_index = time_index;
-            data = data_;
-            Parameter::changed = true;
-            ITypedParameter<T>::OnUpdate(stream);
-        }
-        virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
-        {
-            Parameter::_current_time_index = time_index;
-            data = *data_;
-            Parameter::changed = true;
-            Parameter::OnUpdate(stream);
-        }
-        virtual Parameter::Ptr DeepCopy() const
-        {
-            return Parameter::Ptr(new TypedParameter<T>(Parameter::GetName(), data));
-        }
-        virtual bool Update(Parameter* other)
-        {
-            auto typed = dynamic_cast<ITypedParameter<T>*>(other);
-            if (typed)
-            {
-                data = *(typed->Data());
-                Parameter::changed = true;
-                Parameter::OnUpdate(nullptr);
-                return true;
-            }
-            return false;
-        }
-        template<class Archive>
-        void serialize(Archive& ar)
-        {
-            Parameter::serialize(ar);
-            ar(data);
-        }
+    private:
+        static FactoryRegisterer<TypedParameter<T>, T, TypedParameter_c> _typed_parameter_constructor;
     };
-    template<typename T> FactoryRegisterer<TypedParameter<T>, T, TypedParameter_c> TypedParameter<T>::_typed_parameter_constructor;
+    
 
-    template<typename T> class TypedParameterPtr : public MetaTypedParameter < T >
+    template<typename T> class TypedParameterPtr : 
+        public ITypedParameter < T >
+#ifdef AUTO_REGISTER_META_PARAMETER
+        , public MetaTypedParameter < T >
+#endif
     {
+    public:
+        TypedParameterPtr(const std::string& name = "", T* ptr_ = nullptr, ParameterType type = Control, bool ownsData_ = false);
+        virtual ~TypedParameterPtr();
+
+        virtual T*   GetData(long long time_index = -1, Signals::context* ctx = nullptr);
+        virtual bool GetData(T& value, long long time_index = -1, Signals::context* ctx = nullptr);
+
+        virtual ITypedParameter<T>* UpdateData(T& data_,       long long time_index = -1, Signals::context* ctx = nullptr);
+        virtual ITypedParameter<T>* UpdateData(const T& data_, long long time_index = -1, Signals::context* ctx = nullptr);
+        virtual ITypedParameter<T>* UpdateData(T* data_,       long long time_index = -1, Signals::context* ctx = nullptr);
+        virtual bool Update(Parameter* other, Signals::context* other_ctx = nullptr);
+        virtual Parameter* DeepCopy() const;
     protected:
         T* ptr;
         bool ownsData;
-    public:
-        typedef std::shared_ptr<TypedParameterPtr<T>> Ptr;
-        static std::shared_ptr<TypedParameterPtr<T>> create(const std::string& name, T* ptr_ = nullptr,
-            const Parameter::ParameterType& type = Parameter::ParameterType::Control, const std::string& tooltip = "")
-        {
-            return std::shared_ptr<TypedParameterPtr<T>>(new TypedParameterPtr(name, ptr_, type, tooltip));
-        }
-
-        TypedParameterPtr(const std::string& name, 
-            T* ptr_ = nullptr,
-            const Parameter::ParameterType& type = Parameter::ParameterType::Control, 
-            const std::string& tooltip = "", bool ownsData_ = false) :
-            ptr(ptr_),
-            MetaTypedParameter<T>(name, type, tooltip), ownsData(ownsData_)
-        {}
-        TypedParameterPtr() :
-            MetaTypedParameter<T>("", Parameter::ParameterType::Control, ""), 
-            ptr(nullptr),
-            ownsData(false)
-        {
-
-        }
-
-        virtual T* Data(long long time_index)
-        {
-            LOGIF_NEQ(time_index, Parameter::_current_time_index, trace);
-            return ptr;
-        }
-        virtual bool GetData(T& value, long long time_index = -1)
-        {
-            std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
-            LOGIF_NEQ(time_index, Parameter::_current_time_index, trace);
-            if (ptr)
-            {
-                value = *ptr;
-                return true;
-            }
-            return false;
-        }
-        virtual void UpdateData(T& data, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
-        {
-            ptr = &data;
-            Parameter::_current_time_index = time_index;
-            Parameter::changed = true;
-            Parameter::OnUpdate(stream);
-        }
-        virtual void UpdateData(const T& data, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
-        {
-            if (ptr)
-            {
-                *ptr = data;
-                Parameter::_current_time_index = time_index;
-                Parameter::changed = true;
-                Parameter::OnUpdate(stream);
-            }                
-        }
-        virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
-        {
-            ptr = data_;
-            Parameter::_current_time_index = time_index;
-            Parameter::changed = true;
-            Parameter::OnUpdate(stream);
-        }
-        virtual bool Update(Parameter* other)
-        {
-            auto typed = dynamic_cast<ITypedParameter<T>*>(other);
-            if(typed)
-            {
-                *ptr = *(typed->Data());
-                Parameter::_current_time_index = other->GetTimeIndex();
-                Parameter::changed = true;
-                Parameter::OnUpdate(nullptr);
-                return true;
-            }
-            return false;
-        }
-        virtual Parameter::Ptr DeepCopy() const
-        {
-            return Parameter::Ptr(new TypedParameter<T>(Parameter::GetName(), *ptr));
-        }
     };
+
+
+    // Definitions
+
+    template<typename T> TypedParameter<T>::TypedParameter(const std::string& name, const T& init, ParameterType type) :
+        ITypedParameter<T>(name, type), data(init) 
+    {
+        (void)&_typed_parameter_constructor;
+    }
+    template<typename T> T* TypedParameter<T>::GetData(long long time_index, Signals::context* ctx)
+    {
+        if(time_index != -1)
+            LOGIF_NEQ(time_index, Parameter::_current_time_index, trace);
+        return &data;
+    }
+    template<typename T> bool TypedParameter<T>::GetData(T& value, long long time_index, Signals::context* ctx)
+    {
+        std::lock_guard<std::recursive_mutex> lock(_mtx);
+        T* ptr = GetData(time_index, ctx);
+        if (ptr)
+        {
+            value = *ptr;
+            return true;
+        }
+        return false;
+    }
+    template<typename T> ITypedParameter<T>* TypedParameter<T>::UpdateData(T& data_, long long time_index = -1, Signals::context* ctx  = nullptr)
+    {
+        data = data_;
+        Commit(time_index, ctx);
+        return this;
+    }
+    template<typename T> ITypedParameter<T>* TypedParameter<T>::UpdateData(const T& data_, long long time_index = -1, Signals::context* ctx = nullptr)
+    {
+        data = data_;
+        Commit(time_index, ctx);
+        return this;
+    }
+    template<typename T> ITypedParameter<T>* TypedParameter<T>::UpdateData(T* data_, long long time_index = -1, Signals::context* ctx  = nullptr)
+    {
+        data = *data_;
+        Commit(time_index, ctx);
+        return this;
+    }
+    template<typename T> Parameter* TypedParameter<T>::DeepCopy() const
+    {
+        return new TypedParameter<T>(Parameter::GetName(), data);
+    }
+
+    template<typename T>  bool TypedParameter<T>::Update(Parameter* other, Signals::context* ctx)
+    {
+        auto typed = dynamic_cast<ITypedParameter<T>*>(other);
+        if (typed)
+        {
+            if(typed->GetData(data, -1, ctx))
+            {
+                Commit(other->GetTimeIndex(), ctx);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    template<typename T> template<class Archive>
+    void  TypedParameter<T>::serialize(Archive& ar)
+    {
+        Parameter::serialize(ar);
+        ar(data);
+    }
+
+    template<typename T> FactoryRegisterer<TypedParameter<T>, T, TypedParameter_c> TypedParameter<T>::_typed_parameter_constructor;
+
+    template<typename T> TypedParameterPtr<T>::TypedParameterPtr(const std::string& name, T* ptr_, ParameterType type, bool ownsData_) :
+            ptr(ptr_), ownsData(ownsData_)
+    {
+    }
+    template<typename T> TypedParameterPtr<T>::~TypedParameterPtr()
+    {
+        if(ownsData && ptr)
+            delete ptr;
+    }
+
+    template<typename T> T* TypedParameterPtr<T>::GetData(long long time_index = -1, Signals::context* ctx = nullptr)
+    {
+        LOGIF_NEQ(time_index, Parameter::_current_time_index, trace);
+        return ptr;
+    }
+    template<typename T> bool TypedParameterPtr<T>::GetData(T& value, long long time_index = -1, Signals::context* ctx = nullptr)
+    {
+        std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
+        LOGIF_NEQ(time_index, Parameter::_current_time_index, trace);
+        if (ptr)
+        {
+            value = *ptr;
+            return true;
+        }
+        return false;
+    }
+    template<typename T> ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(T& data_, long long time_index, Signals::context* ctx)
+    {
+        ptr = &data;
+        Parameter::_current_time_index = time_index;
+        Parameter::changed = true;
+        Parameter::OnUpdate(stream);
+    }
+    template<typename T> ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(const T& data_, long long time_index, Signals::context* ctx)
+    {
+        if (ptr)
+        {
+            *ptr = data;
+            Parameter::_current_time_index = time_index;
+            Parameter::changed = true;
+            Parameter::OnUpdate(stream);
+        }                
+    }
+    template<typename T> ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(T* data_, long long time_index, Signals::context* ctx)
+    {
+        ptr = data_;
+        Parameter::_current_time_index = time_index;
+        Parameter::changed = true;
+        Parameter::OnUpdate(stream);
+    }
+    template<typename T> bool TypedParameterPtr<T>::Update(Parameter* other, Signals::context* other_ctx)
+    {
+        auto typed = dynamic_cast<ITypedParameter<T>*>(other);
+        if(typed)
+        {
+            *ptr = *(typed->Data());
+            Parameter::_current_time_index = other->GetTimeIndex();
+            Parameter::changed = true;
+            Parameter::OnUpdate(nullptr);
+            return true;
+        }
+        return false;
+    }
+    template<typename T> Parameter* TypedParameterPtr<T>::DeepCopy() const
+    {
+        return new TypedParameter<T>(Parameter::GetName(), *ptr);
+    }
+
 }
